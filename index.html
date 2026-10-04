@@ -558,7 +558,14 @@ td,th{
     id="rpass"
     type="password"
     placeholder="Mot de passe (8 caractères minimum)"
-  >
+    >
+    <h3>Confirmation de création du compte</h3>
+
+<select id="rnotificationMethod">
+  <option value="">Choisissez le moyen de confirmation</option>
+  <option value="email">📧 E-mail</option>
+  <option value="sms">📱 SMS</option>
+</select>
 
   <button
     class="primary"
@@ -581,7 +588,7 @@ td,th{
   <p id="regError" class="danger"></p>
 
 </div>
-
+</section>
   <div
   id="accountCreated"
   class="auth"
@@ -611,22 +618,41 @@ td,th{
 
   <div class="card">
 
-    <h3>RIB </h3>
+  <h3>Coordonnées bancaires </h3>
 
-    <p
-      id="createdRib"
-      style="font-weight:800;font-size:18px"
-    ></p>
+  <p>
+    <strong>Banque :</strong>
+    Banque Islamique de Développement 
+  </p>
 
-    <button
-      class="primary"
-      onclick="copyRib()"
-    >
-      Copier le RIB
-    </button>
+  <p>
+    <strong>Adresse :</strong>
+    10, Avenue du Développement, Casablanca, Maroc
+  </p>
 
-  </div>
+  <p>
+    <strong>RIB :</strong>
+    <span id="createdRib"></span>
+  </p>
 
+  <p>
+    <strong>IBAN :</strong>
+    <span id="createdIban"></span>
+  </p>
+
+  <p>
+    <strong>BIC :</strong>
+    <span id="createdBic"></span>
+  </p>
+
+  <button
+    class="primary"
+    onclick="copyRib()"
+  >
+    Copier le RIB
+  </button>
+
+</div>
   <p class="muted">
     Ces coordonnées sont reel.
   </p>
@@ -639,7 +665,7 @@ td,th{
   </button>
 
 </div>
-  </section>
+  
 <section id="app" class="app">
 
   <div class="top">
@@ -1010,32 +1036,57 @@ async function register(){
           incomeSource:rincomeSource.value,
 
           accountType:raccountType.value,
-          accountCurrency:raccountCurrency.value,
+accountCurrency:raccountCurrency.value,
 
-          password:rpass.value
+notificationMethod:rnotificationMethod.value,
+
+password:rpass.value
 
         })
       }
     );
 
-    auth.style.display="none";
+    const authBox =
+  document.getElementById("auth");
 
-    createdHolder.textContent =
-      `${rfirstName.value} ${rlastName.value}`;
+const createdHolderBox =
+  document.getElementById("createdHolder");
 
-    createdAccount.textContent =
-      result.account_no;
+const createdAccountBox =
+  document.getElementById("createdAccount");
 
-    createdCurrency.textContent =
-      raccountCurrency.value;
+const createdCurrencyBox =
+  document.getElementById("createdCurrency");
+const createdIbanBox =
+  document.getElementById("createdIban");
 
-    createdRib.textContent =
-      "-" + result.account_no;
+const createdBicBox =
+  document.getElementById("createdBic");
+const createdRibBox =
+  document.getElementById("createdRib");
 
-    accountCreated.style.display="block";
+const accountCreatedBox =
+  document.getElementById("accountCreated");
 
-  }catch(e){
+authBox.style.display = "none";
 
+createdHolderBox.textContent =
+  `${rfirstName.value} ${rlastName.value}`;
+
+createdAccountBox.textContent =
+  result.account_no;
+
+createdCurrencyBox.textContent =
+  raccountCurrency.value;
+createdIbanBox.textContent =
+  result.rib.iban;
+
+createdBicBox.textContent =
+  result.rib.bic;
+
+createdRibBox.textContent = '';
+
+accountCreatedBox.style.display = "block";
     regError.textContent=
       lang==="ar"
       ?"تعذر إنشاء الحساب"

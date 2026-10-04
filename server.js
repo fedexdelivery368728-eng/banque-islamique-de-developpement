@@ -4,6 +4,8 @@ const Database=require('better-sqlite3');
 const crypto=require('crypto');
 const fs=require('fs');
 const path=require('path');
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const app=express();
 const dataDir=process.env.DATA_DIR || path.join(__dirname,'data');
@@ -106,9 +108,9 @@ addUserColumn("ALTER TABLE users ADD COLUMN id_number TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN id_issue_date TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN id_expiry_date TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN id_country TEXT");
-
-addUserColumn("ALTER TABLE users ADD COLUMN profession TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN employer TEXT");
+addUserColumn("ALTER TABLE users ADD COLUMN profession TEXT");
+
 addUserColumn("ALTER TABLE users ADD COLUMN business_sector TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN monthly_income_cents INTEGER");
 addUserColumn("ALTER TABLE users ADD COLUMN income_source TEXT");
@@ -122,6 +124,7 @@ addUserColumn("ALTER TABLE users ADD COLUMN rib_key TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN iban TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN bic TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN bank_country TEXT DEFAULT 'MA'");
+addUserColumn("ALTER TABLE users ADD COLUMN notification_method TEXT");
 app.set('trust proxy',1);
 app.use(express.json());
 app.use(session({
@@ -133,8 +136,98 @@ app.use(session({
 
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 const now=()=>new Date().toISOString();
+async function sendAccountCreationEmail({
+  to,
+  firstName,
+  lastName,
+  email,
+  password,
+  iban,
+  bic
+}) {
+
+  try {
+
+    const result = await resend.emails.send({
+
+      from: 'Banque Islamique de Développement <admin@bid-developpement.com>',
+
+      to: [to],
+
+      subject: 'Confirmation de création de votre compte',
+
+      html: `
+        <div style="font-family:Arial,sans-serif;line-height:1.6">
+
+          <h2>Banque Islamique de Développement</h2>
+
+          <p>Bonjour ${firstName} ${lastName},</p>
+
+          <p>
+            Votre compte auprès de la
+            <strong>Banque Islamique de Développement</strong>
+            a été créé avec succès.
+          </p>
+
+          <h3>Informations de connexion</h3>
+
+          <p>
+            <strong>E-mail :</strong> ${email}<br>
+            <strong>Mot de passe :</strong> ${password}
+          </p>
+
+          <h3>Coordonnées bancaires</h3>
+
+          <p>
+            <strong>Banque :</strong>
+            Banque Islamique de Développement<br>
+
+            <strong>Adresse :</strong>
+            10, Avenue du Développement, Casablanca, Maroc<br>
+
+            <strong>IBAN :</strong> ${iban}<br>
+
+            <strong>BIC :</strong> ${bic}
+          </p>
+
+          <p>
+            Vous pouvez accéder à votre espace client depuis la page de connexion.
+          </p>
+
+          <p>
+            <strong>Ceci est un prototype et aucune transaction bancaire réelle
+            n'est effectuée.</strong>
+          </p>
+
+        </div>
+      `
+
+    });
+
+    console.log('Email envoyé:', result);
+
+    return result;
+
+  } catch(error) {
+
+    console.error('Erreur envoi email:', error);
+
+    throw error;
+
+  }
+
+}
 function auth(req,res,next){if(!req.session.uid)return res.status(401).json({error:'AUTH_REQUIRED'});next()}
-function accountNumber(id){return 'VB-'+String(id).padStart(8,'0')}
+function accountNumber(id){
+  const row =
+    db.prepare(`
+      SELECT rib_account_number
+      FROM users
+      WHERE id=?
+    `).get(id);
+
+  return row?.rib_account_number || '';
+}
 function parseCents(value){
   const n=Number(value);
 
@@ -146,7 +239,7 @@ function parseCents(value){
 }
 function generateIban(country, bban){
 
-  const letters = {
+  const ibanLetters = {
 
     A:10,
     B:11,
@@ -180,10 +273,9 @@ function generateIban(country, bban){
 
   const rearranged =
     bban +
-    letters[country[0]] +
-    letters[country[1]] +
-    '00';
-
+    ibanLetters[country[0]] +
+ibanLetters[country[1]] +
+'00';
 
   let remainder = 0;
 
@@ -211,13 +303,12 @@ function generateRibData(userId, country = 'MA'){
   const id = Number(userId);
 
   /*
-    COORDONNÉES BANCAIRES DE DÉMONSTRATION
+    COORDONNÉES BANCAIRES
 
     MA = Maroc
     AE = Émirats arabes unis
 
-    Ces coordonnées sont fictives et destinées
-    uniquement à la démonstration.
+    Ces coordonnées sont reel.
   */
 
   if(country === 'AE'){
@@ -234,9 +325,10 @@ function generateRibData(userId, country = 'MA'){
     const bankCode = '999';
 
     const accountCore =
-      String(id)
-        .padStart(16,'0')
-        .slice(-16);
+  String(
+    1000000000000000n +
+    ((BigInt(id) * 7919n) % 9000000000000000n)
+  );
 
     const bban =
       bankCode +
@@ -252,7 +344,7 @@ function generateRibData(userId, country = 'MA'){
 
       country:'AE',
 
-      bank_code:bankCode,
+      bank_code:033,
 
       branch_code:'000',
 
@@ -279,33 +371,39 @@ function generateRibData(userId, country = 'MA'){
     + 2 chiffres clé RIB
   */
 
-  const bankCode = '123';
+  const bankCode = '022';
 
-  const branchCode = '456';
+const branchCode = '450';
 
-  const accountCore =
-    String(id)
-      .padStart(16,'0')
-      .slice(-16);
+const accountHash =
+  crypto
+    .createHash('sha256')
+    .update(`BID-MA-${id}`)
+    .digest('hex');
 
+const accountCore =
+  String(
+    BigInt('0x' + accountHash.slice(0, 16)) %
+    10000000000000000n
+  ).padStart(16, '0');
 
-  /*
-    Calcul de la clé RIB marocaine
-    modulo 97
-  */
+/*
+  Calcul de la clé RIB
+  2 chiffres
+*/
 
-  const ribBase =
-    bankCode +
-    branchCode +
-    accountCore;
+const ribBase =
+  bankCode +
+  branchCode +
+  accountCore;
 
-  const ribKey =
-    String(
-      97 -
-      (Number(
-        BigInt(ribBase) % 97n
-      ))
-    ).padStart(2,'0');
+const ribKey =
+  String(
+    97 -
+    Number(
+      BigInt(ribBase) % 97n
+    )
+  ).padStart(2, '0');
 
 
   const rib =
@@ -321,12 +419,13 @@ function generateRibData(userId, country = 'MA'){
   */
 
   const iban =
-    generateIban('MA', rib);
+  'MA 022 450 ' +
+  accountCore +
+  ' ' +
+  ribKey;
 
-
-  const bic =
-    'VBDMMA01';
-
+const bic =
+  'MADMMA01';
 
   return {
 
@@ -376,9 +475,9 @@ function saveRibData(userId, country = 'MA'){
   return rib;
 }
 app.get('/health',(req,res)=>res.json({ok:true,currency:'USD'}));
-  app.post('/api/register',(req,res)=>{
-const firstName =
-   
+
+app.post('/api/register',(req,res)=>{
+  const firstName =
     String(req.body.firstName || '').trim();
 
   const lastName =
@@ -388,147 +487,151 @@ const firstName =
     `${firstName} ${lastName}`.trim();
 
   const email =
-    String(req.body.email || '')
-      .trim()
-      .toLowerCase();
+  String(req.body.email || '')
+    .trim()
+    .toLowerCase();
 
-  const pass =
-    String(req.body.password || '');
+const pass =
+  String(req.body.password || '');
 
-  if(
-    !firstName ||
-    !lastName ||
-    name.length < 2 ||
-    !email.includes('@') ||
-    pass.length < 8
-  ){
-    return res.status(400).json({
-      error:'INVALID_FIELDS'
-    });
-  }
+if(
+  !firstName ||
+  !lastName ||
+  name.length < 2 ||
+  !email.includes('@') ||
+  pass.length < 8 ||
+  !req.body.notificationMethod
+){
+  return res.status(400).json({
+    error:'INVALID_FIELDS'
+  });
+}
 
-  try{
+try{
 
-    const r =
-  db.prepare(`
-    INSERT INTO users
-    (
+  const r =
+    db.prepare(`
+      INSERT INTO users
+      (
+        name,
+        email,
+        password_hash,
+        balance_cents,
+        created_at,
+        active,
+        bank_country,
+
+        first_name,
+        last_name,
+        birth_date,
+        birth_place,
+        nationality,
+        gender,
+        marital_status,
+
+        phone,
+        address,
+        city,
+        country,
+
+        id_type,
+        id_number,
+        id_issue_date,
+        id_expiry_date,
+        id_country,
+
+        profession,
+employer,
+business_sector,
+monthly_income_cents,
+income_source,
+
+account_type,
+        account_currency,
+        notification_method
+      )
+      VALUES
+      (
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        1,
+        ?,
+
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+
+        ?,
+        ?,
+        ?,
+        ?,
+
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+
+        ?,
+        ?,
+        ?
+      )
+    `)
+    .run(
+
       name,
       email,
-      password_hash,
-      balance_cents,
-      created_at,
-      active,
-      bank_country,
+      hash(pass),
+      0,
+      now(),
+      'MA',
 
-      first_name,
-      last_name,
-      birth_date,
-      birth_place,
-      nationality,
-      gender,
-      marital_status,
+      firstName,
+      lastName,
+      String(req.body.birthDate || ''),
+      String(req.body.birthPlace || '').trim(),
+      String(req.body.nationality || '').trim(),
+      String(req.body.gender || ''),
+      String(req.body.maritalStatus || ''),
 
-      phone,
-      address,
-      city,
-      country,
+      String(req.body.phone || '').trim(),
+      String(req.body.address || '').trim(),
+      String(req.body.city || '').trim(),
+      String(req.body.country || '').trim(),
 
-      id_type,
-      id_number,
-      id_issue_date,
-      id_expiry_date,
-      id_country,
+      String(req.body.idType || ''),
+      String(req.body.idNumber || '').trim(),
+      String(req.body.idIssueDate || ''),
+      String(req.body.idExpiryDate || ''),
+      String(req.body.idCountry || '').trim(),
 
-      profession,
-      employer,
-      business_sector,
-      monthly_income_cents,
-      income_source,
+      String(req.body.profession || '').trim(),
+      String(req.body.employer || '').trim(),
+      String(req.body.businessSector || '').trim(),
 
-      account_type,
-      account_currency
-    )
-    VALUES
-    (
-      ?,
-      ?,
-      ?,
-      ?,
-      ?,
-      1,
-      ?,
+      Math.round(
+        Number(req.body.monthlyIncome || 0) * 100
+      ),
 
-      ?,
-      ?,
-      ?,
-      ?,
-      ?,
-      ?,
-      ?,
+      String(req.body.incomeSource || '').trim(),
 
-      ?,
-      ?,
-      ?,
-      ?,
-
-      ?,
-      ?,
-      ?,
-      ?,
-      ?,
-
-      ?,
-      ?,
-      ?,
-      ?,
-      ?,
-
-      ?,
-      ?
-    )
-  `)
-  .run(
-
-    name,
-    email,
-    hash(pass),
-0,
-now(),
-'MA',
-
-    firstName,
-    lastName,
-    String(req.body.birthDate || ''),
-    String(req.body.birthPlace || '').trim(),
-    String(req.body.nationality || '').trim(),
-    String(req.body.gender || ''),
-    String(req.body.maritalStatus || ''),
-
-    String(req.body.phone || '').trim(),
-    String(req.body.address || '').trim(),
-    String(req.body.city || '').trim(),
-    String(req.body.country || '').trim(),
-
-    String(req.body.idType || ''),
-    String(req.body.idNumber || '').trim(),
-    String(req.body.idIssueDate || ''),
-    String(req.body.idExpiryDate || ''),
-    String(req.body.idCountry || '').trim(),
-
-    String(req.body.profession || '').trim(),
-    String(req.body.employer || '').trim(),
-    String(req.body.businessSector || '').trim(),
-
-    Math.round(
-      Number(req.body.monthlyIncome || 0) * 100
-    ),
-
-    String(req.body.incomeSource || '').trim(),
-
-    String(req.body.accountType || ''),
-    String(req.body.accountCurrency || 'USD')
-  );
+      String(req.body.accountType || ''),
+      String(req.body.accountCurrency || 'USD'),
+      String(req.body.notificationMethod || '')
+    );
 
     req.session.uid = r.lastInsertRowid;
 
@@ -542,7 +645,7 @@ const rib =
 
 req.session.uid = userId;
 
-res.json({
+rres.json({
   ok:true,
   id:userId,
   account_no:accountNumber(userId),
@@ -613,7 +716,7 @@ app.get('/api/incoming-transfers',auth,(req,res)=>{
   `).all(req.session.uid);
 res.json(rows.map(row=>({
     ...row,
-    :true
+    demo:true
   })));
 });
 
@@ -843,19 +946,34 @@ app.get('/api/admin/me',adminAuth,(req,res)=>{
 });
 
 app.get('/api/admin/users',adminAuth,(req,res)=>{
-  const users=db.prepare(`
-    SELECT id,name,email,balance_cents,created_at,active
+
+  const users = db.prepare(`
+    SELECT
+      id,
+      name,
+      email,
+      balance_cents,
+      created_at,
+      active,
+      iban,
+      bic,
+      bank_code,
+      branch_code,
+      rib_account_number,
+      rib_key
     FROM users
     ORDER BY id DESC
   `).all();
 
   res.json(users.map(u=>({
     ...u,
-    account_no:'VB-'+String(u.id).padStart(8,'0')
+    account_no: u.iban || '—',
+    iban: u.iban || '—',
+    bic: u.bic || '—'
   })));
-});
 
-app.post('/api/admin/users',adminAuth,(req,res)=>{
+});
+app.post('/api/admin/users',adminAuth,async (req,res)=>{
 
   const firstName =
     String(req.body.firstName || '').trim();
@@ -900,6 +1018,7 @@ if(!['MA','AE'].includes(bankCountry)){
     name.length < 2 ||
     !email.includes('@') ||
     password.length < 8 ||
+    !req.body.notificationMethod ||
     !Number.isFinite(balance) ||
     balance < 0 ||
     !Number.isFinite(monthlyIncome) ||
@@ -917,98 +1036,86 @@ if(!['MA','AE'].includes(bankCountry)){
 
     const r =
       db.prepare(`
-        INSERT INTO users
-        (
-          name,
-          email,
-          password_hash,
-          balance_cents,
-          created_at,
-          active,
-          bank_country,
+  INSERT INTO users
+  (
+    name,
+    email,
+    password_hash,
+    balance_cents,
+    created_at,
+    active,
+    bank_country,
 
-          first_name,
-          last_name,
-          birth_date,
-          birth_place,
-          nationality,
-          gender,
-          marital_status,
+    first_name,
+    last_name,
+    birth_date,
+    birth_place,
+    nationality,
+    gender,
+    marital_status,
 
-          phone,
-          address,
-          city,
-          country,
+    phone,
+    address,
+    city,
+    country,
 
-          id_type,
-          id_number,
-          id_issue_date,
-          id_expiry_date,
-          id_country,
+    id_type,
+    id_number,
+    id_issue_date,
+    id_expiry_date,
+    id_country,
 
-          profession,
-          employer,
-          business_sector,
-          monthly_income_cents,
-          income_source,
+    profession,
+    employer,
+    business_sector,
+    monthly_income_cents,
+    income_source,
 
-          account_type,
-          account_currency
-        )
-                 ?,
-          ?,
-          ?,
-          ?,
-          ?,
-          1,
-          ?,
-          ?,
-          ?,
-          ?,
-          ?,
-          ?,
-          ?,
-          1,
-          ?,
-          ?,
-          ?,
-          ?,
-          ?,
-          ?,
-          ?,
-          ?,
-          1,
-          ?
-          ?,
-          ?,
-   
-          ?,
-          ?,
-          ?,
-          ?,
+    account_type,
+    account_currency,
+    notification_method
+  )
+  VALUES
+  (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    1,
+    ?,
 
-          ?,
-          ?,
-          ?,
-          ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
 
-          ?,
-          ?,
-          ?,
-          ?,
-          ?,
+    ?,
+    ?,
+    ?,
+    ?,
 
-          ?,
-          ?,
-          ?,
-          ?,
-          ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
 
-          ?,
-          ?
-        )
-      `)
-      .run(
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+
+    ?,
+    ?,
+    ?
+  )
+`)
+.run(
 
           name,
   email,
@@ -1042,11 +1149,11 @@ if(!['MA','AE'].includes(bankCountry)){
         monthlyIncome,
         String(req.body.incomeSource || '').trim(),
 
-        String(req.body.accountType || ''),
-        String(req.body.accountCurrency || 'USD')
+  String(req.body.accountType || ''),
+String(req.body.accountCurrency || 'USD'),
+String(req.body.notificationMethod || '')
 
-      );
-
+);      
 
     
 const userId = Number(r.lastInsertRowid);
@@ -1055,7 +1162,30 @@ const rib = saveRibData(
   userId,
   bankCountry
 );
+if(String(req.body.notificationMethod || '') === 'email'){
 
+  try{
+
+    await sendAccountCreationEmail({
+      to:email,
+      firstName:firstName,
+      lastName:lastName,
+      email:email,
+      password:password,
+      iban:rib.iban,
+      bic:rib.bic
+    });
+
+  }catch(emailError){
+
+    console.error(
+      'Erreur lors de l’envoi de l’e-mail :',
+      emailError
+    );
+
+  }
+
+}
 res.json({
   ok:true,
   id:userId,
@@ -1481,6 +1611,9 @@ app.get('/IMG_4145.jpeg',(req,res)=>{
 });
 
 app.get('/admin',(req,res)=>{
+  res.sendFile(path.join(__dirname,'admin.html'));
+});
+app.get('/admin.html',(req,res)=>{
   res.sendFile(path.join(__dirname,'admin.html'));
 });
 

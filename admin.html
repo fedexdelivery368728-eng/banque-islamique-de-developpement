@@ -1539,7 +1539,7 @@ async function loadUsers(){
       <tr>
 
         <td>
-          <b>${esc(u.account_no)}</b>
+        <b>${esc(u.iban || u.account_no || '—')}</b>
         </td>
 
 
@@ -1742,7 +1742,15 @@ function closeModal(){
     <label>Email</label>
     <input id="cEmail" type="email" placeholder="client@email.com">
    </div>
+   <div>
+    <label>Confirmation de création du compte</label>
 
+    <select id="cNotificationMethod">
+      <option value="">Choisissez le moyen de confirmation</option>
+      <option value="email">📧 E-mail</option>
+      <option value="sms">📱 SMS</option>
+    </select>
+   </div>
    <div>
     <label>Adresse</label>
     <input id="cAddress" type="text" placeholder="Adresse">
@@ -2026,6 +2034,9 @@ accountType:$('cAccountType').value,
 
 accountCurrency:$('cCurrency').value,
 bankCountry:$('cBankCountry').value,
+
+notificationMethod:$('cNotificationMethod').value,
+
 password:password,
             
 
@@ -2114,6 +2125,37 @@ async function editUser(id){
         Les informations bancaires générées à l'ouverture
         du compte ne sont pas modifiables ici.
       </span>
+
+      </div>
+
+    <h3>Coordonnées bancaires</h3>
+
+    <div
+      style="
+        background:#f3f7f5;
+        padding:12px;
+        border-radius:10px;
+        margin-bottom:18px;
+      "
+    >
+
+      <b>Banque :</b>
+      Banque Islamique de Développement
+
+      <br><br>
+
+      <b>Adresse :</b>
+      10, Avenue du Développement, Casablanca, Maroc
+
+      <br><br>
+
+      <b>IBAN :</b>
+      ${esc(user.iban || '—')}
+
+      <br><br>
+
+      <b>BIC :</b>
+      ${esc(user.bic || '—')}
 
     </div>
 
