@@ -191,13 +191,17 @@ async function sendAccountCreationEmail({
           </p>
 
           <p>
-            Vous pouvez accéder à votre espace client depuis la page de connexion.
+         Vous pouvez accéder à votre espace client en cliquant sur le bouton ci-dessous.
           </p>
+          <p style="margin:25px 0;">
+  <a
+    href="https://virtual-bank-demo-production-4ec5.up.railway.app"
+    style="display:inline-block;padding:12px 22px;background:#087f68;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;"
+  >
+    🔐 Se connecter à mon espace client
+  </a>
+</p>
 
-          <p>
-            <strong>Ceci est un prototype et aucune transaction bancaire réelle
-            n'est effectuée.</strong>
-          </p>
 
         </div>
       `
