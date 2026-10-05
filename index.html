@@ -736,10 +736,10 @@ td,th{
   </div>
 <<div class="card" id="incomingTransfersCard" style="display:none;">
 
-    <h3>🔒 Virements conditionnés</h3>
+    <h3>🔒 Virements entrants</h3>
 
     <div id="incomingTransfers">
-      <p class="muted">Aucun virement conditionné.</p>
+      <p class="muted">Aucun virement entrant.</p>
     </div>
 
   </div>
@@ -1276,7 +1276,7 @@ incomingCard.style.display =
   if(incoming.length===0){
 
     incomingBox.innerHTML =
-      '<p class="muted">Aucun virement conditionné.</p>';
+      '<p class="muted">Aucun virement entrant.</p>';
 
   }else{
 
@@ -1288,7 +1288,7 @@ incomingCard.style.display =
           ? "Disponible"
           : x.status==="cancelled"
           ? "Annulé"
-          : "🔒 En attente de condition";
+          : "🔒 En attente";
 
         const amount =
           money(
