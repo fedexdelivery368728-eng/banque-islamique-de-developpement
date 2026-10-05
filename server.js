@@ -125,6 +125,7 @@ addUserColumn("ALTER TABLE users ADD COLUMN iban TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN bic TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN bank_country TEXT DEFAULT 'MA'");
 addUserColumn("ALTER TABLE users ADD COLUMN notification_method TEXT");
+addUserColumn("ALTER TABLE users ADD COLUMN notification_language TEXT NOT NULL DEFAULT 'fr'");
 app.set('trust proxy',1);
 app.use(express.json());
 app.use(session({
@@ -142,9 +143,70 @@ async function sendAccountCreationEmail({
   lastName,
   email,
   password,
-  iban,
-  bic
+    iban,
+  bic,
+    language = 'fr'
 }) {
+
+  const lang = ['fr', 'en', 'ar'].includes(language)
+    ? language
+    : 'fr';
+
+  const translations = {
+
+    fr: {
+      subject: 'Confirmation de création de votre compte',
+      greeting: `Bonjour ${firstName} ${lastName},`,
+      created: 'Votre compte auprès de la Banque Islamique de Développement a été créé avec succès.',
+      loginInfo: 'Informations de connexion',
+      email: 'E-mail',
+      password: 'Mot de passe',
+      bankInfo: 'Coordonnées bancaires',
+      bank: 'Banque',
+      address: 'Adresse',
+      iban: 'IBAN',
+      bic: 'BIC',
+      access: 'Vous pouvez accéder à votre espace client en cliquant sur le bouton ci-dessous.',
+      button: '🔐 Se connecter à mon espace client'
+    },
+
+    en: {
+      subject: 'Confirmation of your account creation',
+      greeting: `Hello ${firstName} ${lastName},`,
+      created: 'Your account with Banque Islamique de Développement has been successfully created.',
+      loginInfo: 'Login information',
+      email: 'Email',
+      password: 'Password',
+      bankInfo: 'Bank details',
+      bank: 'Bank',
+      address: 'Address',
+      iban: 'IBAN',
+      bic: 'BIC',
+      access: 'You can access your client area by clicking the button below.',
+      button: '🔐 Sign in to your client area'
+    },
+
+    ar: {
+      subject: 'تأكيد إنشاء حسابك',
+      greeting: `مرحباً ${firstName} ${lastName}،`,
+      created: 'تم إنشاء حسابك لدى بنك التنمية الإسلامي بنجاح.',
+      loginInfo: 'معلومات تسجيل الدخول',
+      email: 'البريد الإلكتروني',
+      password: 'كلمة المرور',
+      bankInfo: 'البيانات المصرفية',
+      bank: 'البنك',
+      address: 'العنوان',
+      iban: 'IBAN',
+      bic: 'BIC',
+      access: 'يمكنك الدخول إلى مساحة العميل الخاصة بك من خلال الضغط على الزر أدناه.',
+      button: '🔐 تسجيل الدخول إلى مساحة العميل'
+    }
+
+  };
+
+  const t = translations[lang];
+
+  const direction = lang === 'ar' ? 'rtl' : 'ltr';
 
   try {
 
@@ -154,51 +216,50 @@ async function sendAccountCreationEmail({
 
       to: [to],
 
-      subject: 'Confirmation de création de votre compte',
+      subject: t.subject,
 
       html: `
         <div style="font-family:Arial,sans-serif;line-height:1.6">
 
-          <h2>Banque Islamique de Développement</h2>
+        <h2>Banque Islamique de Développement</h2>
 
-          <p>Bonjour ${firstName} ${lastName},</p>
+<p>${t.greeting}</p>
 
-          <p>
-            Votre compte auprès de la
-            <strong>Banque Islamique de Développement</strong>
-            a été créé avec succès.
-          </p>
+<p>
+  ${t.created}
+</p>
 
-          <h3>Informations de connexion</h3>
+<h3>${t.loginInfo}</h3>
 
           <p>
-            <strong>E-mail :</strong> ${email}<br>
-            <strong>Mot de passe :</strong> ${password}
-          </p>
+          <strong>${t.email} :</strong> ${email}<br>
+<strong>${t.password} :</strong> ${password}
 
-          <h3>Coordonnées bancaires</h3>
+
+          <h3>${t.bankInfo}</h3>
+
+<p>
+  <strong>${t.bank} :</strong>
+  Banque Islamique de Développement<br>
+
+  <strong>${t.address} :</strong>
+  10, Avenue du Développement, Casablanca, Maroc<br>
+
+  <strong>${t.iban} :</strong> ${iban}<br>
+
+  <strong>${t.bic} :</strong> ${bic}
+</p>
 
           <p>
-            <strong>Banque :</strong>
-            Banque Islamique de Développement<br>
+  ${t.access}
+</p>
 
-            <strong>Adresse :</strong>
-            10, Avenue du Développement, Casablanca, Maroc<br>
-
-            <strong>IBAN :</strong> ${iban}<br>
-
-            <strong>BIC :</strong> ${bic}
-          </p>
-
-          <p>
-         Vous pouvez accéder à votre espace client en cliquant sur le bouton ci-dessous.
-          </p>
-          <p style="margin:25px 0;">
+<p style="margin:25px 0;">
   <a
     href="https://virtual-bank-demo-production.up.railway.app"
     style="display:inline-block;padding:12px 22px;background:#087f68;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;"
   >
-    🔐 Se connecter à mon espace client
+    ${t.button}
   </a>
 </p>
 
@@ -245,7 +306,11 @@ async function sendTransactionEmail({
       subject,
 
       html: `
-        <div style="font-family:Arial,sans-serif;line-height:1.6">
+      <div
+  dir="${direction}"
+  lang="${lang}"
+  style="font-family:Arial,sans-serif;line-height:1.6"
+>
 
           <h2>Banque Islamique de Développement</h2>
 
@@ -611,8 +676,9 @@ monthly_income_cents,
 income_source,
 
 account_type,
-        account_currency,
-        notification_method
+account_currency,
+notification_method,
+notification_language
       )
       VALUES
       (
@@ -649,9 +715,10 @@ account_type,
         ?,
         ?,
 
-        ?,
-        ?,
-        ?
+      ?,
+?,
+?,
+?
       )
     `)
     .run(
@@ -692,9 +759,10 @@ account_type,
 
       String(req.body.incomeSource || '').trim(),
 
-      String(req.body.accountType || ''),
-      String(req.body.accountCurrency || 'USD'),
-      String(req.body.notificationMethod || '')
+    String(req.body.accountType || ''),
+String(req.body.accountCurrency || 'USD'),
+String(req.body.notificationMethod || ''),
+String(req.body.notificationLanguage || 'fr')
     );
 
     req.session.uid = r.lastInsertRowid;
@@ -1261,15 +1329,16 @@ if(String(req.body.notificationMethod || '') === 'email'){
 
   try{
 
-    await sendAccountCreationEmail({
-      to:email,
-      firstName:firstName,
-      lastName:lastName,
-      email:email,
-      password:password,
-      iban:rib.iban,
-      bic:rib.bic
-    });
+ await sendAccountCreationEmail({
+  to:email,
+  firstName:firstName,
+  lastName:lastName,
+  email:email,
+  password:password,
+  iban:rib.iban,
+  bic:rib.bic,
+  language:String(req.body.notificationLanguage || 'fr')
+});
 
   }catch(emailError){
 

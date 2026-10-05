@@ -1751,6 +1751,13 @@ function closeModal(){
       <option value="email">📧 E-mail</option>
       <option value="sms">📱 SMS</option>
     </select>
+    <label>Langue des notifications</label>
+
+<select id="cNotificationLanguage">
+  <option value="fr">🇫🇷 Français</option>
+  <option value="en">🇬🇧 English</option>
+  <option value="ar">🇸🇦 العربية</option>
+</select>
    </div>
    <div>
     <label>Adresse</label>
@@ -2037,6 +2044,8 @@ accountCurrency:$('cCurrency').value,
 bankCountry:$('cBankCountry').value,
 
 notificationMethod:$('cNotificationMethod').value,
+
+notificationLanguage:$('cNotificationLanguage').value,
 
 password:password,
             
