@@ -290,44 +290,88 @@ async function sendTransactionEmail({
   message,
   amountCents,
   balanceCents,
-  showBalance=true
+  showBalance=true,
+  language='fr'
 }) {
+
+  const lang = ['fr','en','ar'].includes(language)
+    ? language
+    : 'fr';
+
+  const direction = lang === 'ar' ? 'rtl' : 'ltr';
+
+  const translations = {
+
+    fr: {
+      greeting: `Bonjour ${name},`,
+      amount: 'Montant',
+      balance: 'Solde après opération',
+      notice: "Cette notification vous informe d'une nouvelle opération enregistrée sur votre compte."
+    },
+
+    en: {
+      greeting: `Hello ${name},`,
+      amount: 'Amount',
+      balance: 'Balance after transaction',
+      notice: 'This notification informs you of a new transaction recorded on your account.'
+    },
+
+    ar: {
+      greeting: `مرحباً ${name}،`,
+      amount: 'المبلغ',
+      balance: 'الرصيد بعد العملية',
+      notice: 'يُعلمك هذا الإشعار بوجود عملية جديدة مسجلة على حسابك.'
+    }
+
+  };
+
+  const t = translations[lang];
+
   try {
 
-    const amount = (Math.abs(amountCents) / 100).toFixed(2);
-    const balance = (balanceCents / 100).toFixed(2);
+    const amount =
+      (Math.abs(amountCents) / 100).toFixed(2);
+
+    const balance =
+      (balanceCents / 100).toFixed(2);
 
     await resend.emails.send({
 
-      from: 'Banque Islamique de Développement <admin@bid-developpement.com>',
+      from:
+        'Banque Islamique de Développement <admin@bid-developpement.com>',
 
       to: [to],
 
       subject,
 
       html: `
-      <div
-  dir="${direction}"
-  lang="${lang}"
-  style="font-family:Arial,sans-serif;line-height:1.6"
->
+        <div
+          dir="${direction}"
+          lang="${lang}"
+          style="font-family:Arial,sans-serif;line-height:1.6"
+        >
 
           <h2>Banque Islamique de Développement</h2>
 
-          <p>Bonjour ${name},</p>
+          <p>${t.greeting}</p>
 
           <h3>${title}</h3>
 
           <p>${message}</p>
 
           <p>
-  <strong>Montant :</strong> ${amount} USD
-  ${showBalance ? `<br><strong>Solde après opération :</strong> ${balance} USD` : ''}
-</p>
+            <strong>${t.amount} :</strong>
+            ${amount} USD
+
+            ${
+              showBalance
+                ? `<br><strong>${t.balance} :</strong> ${balance} USD`
+                : ''
+            }
+          </p>
 
           <p>
-            Cette notification vous informe d'une nouvelle opération
-            enregistrée sur votre compte.
+            ${t.notice}
           </p>
 
         </div>
@@ -335,7 +379,10 @@ async function sendTransactionEmail({
 
     });
 
-    console.log('Notification transaction envoyée à:', to);
+    console.log(
+      'Notification transaction envoyée à:',
+      to
+    );
 
   } catch(error) {
 
@@ -927,7 +974,8 @@ app.post('/api/transfer',auth,(req,res)=>{
   tx();
 
 const client=db.prepare(`
-  SELECT name,email,balance_cents
+  SELECT name,email,balance_cents,notification_language
+  language:client.notification_language || 'fr'
   FROM users
   WHERE id=?
 `).get(req.session.uid);
@@ -1634,8 +1682,8 @@ if(user.email){
       db.prepare(
         'SELECT balance_cents FROM users WHERE id=?'
       ).get(userId).balance_cents
-    )
-
+    ),
+language:client.notification_language || 'fr'
   });
 
 }
@@ -1740,10 +1788,10 @@ app.post('/api/admin/incoming-transfers/:id/validate',adminAuth,(req,res)=>{
         })();
 
     const client=db.prepare(`
-      SELECT name,email
-      FROM users
-      WHERE id=?
-    `).get(incoming.user_id);
+  SELECT name,email,notification_language
+  FROM users
+  WHERE id=?
+`).get(incoming.user_id);
 
     if(client && client.email){
 
@@ -1767,7 +1815,10 @@ app.post('/api/admin/incoming-transfers/:id/validate',adminAuth,(req,res)=>{
 
         amountCents:incoming.amount_cents,
 
-        balanceCents:result
+        balanceCents:result,
+
+language:client.notification_language || 'fr'
+
 
       });
 
