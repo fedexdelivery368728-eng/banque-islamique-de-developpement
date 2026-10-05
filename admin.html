@@ -685,14 +685,15 @@ function usd(cents){
 async function api(url,opt={}){
 
   const response = await fetch(
-    url,
-    {
-      headers:{
-        'Content-Type':'application/json'
-      },
-      ...opt
-    }
-  );
+  url,
+  {
+    credentials:'same-origin',
+    headers:{
+      'Content-Type':'application/json'
+    },
+    ...opt
+  }
+);
 
 
   const data =
