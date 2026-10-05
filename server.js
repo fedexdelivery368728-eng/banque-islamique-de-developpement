@@ -228,7 +228,8 @@ async function sendTransactionEmail({
   title,
   message,
   amountCents,
-  balanceCents
+  balanceCents,
+  showBalance=true
 }) {
   try {
 
@@ -255,9 +256,9 @@ async function sendTransactionEmail({
           <p>${message}</p>
 
           <p>
-            <strong>Montant :</strong> ${amount} USD<br>
-            <strong>Solde après opération :</strong> ${balance} USD
-          </p>
+  <strong>Montant :</strong> ${amount} USD
+  ${showBalance ? `<br><strong>Solde après opération :</strong> ${balance} USD` : ''}
+</p>
 
           <p>
             Cette notification vous informe d'une nouvelle opération
@@ -1545,6 +1546,8 @@ if(user.email){
     subject:'Nouveau virement entrant en attente de validation',
 
     title:'🔒 Virement entrant',
+        showBalance:false,
+
 
     message:
       'Un virement entrant de ' +
