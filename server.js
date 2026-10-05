@@ -195,7 +195,7 @@ async function sendAccountCreationEmail({
           </p>
           <p style="margin:25px 0;">
   <a
-    href="https://virtual-bank-demo-production-00d4.up.railway.app"
+    href="https://virtual-bank-demo-production.up.railway.app"
     style="display:inline-block;padding:12px 22px;background:#087f68;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;"
   >
     🔐 Se connecter à mon espace client
