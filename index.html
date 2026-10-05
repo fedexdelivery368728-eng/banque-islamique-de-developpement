@@ -668,6 +668,34 @@ td,th{
   
 <section id="app" class="app">
 
+  <div class="card">
+  <h3>Coordonnées bancaires</h3>
+
+  <p>
+    <strong>Banque :</strong>
+    Banque Islamique de Développement
+  </p>
+
+  <p>
+    <strong>Adresse :</strong>
+    10, Avenue du Développement, Casablanca, Maroc
+  </p>
+
+  <p>
+    <strong>N° de compte :</strong>
+    <span id="clientAccount"></span>
+  </p>
+
+  <p>
+    <strong>IBAN :</strong>
+    <span id="clientIban"></span>
+  </p>
+
+  <p>
+    <strong>BIC :</strong>
+    <span id="clientBic"></span>
+  </p>
+</div>
   <div class="top">
 
     <div>
@@ -1213,7 +1241,15 @@ balance.textContent =
   money(me.balance_cents,accountCurrency);
 
 account.textContent =
-  "VB-"+String(me.id).padStart(8,"0");
+  me.account_no || "—";
+  document.getElementById("clientAccount").textContent =
+  me.account_no || "—";
+
+document.getElementById("clientIban").textContent =
+  me.iban || "—";
+
+document.getElementById("clientBic").textContent =
+  me.bic || "—";
 
   let bs=await api("/api/beneficiaries");
 
