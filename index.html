@@ -734,6 +734,15 @@ td,th{
     </div>
 
   </div>
+    <div class="card" id="incomingTransfersCard">
+
+    <h3>🔒 Virements conditionnés</h3>
+
+    <div id="incomingTransfers">
+      <p class="muted">Aucun virement conditionné.</p>
+    </div>
+
+  </div>
 
   <div class="tabs">
 
@@ -1252,7 +1261,71 @@ document.getElementById("clientBic").textContent =
   me.bic || "—";
 
   let bs=await api("/api/beneficiaries");
+  let incoming=await api("/api/incoming-transfers");
 
+  const incomingBox =
+    document.getElementById("incomingTransfers");
+
+  if(incoming.length===0){
+
+    incomingBox.innerHTML =
+      '<p class="muted">Aucun virement conditionné.</p>';
+
+  }else{
+
+    incomingBox.innerHTML =
+      incoming.map(x=>{
+
+        const status =
+          x.status==="available"
+          ? "Disponible"
+          : x.status==="cancelled"
+          ? "Annulé"
+          : "🔒 En attente de condition";
+
+        const amount =
+          money(
+            x.amount_cents,
+            accountCurrency
+          );
+
+        return `
+          <div class="card" style="margin-top:12px">
+
+            <strong>🔒 Virement conditionné</strong>
+
+            <p>
+              <strong>Montant :</strong>
+              ${amount}
+            </p>
+
+            <p>
+              <strong>Expéditeur :</strong>
+              ${x.sender_name}
+            </p>
+
+            <p>
+              <strong>Condition demandée :</strong>
+              ${x.condition_text || "Aucune condition précisée"}
+            </p>
+
+            <p>
+              <strong>Statut :</strong>
+              ${status}
+            </p>
+
+            ${
+              x.status==="pending"
+              ? '<p class="muted">⚠️ Montant non disponible tant que la condition n’est pas validée.</p>'
+              : ''
+            }
+
+          </div>
+        `;
+
+      }).join("");
+
+  }
   beneficiary.innerHTML=
     bs.map(
       b=>`<option value="${b.id}">
@@ -1268,33 +1341,7 @@ document.getElementById("clientBic").textContent =
       </tr>`
     ).join("");
 
-  let tx=await api("/api/transactions");
-
-  document.getElementById("tx").innerHTML=
-    tx.map(
-      x=>`<tr>
-        <td>${x.label}</td>
-        <td>${new Date(x.created_at).toLocaleString()}</td>
-        <td class="${x.amount_cents>=0?"green":"red"}">
-          ${money(x.amount_cents,accountCurrency)}
-        </td>
-        ${money(x.balance_after_cents,accountCurrency)}
-      </tr>`
-    ).join("");
-
-  setLanguage(lang);
-
-}
-
-async function credit(){
-
-  await api(
-    "/api/credit",
-    {
-      method:"POST",
-      body:JSON.stringify({amount:1000})
-    }
-  );
+  l
 
   await load();
 
