@@ -734,7 +734,7 @@ td,th{
     </div>
 
   </div>
-    <div class="card" id="incomingTransfersCard">
+<div class="card" id="incomingTransfersCard" style="display:none;"></div>
 
     <h3>🔒 Virements conditionnés</h3>
 
@@ -1265,6 +1265,11 @@ document.getElementById("clientBic").textContent =
 
   const incomingBox =
     document.getElementById("incomingTransfers");
+    const incomingCard =
+  document.getElementById("incomingTransfersCard");
+
+incomingCard.style.display =
+  incoming.length > 0 ? "block" : "none";
 
   if(incoming.length===0){
 
