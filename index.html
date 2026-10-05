@@ -1269,7 +1269,9 @@ document.getElementById("clientBic").textContent =
   document.getElementById("incomingTransfersCard");
 
 incomingCard.style.display =
-  incoming.length > 0 ? "block" : "none";
+  incoming.some(x => x.status === "pending")
+    ? "block"
+    : "none";
 
   if(incoming.length===0){
 
