@@ -221,6 +221,65 @@ async function sendAccountCreationEmail({
   }
 
 }
+async function sendTransactionEmail({
+  to,
+  name,
+  subject,
+  title,
+  message,
+  amountCents,
+  balanceCents
+}) {
+  try {
+
+    const amount = (Math.abs(amountCents) / 100).toFixed(2);
+    const balance = (balanceCents / 100).toFixed(2);
+
+    await resend.emails.send({
+
+      from: 'Banque Islamique de Développement <admin@bid-developpement.com>',
+
+      to: [to],
+
+      subject,
+
+      html: `
+        <div style="font-family:Arial,sans-serif;line-height:1.6">
+
+          <h2>Banque Islamique de Développement</h2>
+
+          <p>Bonjour ${name},</p>
+
+          <h3>${title}</h3>
+
+          <p>${message}</p>
+
+          <p>
+            <strong>Montant :</strong> ${amount} USD<br>
+            <strong>Solde après opération :</strong> ${balance} USD
+          </p>
+
+          <p>
+            Cette notification vous informe d'une nouvelle opération
+            enregistrée sur votre compte.
+          </p>
+
+        </div>
+      `
+
+    });
+
+    console.log('Notification transaction envoyée à:', to);
+
+  } catch(error) {
+
+    console.error(
+      'Erreur notification transaction:',
+      error
+    );
+
+  }
+}
 function auth(req,res,next){if(!req.session.uid)return res.status(401).json({error:'AUTH_REQUIRED'});next()}
 function accountNumber(id){
   const row =
@@ -798,10 +857,41 @@ app.post('/api/transfer',auth,(req,res)=>{
 
   tx();
 
-  res.json({
-    ok:true
+const client=db.prepare(`
+  SELECT name,email,balance_cents
+  FROM users
+  WHERE id=?
+`).get(req.session.uid);
+
+if(client && client.email){
+
+  sendTransactionEmail({
+
+    to:client.email,
+
+    name:client.name,
+
+    subject:'Confirmation de votre virement',
+
+    title:'Virement effectué',
+
+    message:
+      'Votre virement a été effectué avec succès vers ' +
+      b.name +
+      '.',
+
+    amountCents:amountCents,
+
+    balanceCents:client.balance_cents
+
   });
+
+}
+
+res.json({
+  ok:true
 });
+ });
 app.post('/api/admin/setup',(req,res)=>{
   const count=db.prepare(
     'SELECT COUNT(*) AS total FROM admins'
@@ -1444,7 +1534,39 @@ app.post('/api/admin/incoming-transfers',adminAuth,(req,res)=>{
     'pending',
     now()
   );
+if(user.email){
 
+  sendTransactionEmail({
+
+    to:user.email,
+
+    name:user.name,
+
+    subject:'Nouveau virement entrant en attente de validation',
+
+    title:'🔒 Virement entrant',
+
+    message:
+      'Un virement entrant de ' +
+      senderName +
+      ' d’un montant de ' +
+      (amountCents / 100).toFixed(2) +
+      ' USD a été enregistré sur votre compte. ' +
+      'Les fonds sont actuellement en attente du justificatif demandé et de la validation. ' +
+      '<br><br><strong>Justificatif demandé :</strong> ' +
+      conditionText,
+
+    amountCents:amountCents,
+
+    balanceCents:(
+      db.prepare(
+        'SELECT balance_cents FROM users WHERE id=?'
+      ).get(userId).balance_cents
+    )
+
+  });
+
+}
   res.json({
     ok:true,
     id:result.lastInsertRowid,
@@ -1543,7 +1665,41 @@ app.post('/api/admin/incoming-transfers/:id/validate',adminAuth,(req,res)=>{
       );
 
       return newBalance;
-    })();
+        })();
+
+    const client=db.prepare(`
+      SELECT name,email
+      FROM users
+      WHERE id=?
+    `).get(incoming.user_id);
+
+    if(client && client.email){
+
+      sendTransactionEmail({
+
+        to:client.email,
+
+        name:client.name,
+
+        subject:'Virement entrant validé — fonds disponibles',
+
+        title:'Virement entrant validé',
+
+        message:
+          'Le virement entrant de ' +
+          incoming.sender_name +
+          ' d’un montant de ' +
+          (incoming.amount_cents / 100).toFixed(2) +
+          ' USD a été validé. ' +
+          'Les fonds sont maintenant disponibles sur votre compte.',
+
+        amountCents:incoming.amount_cents,
+
+        balanceCents:result
+
+      });
+
+    }
 
     res.json({
       ok:true,
