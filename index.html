@@ -1087,17 +1087,18 @@ createdBicBox.textContent =
 createdRibBox.textContent = '';
 
 accountCreatedBox.style.display = "block";
-    regError.textContent=
-      lang==="ar"
-      ?"تعذر إنشاء الحساب"
-      :lang==="en"
-      ?"Could not create account"
-      :"Impossible de créer le compte";
+       }catch(e){
+
+    console.error("ERREUR REGISTER:",e);
+
+    regError.textContent =
+      e?.error ||
+      e?.message ||
+      "Impossible de créer le compte.";
 
   }
 
 }
-
 
 async function login(){
 
