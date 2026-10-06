@@ -2632,6 +2632,66 @@ app.post('/api/admin/incoming-transfers/:id/cancel',adminAuth,(req,res)=>{
   });
 });
 
+
+app.post('/api/admin/send-email',adminAuth,async (req,res)=>{
+  try{
+    if(!resend){
+      return res.status(503).json({
+        error:'EMAIL_SERVICE_NOT_CONFIGURED'
+      });
+    }
+
+    const to=String(req.body.to||'').trim();
+    const subject=String(req.body.subject||'').trim();
+    const message=String(req.body.message||'').trim();
+
+    if(!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){
+      return res.status(400).json({
+        error:'INVALID_EMAIL'
+      });
+    }
+
+    if(!subject){
+      return res.status(400).json({
+        error:'SUBJECT_REQUIRED'
+      });
+    }
+
+    if(!message){
+      return res.status(400).json({
+        error:'MESSAGE_REQUIRED'
+      });
+    }
+
+    const result=await resend.emails.send({
+      from:'Banque Islamique de Développement <admin@bid-developpement.com>',
+      to:[to],
+      subject:subject,
+      text:message
+    });
+
+    if(result.error){
+      console.error('Resend email error:',result.error);
+
+      return res.status(502).json({
+        error:'EMAIL_SEND_FAILED'
+      });
+    }
+
+    res.json({
+      ok:true,
+      id:result.data?.id||null
+    });
+
+  }catch(e){
+    console.error('External email error:',e);
+
+    res.status(500).json({
+      error:'EMAIL_SEND_FAILED'
+    });
+  }
+});
+
 app.get('/IMG_4145.jpeg',(req,res)=>{
   res.sendFile(path.join(__dirname,'IMG_4145.jpeg'));
 });

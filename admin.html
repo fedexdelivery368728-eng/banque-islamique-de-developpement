@@ -474,6 +474,88 @@ th{
   </div>
 
 <!-- ========================= -->
+<!-- ENVOI D'EMAIL EXTERNE -->
+<!-- ========================= -->
+
+<section class="card">
+
+  <div class="top" style="margin-bottom:15px">
+
+    <div>
+      <h2 style="margin:0">
+        Envoyer un email externe
+      </h2>
+
+      <p class="muted" style="margin:6px 0 0">
+        Envoyez directement un email à une adresse externe depuis l'espace administrateur.
+      </p>
+    </div>
+
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+
+    <div style="grid-column:1/-1">
+      <label>
+        Adresse email du destinataire
+      </label>
+
+      <input
+        id="adminEmailTo"
+        type="email"
+        placeholder="exemple@email.com"
+        autocomplete="off"
+      >
+    </div>
+
+    <div style="grid-column:1/-1">
+      <label>
+        Objet
+      </label>
+
+      <input
+        id="adminEmailSubject"
+        type="text"
+        placeholder="Objet de l'email"
+        autocomplete="off"
+      >
+    </div>
+
+    <div style="grid-column:1/-1">
+      <label>
+        Message
+      </label>
+
+      <textarea
+        id="adminEmailMessage"
+        rows="8"
+        placeholder="Écrivez votre message..."
+        style="width:100%;resize:vertical"
+      ></textarea>
+    </div>
+
+  </div>
+
+  <div style="margin-top:15px;display:flex;align-items:center;gap:12px">
+
+    <button
+      type="button"
+      class="primary"
+      onclick="sendAdminExternalEmail()"
+    >
+      Envoyer l'email
+    </button>
+
+    <span
+      id="adminEmailStatus"
+      class="muted"
+    ></span>
+
+  </div>
+
+</section>
+
+<!-- ========================= -->
 <!-- VIREMENTS ENTRANTS -->
 <!-- ========================= -->
 
@@ -3956,6 +4038,74 @@ async function transactions(id){
 
 }
 
+
+
+async function sendAdminExternalEmail(){
+
+  const to=document.getElementById('adminEmailTo').value.trim();
+  const subject=document.getElementById('adminEmailSubject').value.trim();
+  const message=document.getElementById('adminEmailMessage').value.trim();
+  const status=document.getElementById('adminEmailStatus');
+
+  status.textContent='';
+
+  if(!to){
+    status.textContent='Veuillez saisir une adresse email.';
+    return;
+  }
+
+  if(!subject){
+    status.textContent="Veuillez saisir l'objet de l'email.";
+    return;
+  }
+
+  if(!message){
+    status.textContent='Veuillez saisir un message.';
+    return;
+  }
+
+  status.textContent='Envoi en cours...';
+
+  try{
+
+    const r=await fetch('/api/admin/send-email',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        to,
+        subject,
+        message
+      })
+    });
+
+    const data=await r.json().catch(()=>({}));
+
+    if(!r.ok){
+
+      if(data.error==='INVALID_EMAIL'){
+        throw new Error('Adresse email invalide.');
+      }
+
+      if(data.error==='EMAIL_SERVICE_NOT_CONFIGURED'){
+        throw new Error('Le service email n’est pas configuré.');
+      }
+
+      throw new Error('Impossible d’envoyer l’email.');
+    }
+
+    status.textContent='Email envoyé avec succès.';
+
+    document.getElementById('adminEmailTo').value='';
+    document.getElementById('adminEmailSubject').value='';
+    document.getElementById('adminEmailMessage').value='';
+
+  }catch(e){
+
+    status.textContent=e.message||'Erreur lors de l’envoi de l’email.';
+  }
+}
 
 
 /* ========================= */
