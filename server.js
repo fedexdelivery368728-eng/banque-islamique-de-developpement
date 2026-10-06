@@ -1753,6 +1753,71 @@ res.json({
   }
 
 });
+app.delete('/api/admin/users/:id',adminAuth,(req,res)=>{
+  const id=Number(req.params.id);
+
+  if(!Number.isInteger(id)||id<1){
+    return res.status(400).json({
+      error:'INVALID_ID'
+    });
+  }
+
+  try{
+    const deleteUser=db.transaction(()=>{
+      const user=db.prepare(
+        'SELECT id FROM users WHERE id=?'
+      ).get(id);
+
+      if(!user){
+        throw new Error('USER_NOT_FOUND');
+      }
+
+      db.prepare(
+        'DELETE FROM transactions WHERE user_id=?'
+      ).run(id);
+
+      db.prepare(
+        'DELETE FROM beneficiaries WHERE user_id=?'
+      ).run(id);
+
+      db.prepare(
+        'DELETE FROM incoming_transfers WHERE user_id=?'
+      ).run(id);
+
+      db.prepare(
+        'DELETE FROM external_transfers WHERE source_user_id=?'
+      ).run(id);
+
+      db.prepare(
+        'DELETE FROM users WHERE id=?'
+      ).run(id);
+    });
+
+    deleteUser();
+
+    res.json({
+      ok:true
+    });
+
+  }catch(e){
+
+    if(e.message==='USER_NOT_FOUND'){
+      return res.status(404).json({
+        error:'USER_NOT_FOUND'
+      });
+    }
+
+    console.error(
+      'ADMIN_USER_DELETE_FAILED:',
+      e
+    );
+
+    res.status(500).json({
+      error:'USER_DELETE_FAILED'
+    });
+  }
+});
+
 app.patch('/api/admin/users/:id',adminAuth,(req,res)=>{
 
   const id=Number(req.params.id);

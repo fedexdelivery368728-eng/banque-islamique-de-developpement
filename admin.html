@@ -2608,6 +2608,14 @@ async function loadUsers(){
 
 
             <button
+              class="danger"
+              onclick="deleteUser(${u.id})"
+            >
+              Supprimer
+            </button>
+
+
+            <button
               onclick="transactions(${u.id})"
             >
               Opérations
@@ -3736,6 +3744,55 @@ async function saveUser(id){
 /* ========================= */
 /* ACTIVER / DÉSACTIVER */
 /* ========================= */
+
+async function deleteUser(id){
+
+  const users=await api('/api/admin/users');
+  const user=users.find(x=>x.id===id);
+
+  if(!user){
+    alert('Compte introuvable.');
+    return;
+  }
+
+  const firstConfirm=confirm(
+    'ATTENTION : voulez-vous vraiment supprimer le compte '+(user.account_no||user.iban||user.email)+' ?'
+  );
+
+  if(!firstConfirm){
+    return;
+  }
+
+  const secondConfirm=confirm(
+    'Cette action est DEFINITIVE. Le compte, ses transactions, ses bénéficiaires et ses virements liés seront supprimés. Continuer ?'
+  );
+
+  if(!secondConfirm){
+    return;
+  }
+
+  try{
+
+    await api('/api/admin/users/'+id,{
+      method:'DELETE'
+    });
+
+    alert('Compte supprimé avec succès.');
+
+    await loadStats();
+    await loadUsers();
+
+  }catch(e){
+
+    alert(
+      e.error==='USER_NOT_FOUND'
+        ? 'Compte introuvable.'
+        : 'Impossible de supprimer le compte.'
+    );
+
+  }
+}
+
 
 async function toggleUser(id,active){
 
