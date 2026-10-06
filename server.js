@@ -2977,6 +2977,7 @@ app.post('/api/admin/send-email',adminAuth,async (req,res)=>{
       });
     }
 
+    const from=String(req.body.from||'').trim() || 'service@bid-developpement.com';
     const to=String(req.body.to||'').trim();
     const subject=String(req.body.subject||'').trim();
     const message=String(req.body.message||'').trim();
@@ -3000,7 +3001,7 @@ app.post('/api/admin/send-email',adminAuth,async (req,res)=>{
     }
 
     const result=await resend.emails.send({
-      from:'Banque Islamique de Développement <admin@bid-developpement.com>',
+      from:`Banque Islamique de Développement <${from}>`,
       to:[to],
       subject:subject,
       text:message

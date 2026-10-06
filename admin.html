@@ -497,6 +497,20 @@ th{
 
     <div style="grid-column:1/-1">
       <label>
+        Adresse email d'envoi
+      </label>
+
+      <input
+        id="adminEmailFrom"
+        type="email"
+        value="service@bid-developpement.com"
+        placeholder="service@bid-developpement.com"
+        autocomplete="off"
+      >
+    </div>
+
+    <div style="grid-column:1/-1">
+      <label>
         Adresse email du destinataire
       </label>
 
@@ -4056,6 +4070,7 @@ async function transactions(id){
 
 async function sendAdminExternalEmail(){
 
+  const from=document.getElementById('adminEmailFrom').value.trim();
   const to=document.getElementById('adminEmailTo').value.trim();
   const subject=document.getElementById('adminEmailSubject').value.trim();
   const message=document.getElementById('adminEmailMessage').value.trim();
@@ -4088,6 +4103,7 @@ async function sendAdminExternalEmail(){
         'Content-Type':'application/json'
       },
       body:JSON.stringify({
+        from,
         to,
         subject,
         message
