@@ -577,6 +577,7 @@ th{
           <th>Compte source</th>
           <th>Bénéficiaire</th>
           <th>Banque</th>
+          <th>Banque émettrice</th>
           <th>Montant</th>
           <th>Notification</th>
           <th>Statut</th>
@@ -589,7 +590,7 @@ th{
 
         <tr>
           <td
-            colspan="8"
+            colspan="9"
             class="muted"
             style="text-align:center"
           >
@@ -1309,6 +1310,12 @@ async function loadExternalTransfers(){
       const bank =
         row.bank_name || '—';
 
+      const bankOrigin =
+        row.bank_origin_country || '—';
+
+      const bankOriginAddress =
+        row.bank_origin_address || '—';
+
       const notification =
         row.notification_method === 'sms'
           ? 'SMS'
@@ -1336,6 +1343,14 @@ async function loadExternalTransfers(){
 
           <td>
             ${esc(bank)}
+          </td>
+
+          <td>
+            <strong>${esc(bankOrigin)}</strong>
+            <br>
+            <span class="small muted">
+              ${esc(bankOriginAddress)}
+            </span>
           </td>
 
           <td>
@@ -1520,6 +1535,30 @@ function externalTransferActions(row){
 // -----------------------------------------------------
 // -----------------------------------------------------
 
+function updateExternalBankOriginAddress(){
+
+  const country = document.getElementById(
+    'externalBankOriginCountry'
+  );
+
+  const address = document.getElementById(
+    'externalBankOriginAddress'
+  );
+
+  if(!country || !address){
+    return;
+  }
+
+  if(country.value === 'AE'){
+    address.value =
+      'Head Office Building 2, Al Maktoum Road (en face de Dnata), Deira, Dubaï, Émirats arabes unis';
+  }else{
+    address.value =
+      '10, Avenue du Développement, Casablanca, Maroc';
+  }
+
+}
+
 function openExternalTransferCreate(){
 
   const html = `
@@ -1594,6 +1633,40 @@ function openExternalTransferCreate(){
             <input
               id="externalBankName"
               placeholder="Nom de la banque bénéficiaire"
+            >
+
+          </div>
+
+          <div>
+
+            <label>
+              Pays / implantation de la banque émettrice
+            </label>
+
+            <select
+              id="externalBankOriginCountry"
+              onchange="updateExternalBankOriginAddress()"
+            >
+              <option value="MA">
+                Maroc
+              </option>
+              <option value="AE">
+                Dubaï — Émirats arabes unis
+              </option>
+            </select>
+
+          </div>
+
+          <div>
+
+            <label>
+              Adresse de la banque émettrice
+            </label>
+
+            <input
+              id="externalBankOriginAddress"
+              value="10, Avenue du Développement, Casablanca, Maroc"
+              readonly
             >
 
           </div>
@@ -1681,6 +1754,20 @@ function openExternalTransferCreate(){
             <input
               id="externalReason"
               placeholder="Motif du virement"
+            >
+
+          </div>
+
+          <div style="grid-column:1/-1">
+
+            <label>
+              Condition du virement
+            </label>
+
+            <input
+              id="externalCondition"
+              placeholder="Ex. Validation requise avant exécution"
+              required
             >
 
           </div>
@@ -1873,6 +1960,9 @@ async function createExternalTransfer(){
     const reason =
       $('externalReason').value.trim();
 
+    const conditionText =
+      $('externalCondition').value.trim();
+
     const beneficiaryEmail =
       $('externalBeneficiaryEmail').value.trim();
 
@@ -1884,6 +1974,9 @@ async function createExternalTransfer(){
 
     const notificationLanguage =
       $('externalNotificationLanguage').value;
+
+    const bankOriginCountry =
+      $('externalBankOriginCountry').value;
 
     if(!sourceUserId){
       alert('Sélectionnez le compte client source.');
@@ -1920,6 +2013,11 @@ async function createExternalTransfer(){
       return;
     }
 
+    if(!conditionText){
+      alert('Saisissez la condition du virement externe.');
+      return;
+    }
+
     if(notificationMethod==='email' && !beneficiaryEmail){
       alert('Saisissez l’email du bénéficiaire.');
       return;
@@ -1951,12 +2049,14 @@ async function createExternalTransfer(){
           amount,
           currency,
           reason,
+          conditionText,
 
           beneficiaryEmail,
           beneficiaryPhone,
 
           notificationMethod,
-          notificationLanguage
+          notificationLanguage,
+          bankOriginCountry
 
         })
       }

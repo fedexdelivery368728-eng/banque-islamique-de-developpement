@@ -65,6 +65,8 @@ CREATE TABLE IF NOT EXISTS external_transfers(
  beneficiary_phone TEXT NOT NULL DEFAULT '',
  notification_method TEXT NOT NULL DEFAULT 'email',
  notification_language TEXT NOT NULL DEFAULT 'fr',
+ bank_origin_country TEXT NOT NULL DEFAULT 'Maroc',
+ bank_origin_address TEXT NOT NULL DEFAULT '10, Avenue du Développement, Casablanca, Maroc',
  status TEXT NOT NULL DEFAULT 'pending_verification',
  condition_text TEXT NOT NULL DEFAULT '',
  condition_completed INTEGER NOT NULL DEFAULT 0,
@@ -103,15 +105,13 @@ function addExternalTransferColumn(sql){
 }
 addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN notification_method TEXT NOT NULL DEFAULT 'email'");
 addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN notification_language TEXT NOT NULL DEFAULT 'fr'");
-
+addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN bank_origin_country TEXT NOT NULL DEFAULT 'Maroc'");
+addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN bank_origin_address TEXT NOT NULL DEFAULT '10, Avenue du Développement, Casablanca, Maroc'");
 addUserColumn("ALTER TABLE users ADD COLUMN first_name TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN last_name TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN birth_date TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN birth_place TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN nationality TEXT");
-addUserColumn("ALTER TABLE users ADD COLUMN gender TEXT");
-addUserColumn("ALTER TABLE users ADD COLUMN marital_status TEXT");
-
 addUserColumn("ALTER TABLE users ADD COLUMN phone TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN address TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN city TEXT");
@@ -1667,10 +1667,31 @@ app.post('/api/external-transfers',auth,(req,res)=>{
     const bic=String(req.body.bic||'').trim();
     const currency=String(req.body.currency||'USD').trim().toUpperCase();
     const reason=String(req.body.reason||'').trim();
+    const conditionText=String(req.body.conditionText||'').trim();
     const beneficiaryEmail=String(req.body.beneficiaryEmail||'').trim();
     const beneficiaryPhone=String(req.body.beneficiaryPhone||'').trim();
     const notificationMethod=String(req.body.notificationMethod||'email').trim().toLowerCase();
     const notificationLanguage=String(req.body.notificationLanguage||'fr').trim().toLowerCase();
+
+    const bankOriginCountry=String(req.body.bankOriginCountry||'').trim().toUpperCase();
+
+    const bankOrigins={
+      MA:{
+        country:'Maroc',
+        address:'10, Avenue du Développement, Casablanca, Maroc'
+      },
+      AE:{
+        country:'Émirats arabes unis (Dubaï)',
+        address:'Head Office Building 2, Al Maktoum Road (en face de Dnata), Deira, Dubai, United Arab Emirates'
+      }
+    };
+
+    const bankOrigin=bankOrigins[bankOriginCountry];
+
+    if(!bankOrigin){
+      return res.status(400).json({error:'INVALID_BANK_ORIGIN'});
+    }
+
     const amountCents=parseCents(req.body.amount);
 
     if(!['email','sms'].includes(notificationMethod)){
@@ -1703,6 +1724,10 @@ app.post('/api/external-transfers',auth,(req,res)=>{
 
     if(!Number.isFinite(amountCents) || amountCents<=0){
       return res.status(400).json({error:'INVALID_AMOUNT'});
+    }
+
+    if(!conditionText){
+      return res.status(400).json({error:'CONDITION_REQUIRED'});
     }
 
     const now=new Date().toISOString();
@@ -1749,8 +1774,12 @@ status,
         ?,
         ?,
         ?,
+        ?,
+        ?,
+        ?,
+        ?,
         'pending_verification',
-        'Vérification des informations du bénéficiaire requise avant l''envoi du virement.',
+        ?,
         0,
         '',
         '',
@@ -1844,6 +1873,26 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
     const beneficiaryPhone=String(req.body.beneficiaryPhone||'').trim();
     const notificationMethod=String(req.body.notificationMethod||'email').trim().toLowerCase();
     const notificationLanguage=String(req.body.notificationLanguage||'fr').trim().toLowerCase();
+
+    const bankOriginCountry=String(req.body.bankOriginCountry||'').trim().toUpperCase();
+
+    const bankOrigins={
+      MA:{
+        country:'Maroc',
+        address:'10, Avenue du Développement, Casablanca, Maroc'
+      },
+      AE:{
+        country:'Émirats arabes unis (Dubaï)',
+        address:'Head Office Building 2, Al Maktoum Road (en face de Dnata), Deira, Dubai, United Arab Emirates'
+      }
+    };
+
+    const bankOrigin=bankOrigins[bankOriginCountry];
+
+    if(!bankOrigin){
+      return res.status(400).json({error:'INVALID_BANK_ORIGIN'});
+    }
+
     const amountCents=parseCents(req.body.amount);
 
     if(!['email','sms'].includes(notificationMethod)){
@@ -1912,6 +1961,8 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
         beneficiary_phone,
         notification_method,
         notification_language,
+        bank_origin_country,
+        bank_origin_address,
         status,
         condition_text,
         condition_completed,
@@ -1938,8 +1989,9 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
         ?,
         ?,
         ?,
+        ?,
         'pending_verification',
-        'Vérification des informations du bénéficiaire requise avant l''envoi du virement.',
+        ?,
         0,
         '',
         '',
@@ -1963,6 +2015,9 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
       beneficiaryPhone,
       notificationMethod,
       notificationLanguage,
+      bankOrigin.country,
+      bankOrigin.address,
+      conditionText,
       now,
       now
     );
