@@ -1543,8 +1543,18 @@ function externalTransferActions(row){
   const id=Number(row.id);
   const status=String(row.status||'');
 
+  const pdfButton=`
+    <button
+      type="button"
+      onclick="window.open('/api/admin/external-transfers/${id}/pdf','_blank')"
+    >
+      Ordre PDF
+    </button>
+  `;
+
   if(status==='pending_verification'){
     return `
+      ${pdfButton}
       <button
         class="primary"
         onclick="updateExternalTransferStatus(${id},'verified')"
@@ -1561,6 +1571,7 @@ function externalTransferActions(row){
 
   if(status==='verified'){
     return `
+      ${pdfButton}
       <button
         class="primary"
         onclick="updateExternalTransferStatus(${id},'processing')"
@@ -1577,6 +1588,7 @@ function externalTransferActions(row){
 
   if(status==='processing'){
     return `
+      ${pdfButton}
       <button
         class="primary"
         onclick="updateExternalTransferStatus(${id},'completed')"
@@ -1593,6 +1605,7 @@ function externalTransferActions(row){
 
   if(status==='completed'){
     return `
+      ${pdfButton}
       <span class="muted">
         Terminé
       </span>
@@ -1601,6 +1614,7 @@ function externalTransferActions(row){
 
   if(status==='failed'){
     return `
+      ${pdfButton}
       <span class="muted">
         Échec / traité
       </span>

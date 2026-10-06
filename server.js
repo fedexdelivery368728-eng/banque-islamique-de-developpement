@@ -4,6 +4,8 @@ const Database=require('better-sqlite3');
 const crypto=require('crypto');
 const fs=require('fs');
 const path=require('path');
+const PDFDocument=require('pdfkit');
+const QRCode=require('qrcode');
 const { Resend } = require('resend');
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -330,6 +332,269 @@ async function sendAccountCreationEmail({
   }
 
 }
+
+async function generateExternalTransferPdf(transfer, sourceUser){
+
+  const doc=new PDFDocument({
+    size:'A4',
+    margin:45
+  });
+
+  const chunks=[];
+
+  doc.on('data',chunk=>chunks.push(chunk));
+
+  const finished=new Promise((resolve,reject)=>{
+    doc.on('end',()=>resolve(Buffer.concat(chunks)));
+    doc.on('error',reject);
+  });
+
+  const orderNumber=
+    'OV-'+String(transfer.id).padStart(8,'0');
+
+  const verificationUrl=
+    'https://bid-developpement.com/verification/'+
+    encodeURIComponent(orderNumber);
+
+  const qrDataUrl=
+    await QRCode.toDataURL(verificationUrl,{
+      width:180,
+      margin:1,
+      errorCorrectionLevel:'M'
+    });
+
+  const qrBuffer=
+    Buffer.from(
+      qrDataUrl.replace(/^data:image\/png;base64,/,''),
+      'base64'
+    );
+
+  const amount=
+    (Number(transfer.amount_cents||0)/100)
+      .toLocaleString('fr-FR',{
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      });
+
+  const createdAt=
+    transfer.created_at
+      ? new Date(transfer.created_at).toLocaleString('fr-FR')
+      : '—';
+
+  const sourceName=
+    sourceUser?.name ||
+    sourceUser?.email ||
+    '—';
+
+  const status=
+    transfer.status || '—';
+
+  const notification=
+    transfer.notification_method === 'sms'
+      ? 'SMS'
+      : 'Email';
+
+  const logoPath=path.join(__dirname,'IMG_4145.jpeg');
+
+  if(fs.existsSync(logoPath)){
+    doc.image(
+      logoPath,
+      235,
+      40,
+      {
+        fit:[125,70]
+      }
+    );
+
+    doc.y=125;
+  }
+
+  doc
+    .fillColor('#073d34')
+    .fontSize(20)
+    .font('Helvetica-Bold')
+    .text('Banque Islamique de Développement',{
+      align:'center'
+    });
+
+  doc
+    .moveDown(0.5)
+    .fontSize(18)
+    .text('ORDRE DE VIREMENT',{
+      align:'center'
+    });
+
+  doc
+    .moveDown(0.3)
+    .fontSize(10)
+    .fillColor('#087f68')
+    .font('Helvetica-Bold')
+    .text('DOCUMENT DE SIMULATION',{
+      align:'center'
+    });
+
+  doc.moveDown(1);
+
+  doc
+    .fillColor('#222')
+    .font('Helvetica-Bold')
+    .fontSize(10)
+    .text('Numéro de l’ordre : ',{continued:true})
+    .font('Helvetica')
+    .text(orderNumber);
+
+  doc
+    .font('Helvetica-Bold')
+    .text('Date : ',{continued:true})
+    .font('Helvetica')
+    .text(createdAt);
+
+  doc.moveDown(0.8);
+
+  function sectionTitle(title){
+    doc
+      .fillColor('#073d34')
+      .font('Helvetica-Bold')
+      .fontSize(12)
+      .text(title);
+
+    doc
+      .moveTo(45,doc.y+3)
+      .lineTo(550,doc.y+3)
+      .strokeColor('#087f68')
+      .stroke();
+
+    doc.moveDown(0.5);
+  }
+
+  function field(label,value){
+    doc
+      .fillColor('#222')
+      .font('Helvetica-Bold')
+      .fontSize(10)
+      .text(label+': ',{continued:true})
+      .font('Helvetica')
+      .text(String(value||'—'));
+
+    doc.moveDown(0.15);
+  }
+
+  sectionTitle('Banque émettrice');
+
+  field(
+    'Banque',
+    'Banque Islamique de Développement'
+  );
+
+  field(
+    'Pays / implantation',
+    transfer.bank_origin_country
+  );
+
+  field(
+    'Adresse',
+    transfer.bank_origin_address
+  );
+
+  sectionTitle('Donneur d’ordre');
+
+  field('Nom',sourceName);
+
+  field(
+    'Compte',
+    sourceUser?.iban || sourceUser?.rib_account_number || '—'
+  );
+
+  sectionTitle('Bénéficiaire');
+
+  field('Nom',transfer.beneficiary_name);
+
+  field('Pays',transfer.beneficiary_country);
+
+  sectionTitle('Banque bénéficiaire');
+
+  field('Banque',transfer.bank_name);
+
+  field(
+    'Compte / IBAN',
+    transfer.iban || transfer.account_no || '—'
+  );
+
+  field('BIC / SWIFT',transfer.bic);
+
+  sectionTitle('Détails du virement');
+
+  field(
+    'Montant',
+    amount+' '+(transfer.currency||'USD')
+  );
+
+  field('Motif',transfer.reason);
+
+  field(
+    'Condition du virement',
+    transfer.condition_text
+  );
+
+  field('Statut',status);
+
+  field('Notification',notification);
+
+  doc.moveDown(1);
+
+  const qrX=410;
+  const qrY=doc.y;
+
+  doc
+    .image(qrBuffer,qrX,qrY,{
+      width:115,
+      height:115
+    });
+
+  doc
+    .fontSize(8)
+    .fillColor('#555')
+    .text(
+      'Vérification en ligne',
+      qrX,
+      qrY+120,
+      {
+        width:115,
+        align:'center'
+      }
+    );
+
+  doc
+    .fontSize(7)
+    .text(
+      orderNumber,
+      qrX,
+      qrY+133,
+      {
+        width:115,
+        align:'center'
+      }
+    );
+
+  doc
+    .fillColor('#073d34')
+    .font('Helvetica-Bold')
+    .fontSize(9)
+    .text(
+      'DOCUMENT DE SIMULATION',
+      45,
+      760,
+      {
+        width:505,
+        align:'center'
+      }
+    );
+
+  doc.end();
+
+  return finished;
+}
+
 async function sendTransactionEmail({
   to,
   name,
@@ -1672,7 +1937,6 @@ app.post('/api/external-transfers',auth,(req,res)=>{
     const beneficiaryPhone=String(req.body.beneficiaryPhone||'').trim();
     const notificationMethod=String(req.body.notificationMethod||'email').trim().toLowerCase();
     const notificationLanguage=String(req.body.notificationLanguage||'fr').trim().toLowerCase();
-
     const bankOriginCountry=String(req.body.bankOriginCountry||'').trim().toUpperCase();
 
     const bankOrigins={
@@ -1854,6 +2118,77 @@ app.get('/api/admin/external-transfers',adminAuth,(req,res)=>{
 });
 
 
+
+app.get('/api/admin/external-transfers/:id/pdf',adminAuth,async (req,res)=>{
+  try{
+
+    const transferId=Number(req.params.id);
+
+    if(!Number.isInteger(transferId) || transferId<=0){
+      return res.status(400).json({
+        error:'INVALID_TRANSFER_ID'
+      });
+    }
+
+    const transfer=db.prepare(`
+      SELECT *
+      FROM external_transfers
+      WHERE id=?
+    `).get(transferId);
+
+    if(!transfer){
+      return res.status(404).json({
+        error:'TRANSFER_NOT_FOUND'
+      });
+    }
+
+    let sourceUser=null;
+
+    if(transfer.source_user_id){
+      sourceUser=db.prepare(`
+        SELECT *
+        FROM users
+        WHERE id=?
+      `).get(transfer.source_user_id);
+    }
+
+    const pdfBuffer=
+      await generateExternalTransferPdf(
+        transfer,
+        sourceUser
+      );
+
+    const orderNumber=
+      'OV-'+String(transfer.id).padStart(8,'0');
+
+    res.setHeader(
+      'Content-Type',
+      'application/pdf'
+    );
+
+    res.setHeader(
+      'Content-Disposition',
+      'inline; filename="ordre-virement-simulation-'+
+      orderNumber+
+      '.pdf"'
+    );
+
+    res.send(pdfBuffer);
+
+  }catch(error){
+
+    console.error(
+      'Erreur génération PDF ordre de virement:',
+      error
+    );
+
+    res.status(500).json({
+      error:'PDF_GENERATION_FAILED'
+    });
+
+  }
+});
+
 app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
   try{
 
@@ -1869,6 +2204,7 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
     const bic=String(req.body.bic||'').trim();
     const currency=String(req.body.currency||'USD').trim().toUpperCase();
     const reason=String(req.body.reason||'').trim();
+    const conditionText=String(req.body.conditionText||'').trim();
     const beneficiaryEmail=String(req.body.beneficiaryEmail||'').trim();
     const beneficiaryPhone=String(req.body.beneficiaryPhone||'').trim();
     const notificationMethod=String(req.body.notificationMethod||'email').trim().toLowerCase();
@@ -2694,6 +3030,456 @@ app.post('/api/admin/send-email',adminAuth,async (req,res)=>{
 
 app.get('/IMG_4145.jpeg',(req,res)=>{
   res.sendFile(path.join(__dirname,'IMG_4145.jpeg'));
+});
+
+
+app.get('/verification/:orderNumber',(req,res)=>{
+  try{
+
+    const orderNumber=String(req.params.orderNumber||'').trim().toUpperCase();
+
+    const match=orderNumber.match(/^OV-(\d{8})$/);
+
+    if(!match){
+      return res.status(404).send(`
+        <!doctype html>
+        <html lang="fr">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>Vérification de l'ordre</title>
+          <style>
+            body{
+              margin:0;
+              font-family:Arial,sans-serif;
+              background:#f3f7f5;
+              color:#222;
+            }
+            .card{
+              max-width:760px;
+              margin:50px auto;
+              background:white;
+              padding:30px;
+              border-radius:16px;
+              box-shadow:0 8px 30px rgba(0,0,0,.08);
+            }
+            h1{
+              color:#073d34;
+              margin-top:0;
+            }
+            .simulation{
+              color:#087f68;
+              font-weight:700;
+              margin-bottom:25px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h1>Ordre introuvable</h1>
+            <div class="simulation">DOCUMENT DE SIMULATION</div>
+            <p>Le numéro d'ordre fourni n'est pas valide.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    const transferId=Number(match[1]);
+
+    const transfer=db.prepare(`
+      SELECT
+        et.*,
+        u.name AS source_user_name,
+        u.email AS source_user_email,
+        u.iban AS source_user_iban
+      FROM external_transfers et
+      LEFT JOIN users u
+        ON u.id=et.source_user_id
+      WHERE et.id=?
+    `).get(transferId);
+
+    if(!transfer){
+      return res.status(404).send(`
+        <!doctype html>
+        <html lang="fr">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>Ordre introuvable</title>
+          <style>
+            body{
+              margin:0;
+              font-family:Arial,sans-serif;
+              background:#f3f7f5;
+              color:#222;
+            }
+            .card{
+              max-width:760px;
+              margin:50px auto;
+              background:white;
+              padding:30px;
+              border-radius:16px;
+              box-shadow:0 8px 30px rgba(0,0,0,.08);
+            }
+            h1{
+              color:#073d34;
+              margin-top:0;
+            }
+            .simulation{
+              color:#087f68;
+              font-weight:700;
+              margin-bottom:25px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h1>Ordre introuvable</h1>
+            <div class="simulation">DOCUMENT DE SIMULATION</div>
+            <p>Aucun ordre ne correspond à ce numéro.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    const orderNumberDisplay=
+      'OV-'+String(transfer.id).padStart(8,'0');
+
+    const createdAt=
+      transfer.created_at
+        ? new Date(transfer.created_at).toLocaleString('fr-FR')
+        : '—';
+
+    const amount=
+      (Number(transfer.amount_cents||0)/100)
+        .toLocaleString('fr-FR',{
+          minimumFractionDigits:2,
+          maximumFractionDigits:2
+        })+
+      ' '+
+      (transfer.currency||'USD');
+
+    const sourceName=
+      transfer.source_user_name ||
+      transfer.source_user_email ||
+      '—';
+
+    const sourceIban=
+      transfer.source_user_iban ||
+      '—';
+
+    const notification=
+      transfer.notification_method === 'sms'
+        ? 'SMS'
+        : 'Email';
+
+    const esc=value=>String(value??'—')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+
+    res.send(`
+      <!doctype html>
+      <html lang="fr">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+
+        <title>${esc(orderNumberDisplay)} — Vérification</title>
+
+        <style>
+          *{
+            box-sizing:border-box;
+          }
+
+          body{
+            margin:0;
+            font-family:Arial,sans-serif;
+            background:#f3f7f5;
+            color:#222;
+          }
+
+          .card{
+            max-width:850px;
+            margin:35px auto;
+            background:#fff;
+            padding:32px;
+            border-radius:18px;
+            box-shadow:0 8px 30px rgba(0,0,0,.08);
+          }
+
+          .header{
+            text-align:center;
+            border-bottom:1px solid #dce8e4;
+            padding-bottom:22px;
+            margin-bottom:25px;
+          }
+
+          .header img{
+            width:110px;
+            max-height:75px;
+            object-fit:contain;
+            margin-bottom:10px;
+          }
+
+          h1{
+            color:#073d34;
+            margin:5px 0;
+            font-size:27px;
+          }
+
+          h2{
+            color:#073d34;
+            font-size:18px;
+            margin:25px 0 10px;
+            padding-bottom:7px;
+            border-bottom:2px solid #087f68;
+          }
+
+          .simulation{
+            color:#087f68;
+            font-weight:700;
+            font-size:14px;
+            margin-top:8px;
+          }
+
+          .order{
+            text-align:center;
+            font-weight:700;
+            margin:15px 0;
+          }
+
+          .grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:12px 25px;
+          }
+
+          .field{
+            padding:8px 0;
+          }
+
+          .label{
+            font-size:12px;
+            color:#687873;
+            margin-bottom:3px;
+          }
+
+          .value{
+            font-size:15px;
+            font-weight:600;
+            word-break:break-word;
+          }
+
+          .notice{
+            margin-top:28px;
+            padding:15px;
+            border-radius:10px;
+            background:#eef7f3;
+            color:#073d34;
+            text-align:center;
+            font-weight:700;
+          }
+
+          @media(max-width:650px){
+            .card{
+              margin:15px;
+              padding:22px;
+            }
+
+            .grid{
+              grid-template-columns:1fr;
+            }
+          }
+        </style>
+      </head>
+
+      <body>
+
+        <div class="card">
+
+          <div class="header">
+            <img
+              src="/IMG_4145.jpeg"
+              alt="Banque Islamique de Développement"
+            >
+
+            <h1>Banque Islamique de Développement</h1>
+
+            <div>ORDRE DE VIREMENT</div>
+
+            <div class="simulation">
+              DOCUMENT DE SIMULATION
+            </div>
+          </div>
+
+          <div class="order">
+            Numéro de l'ordre :
+            ${esc(orderNumberDisplay)}
+          </div>
+
+          <h2>Informations générales</h2>
+
+          <div class="grid">
+
+            <div class="field">
+              <div class="label">Date</div>
+              <div class="value">${esc(createdAt)}</div>
+            </div>
+
+            <div class="field">
+              <div class="label">Statut</div>
+              <div class="value">${esc(transfer.status)}</div>
+            </div>
+
+          </div>
+
+          <h2>Banque émettrice</h2>
+
+          <div class="grid">
+
+            <div class="field">
+              <div class="label">Banque</div>
+              <div class="value">
+                Banque Islamique de Développement
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="label">Pays / implantation</div>
+              <div class="value">
+                ${esc(transfer.bank_origin_country)}
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="label">Adresse</div>
+              <div class="value">
+                ${esc(transfer.bank_origin_address)}
+              </div>
+            </div>
+
+          </div>
+
+          <h2>Donneur d'ordre</h2>
+
+          <div class="grid">
+
+            <div class="field">
+              <div class="label">Nom</div>
+              <div class="value">${esc(sourceName)}</div>
+            </div>
+
+            <div class="field">
+              <div class="label">Compte / IBAN</div>
+              <div class="value">${esc(sourceIban)}</div>
+            </div>
+
+          </div>
+
+          <h2>Bénéficiaire</h2>
+
+          <div class="grid">
+
+            <div class="field">
+              <div class="label">Nom</div>
+              <div class="value">
+                ${esc(transfer.beneficiary_name)}
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="label">Pays</div>
+              <div class="value">
+                ${esc(transfer.beneficiary_country)}
+              </div>
+            </div>
+
+          </div>
+
+          <h2>Banque bénéficiaire</h2>
+
+          <div class="grid">
+
+            <div class="field">
+              <div class="label">Banque</div>
+              <div class="value">
+                ${esc(transfer.bank_name)}
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="label">Compte / IBAN</div>
+              <div class="value">
+                ${esc(transfer.iban || transfer.account_no)}
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="label">BIC / SWIFT</div>
+              <div class="value">
+                ${esc(transfer.bic)}
+              </div>
+            </div>
+
+          </div>
+
+          <h2>Détails du virement</h2>
+
+          <div class="grid">
+
+            <div class="field">
+              <div class="label">Montant</div>
+              <div class="value">${esc(amount)}</div>
+            </div>
+
+            <div class="field">
+              <div class="label">Notification</div>
+              <div class="value">${esc(notification)}</div>
+            </div>
+
+            <div class="field">
+              <div class="label">Motif</div>
+              <div class="value">
+                ${esc(transfer.reason)}
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="label">Condition du virement</div>
+              <div class="value">
+                ${esc(transfer.condition_text)}
+              </div>
+            </div>
+
+          </div>
+
+          <div class="notice">
+            DOCUMENT DE SIMULATION
+          </div>
+
+        </div>
+
+      </body>
+      </html>
+    `);
+
+  }catch(error){
+
+    console.error(
+      'Erreur vérification ordre:',
+      error
+    );
+
+    res.status(500).send(
+      'Erreur lors de la vérification de l’ordre.'
+    );
+
+  }
 });
 
 app.get('/admin',(req,res)=>{
