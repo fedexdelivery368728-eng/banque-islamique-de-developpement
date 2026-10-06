@@ -541,6 +541,70 @@ th{
 
 </section>
 
+<!-- ========================= -->
+<!-- VIREMENTS BANCAIRES EXTERNES -->
+<!-- ========================= -->
+
+<section class="card">
+
+  <div class="top" style="margin-bottom:15px">
+
+    <div>
+      <h2 style="margin:0">
+        Virements bancaires externes
+      </h2>
+
+      <p class="muted" style="margin:6px 0 0">
+        Créer une demande de virement vers un compte bancaire externe.
+      </p>
+    </div>
+
+    <button
+      class="primary"
+      onclick="openExternalTransferCreate()"
+    >
+      + Nouveau virement externe
+    </button>
+
+  </div>
+
+  <div style="overflow:auto">
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Compte source</th>
+          <th>Bénéficiaire</th>
+          <th>Banque</th>
+          <th>Montant</th>
+          <th>Notification</th>
+          <th>Statut</th>
+          <th>Actions</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+
+      <tbody id="externalTransfersTable">
+
+        <tr>
+          <td
+            colspan="8"
+            class="muted"
+            style="text-align:center"
+          >
+            Aucun virement externe chargé.
+          </td>
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
   <!-- GESTION DES CLIENTS -->
 
   <section class="card">
@@ -1195,6 +1259,736 @@ function closeIncomingCreate(){
 
 
 // -----------------------------------------------------
+// -----------------------------------------------------
+// CHARGER LES VIREMENTS BANCAIRES EXTERNES
+// -----------------------------------------------------
+
+async function loadExternalTransfers(){
+
+  try{
+
+    const rows =
+      await api('/api/admin/external-transfers');
+
+    const tbody =
+      $('externalTransfersTable');
+
+    if(!tbody) return;
+
+    if(!rows.length){
+
+      tbody.innerHTML = `
+        <tr>
+          <td
+            colspan="8"
+            class="muted"
+            style="text-align:center"
+          >
+            Aucun virement externe chargé.
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+    tbody.innerHTML = rows.map(row => {
+
+      const amount =
+        (Number(row.amount_cents || 0) / 100)
+        .toFixed(2);
+
+      const source =
+        row.source_user_name ||
+        row.source_user_email ||
+        ('#' + row.source_user_id);
+
+      const beneficiary =
+        row.beneficiary_name || '—';
+
+      const bank =
+        row.bank_name || '—';
+
+      const notification =
+        row.notification_method === 'sms'
+          ? 'SMS'
+          : 'Email';
+
+      const status =
+        row.status || '—';
+
+      const date =
+        row.created_at
+          ? new Date(row.created_at).toLocaleString()
+          : '—';
+
+      return `
+
+        <tr>
+
+          <td>
+            ${esc(source)}
+          </td>
+
+          <td>
+            ${esc(beneficiary)}
+          </td>
+
+          <td>
+            ${esc(bank)}
+          </td>
+
+          <td>
+            ${esc(amount)}
+            ${esc(row.currency || 'USD')}
+          </td>
+
+          <td>
+            ${notification}
+            <br>
+            <span class="small muted">
+              ${esc(row.notification_language || 'fr')}
+            </span>
+          </td>
+
+          <td>
+            ${esc(status)}
+          </td>
+
+          <td>
+            ${externalTransferActions(row)}
+          </td>
+
+          <td>
+            ${esc(date)}
+          </td>
+
+        </tr>
+
+      `;
+
+    }).join('');
+
+  }catch(error){
+
+    console.error(
+      'Erreur chargement virements externes:',
+      error
+    );
+
+  }
+
+}
+
+
+// -----------------------------------------------------
+// TRAITEMENT DES VIREMENTS BANCAIRES EXTERNES
+// -----------------------------------------------------
+
+async function updateExternalTransferStatus(id,status){
+
+  let message='';
+
+  if(status==='verified'){
+    message='Confirmer que les informations du bénéficiaire ont été vérifiées ?';
+  }else if(status==='processing'){
+    message='Lancer le traitement ? Le montant sera débité du compte source.';
+  }else if(status==='completed'){
+    message='Confirmer que le virement a été effectivement traité ?';
+  }else if(status==='failed'){
+    message='Confirmer l’échec du virement ? Si le montant a déjà été débité, il sera remboursé.';
+  }
+
+  if(!confirm(message)){
+    return;
+  }
+
+  try{
+
+    const result=await api(
+      '/api/admin/external-transfers/'+id+'/status',
+      {
+        method:'PATCH',
+        headers:{
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({
+          status
+        })
+      }
+    );
+
+    alert(
+      'Virement #'+id+
+      ' — nouveau statut : '+
+      (result.transfer?.status || status)
+    );
+
+    await loadExternalTransfers();
+
+  }catch(error){
+
+    console.error(
+      'Erreur changement statut virement externe:',
+      error
+    );
+
+    alert(
+      'Impossible de modifier le statut du virement.'
+    );
+
+  }
+
+}
+
+function externalTransferActions(row){
+
+  const id=Number(row.id);
+  const status=String(row.status||'');
+
+  if(status==='pending_verification'){
+    return `
+      <button
+        class="primary"
+        onclick="updateExternalTransferStatus(${id},'verified')"
+      >
+        Vérifier
+      </button>
+      <button
+        onclick="updateExternalTransferStatus(${id},'failed')"
+      >
+        Refuser
+      </button>
+    `;
+  }
+
+  if(status==='verified'){
+    return `
+      <button
+        class="primary"
+        onclick="updateExternalTransferStatus(${id},'processing')"
+      >
+        Lancer le traitement
+      </button>
+      <button
+        onclick="updateExternalTransferStatus(${id},'failed')"
+      >
+        Annuler
+      </button>
+    `;
+  }
+
+  if(status==='processing'){
+    return `
+      <button
+        class="primary"
+        onclick="updateExternalTransferStatus(${id},'completed')"
+      >
+        Confirmer
+      </button>
+      <button
+        onclick="updateExternalTransferStatus(${id},'failed')"
+      >
+        Échec / rembourser
+      </button>
+    `;
+  }
+
+  if(status==='completed'){
+    return `
+      <span class="muted">
+        Terminé
+      </span>
+    `;
+  }
+
+  if(status==='failed'){
+    return `
+      <span class="muted">
+        Échec / traité
+      </span>
+    `;
+  }
+
+  return '—';
+}
+
+
+
+// -----------------------------------------------------
+// VIREMENT BANCAIRE EXTERNE — FORMULAIRE ADMIN
+// -----------------------------------------------------
+// -----------------------------------------------------
+
+function openExternalTransferCreate(){
+
+  const html = `
+
+    <div
+      class="modal"
+      id="externalTransferCreateModal"
+      style="display:flex"
+    >
+
+      <div class="modalBox">
+
+        <button
+          class="close"
+          onclick="closeExternalTransferCreate()"
+        >
+          ✕
+        </button>
+
+        <h2>
+          Nouveau virement bancaire externe
+        </h2>
+
+        <div class="formgrid">
+
+          <div>
+
+            <label>
+              Compte client source
+            </label>
+
+            <select id="externalSourceUserId">
+              <option value="">
+                Sélectionner un client
+              </option>
+            </select>
+
+          </div>
+
+          <div>
+
+            <label>
+              Nom du bénéficiaire
+            </label>
+
+            <input
+              id="externalBeneficiaryName"
+              placeholder="Nom complet du bénéficiaire"
+            >
+
+          </div>
+
+          <div>
+
+            <label>
+              Pays du bénéficiaire
+            </label>
+
+            <input
+              id="externalBeneficiaryCountry"
+              placeholder="Ex. Cameroun"
+            >
+
+          </div>
+
+          <div>
+
+            <label>
+              Nom de la banque
+            </label>
+
+            <input
+              id="externalBankName"
+              placeholder="Nom de la banque bénéficiaire"
+            >
+
+          </div>
+
+          <div>
+
+            <label>
+              Numéro de compte
+            </label>
+
+            <input
+              id="externalAccountNo"
+              placeholder="Numéro de compte"
+            >
+
+          </div>
+
+          <div>
+
+            <label>
+              IBAN
+            </label>
+
+            <input
+              id="externalIban"
+              placeholder="IBAN si applicable"
+            >
+
+          </div>
+
+          <div>
+
+            <label>
+              BIC / SWIFT
+            </label>
+
+            <input
+              id="externalBic"
+              placeholder="BIC ou SWIFT"
+            >
+
+          </div>
+
+          <div>
+
+            <label>
+              Montant
+            </label>
+
+            <input
+              id="externalAmount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              placeholder="Ex. 5000"
+            >
+
+          </div>
+
+          <div>
+
+            <label>
+              Devise
+            </label>
+
+            <select id="externalCurrency">
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="CAD">CAD</option>
+              <option value="CHF">CHF</option>
+              <option value="AED">AED</option>
+              <option value="XAF">XAF</option>
+              <option value="MAD">MAD</option>
+            </select>
+
+          </div>
+
+          <div style="grid-column:1/-1">
+
+            <label>
+              Motif du virement
+            </label>
+
+            <input
+              id="externalReason"
+              placeholder="Motif du virement"
+            >
+
+          </div>
+
+          <div>
+
+            <label>
+              Email du bénéficiaire
+            </label>
+
+            <input
+              id="externalBeneficiaryEmail"
+              type="email"
+              placeholder="beneficiaire@example.com"
+            >
+
+          </div>
+
+          <div>
+
+            <label>
+              Téléphone du bénéficiaire
+            </label>
+
+            <input
+              id="externalBeneficiaryPhone"
+              type="tel"
+              placeholder="+237..."
+            >
+
+          </div>
+
+          <div>
+
+            <label>
+              Méthode de notification
+            </label>
+
+            <select id="externalNotificationMethod">
+              <option value="email">
+                Email
+              </option>
+              <option value="sms">
+                SMS
+              </option>
+            </select>
+
+          </div>
+
+          <div>
+
+            <label>
+              Langue de notification
+            </label>
+
+            <select id="externalNotificationLanguage">
+              <option value="fr">
+                Français
+              </option>
+              <option value="en">
+                English
+              </option>
+              <option value="ar">
+                العربية
+              </option>
+            </select>
+
+          </div>
+
+        </div>
+
+        <p class="small muted">
+          Le virement est créé avec le statut
+          « en attente de vérification ».
+          Aucun transfert bancaire réel n'est exécuté par cette étape.
+        </p>
+
+        <button
+          class="primary"
+          onclick="createExternalTransfer()"
+        >
+          Créer le virement externe
+        </button>
+
+        <button
+          onclick="closeExternalTransferCreate()"
+          style="margin-left:8px"
+        >
+          Annuler
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+  document.body.insertAdjacentHTML(
+    'beforeend',
+    html
+  );
+
+  loadExternalTransferUsers();
+
+}
+
+
+function closeExternalTransferCreate(){
+
+  const modal = $('externalTransferCreateModal');
+
+  if(modal){
+    modal.remove();
+  }
+
+}
+
+
+// -----------------------------------------------------
+// CHARGER LES CLIENTS POUR VIREMENT EXTERNE
+// -----------------------------------------------------
+
+async function loadExternalTransferUsers(){
+
+  const users = await api('/api/admin/users');
+
+  const select = $('externalSourceUserId');
+
+  if(!select) return;
+
+  select.innerHTML = `
+    <option value="">
+      Sélectionner un client
+    </option>
+  `;
+
+  users
+    .filter(user => user.active !== 0)
+    .forEach(user => {
+
+      const option = document.createElement('option');
+
+      option.value = user.id;
+
+      option.textContent =
+        `#${user.id} — ${user.email}`;
+
+      select.appendChild(option);
+
+    });
+
+}
+
+
+// -----------------------------------------------------
+// CRÉER LE VIREMENT BANCAIRE EXTERNE
+// -----------------------------------------------------
+
+async function createExternalTransfer(){
+
+  try{
+
+    const sourceUserId =
+      $('externalSourceUserId').value;
+
+    const beneficiaryName =
+      $('externalBeneficiaryName').value.trim();
+
+    const beneficiaryCountry =
+      $('externalBeneficiaryCountry').value.trim();
+
+    const bankName =
+      $('externalBankName').value.trim();
+
+    const accountNo =
+      $('externalAccountNo').value.trim();
+
+    const iban =
+      $('externalIban').value.trim();
+
+    const bic =
+      $('externalBic').value.trim();
+
+    const amount =
+      $('externalAmount').value;
+
+    const currency =
+      $('externalCurrency').value;
+
+    const reason =
+      $('externalReason').value.trim();
+
+    const beneficiaryEmail =
+      $('externalBeneficiaryEmail').value.trim();
+
+    const beneficiaryPhone =
+      $('externalBeneficiaryPhone').value.trim();
+
+    const notificationMethod =
+      $('externalNotificationMethod').value;
+
+    const notificationLanguage =
+      $('externalNotificationLanguage').value;
+
+    if(!sourceUserId){
+      alert('Sélectionnez le compte client source.');
+      return;
+    }
+
+    if(!beneficiaryName){
+      alert('Saisissez le nom du bénéficiaire.');
+      return;
+    }
+
+    if(!beneficiaryCountry){
+      alert('Saisissez le pays du bénéficiaire.');
+      return;
+    }
+
+    if(!bankName){
+      alert('Saisissez le nom de la banque.');
+      return;
+    }
+
+    if(!accountNo && !iban){
+      alert('Saisissez le numéro de compte ou l’IBAN.');
+      return;
+    }
+
+    if(!bic){
+      alert('Saisissez le BIC / SWIFT.');
+      return;
+    }
+
+    if(!amount || Number(amount)<=0){
+      alert('Saisissez un montant valide.');
+      return;
+    }
+
+    if(notificationMethod==='email' && !beneficiaryEmail){
+      alert('Saisissez l’email du bénéficiaire.');
+      return;
+    }
+
+    if(notificationMethod==='sms' && !beneficiaryPhone){
+      alert('Saisissez le téléphone du bénéficiaire.');
+      return;
+    }
+
+    const result = await api(
+      '/api/admin/external-transfers',
+      {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({
+
+          sourceUserId,
+
+          beneficiaryName,
+          beneficiaryCountry,
+          bankName,
+          accountNo,
+          iban,
+          bic,
+
+          amount,
+          currency,
+          reason,
+
+          beneficiaryEmail,
+          beneficiaryPhone,
+
+          notificationMethod,
+          notificationLanguage
+
+        })
+      }
+    );
+
+    alert(
+      'Virement externe créé.\\n\\n' +
+      'Statut : en attente de vérification.\\n' +
+      'ID : ' + result.transferId
+    );
+
+    closeExternalTransferCreate();
+
+    if(typeof loadExternalTransfers === 'function'){
+      await loadExternalTransfers();
+    }
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      error.message ||
+      'Impossible de créer le virement externe.'
+    );
+
+  }
+
+}
+
+
+// -----------------------------------------------------
 // CHARGER LES CLIENTS DANS LE SELECT
 // -----------------------------------------------------
 
@@ -1382,6 +2176,7 @@ async function start(){
   await loadUsers();
   await loadStats();
   await loadIncomingTransfers();
+  await loadExternalTransfers();
 }
 
 

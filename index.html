@@ -784,16 +784,26 @@ td,th{
   </section>
 
   <section
-    id="transfer"
-    class="view card"
-  >
+  id="transfer"
+  class="view card"
+>
 
-    <h2 data-k="newTransfer"></h2>
+  <h2 data-k="newTransfer"></h2>
 
-    <p
-      class="notice"
-      data-k="Transfer"
-    ></p>
+  <p
+    class="notice"
+    data-k="Transfer"
+  ></p>
+
+  <label for="transferType">Type de virement</label>
+
+  <select id="transferType" onchange="toggleTransferType()">
+    <option value="internal">Virement vers un compte BID</option>
+    <option value="external">Virement bancaire externe</option>
+  </select>
+
+  <!-- VIREMENT INTERNE -->
+  <div id="internalTransfer">
 
     <select id="beneficiary"></select>
 
@@ -811,12 +821,114 @@ td,th{
       data-k="send"
     ></button>
 
-  </section>
+  </div>
 
-  <section
-    id="beneficiaries"
-    class="view card"
+  <!-- VIREMENT EXTERNE -->
+  <div
+    id="externalTransfer"
+    style="display:none;"
   >
+
+    <input
+      id="externalBeneficiaryName"
+      type="text"
+      placeholder="Nom du bénéficiaire"
+    >
+
+    <input
+      id="externalBeneficiaryCountry"
+      type="text"
+      placeholder="Pays du bénéficiaire"
+    >
+
+    <input
+      id="externalBankName"
+      type="text"
+      placeholder="Nom de la banque"
+    >
+
+    <input
+      id="externalAccountNo"
+      type="text"
+      placeholder="Numéro de compte"
+    >
+
+    <input
+      id="externalIban"
+      type="text"
+      placeholder="IBAN"
+    >
+
+    <input
+      id="externalBic"
+      type="text"
+      placeholder="BIC / SWIFT"
+    >
+
+    <input
+      id="externalAmount"
+      type="number"
+      min="1"
+      step="0.01"
+      placeholder="Montant"
+    >
+
+    <select id="externalCurrency">
+      <option value="USD">USD</option>
+      <option value="EUR">EUR</option>
+      <option value="GBP">GBP</option>
+      <option value="MAD">MAD</option>
+      <option value="CAD">CAD</option>
+      <option value="CHF">CHF</option>
+      <option value="AED">AED</option>
+      <option value="XAF">XAF</option>
+    </select>
+
+    <input
+      id="externalReason"
+      type="text"
+      placeholder="Motif du virement"
+    >
+
+    <input
+      id="externalBeneficiaryEmail"
+      type="email"
+      placeholder="E-mail du bénéficiaire"
+    >
+
+    <input
+      id="externalBeneficiaryPhone"
+      type="tel"
+      placeholder="Téléphone du bénéficiaire"
+    >
+
+    <label for="externalNotificationMethod">Méthode de notification</label>
+
+    <select id="externalNotificationMethod">
+      <option value="email">Email</option>
+      <option value="sms">SMS</option>
+    </select>
+
+    <label for="externalNotificationLanguage">Langue de notification</label>
+
+    <select id="externalNotificationLanguage">
+      <option value="fr">Français</option>
+      <option value="en">English</option>
+      <option value="ar">العربية</option>
+    </select>
+
+    <button
+      class="primary"
+      onclick="externalTransfer()"
+    >
+      Effectuer le virement externe
+    </button>
+
+  </div>
+
+</section>
+
+<section id="beneficiaries" class="view card">
 
     <h2 data-k="beneficiaries"></h2>
 
@@ -1384,6 +1496,152 @@ async function transfer(){
       :lang==="en"
       ?"Insufficient balance"
       :"Solde insuffisant"
+    );
+
+  }
+
+}
+
+function toggleTransferType(){
+
+  const type=document.getElementById("transferType").value;
+  const internal=document.getElementById("internalTransfer");
+  const external=document.getElementById("externalTransfer");
+
+  if(type==="external"){
+    internal.style.display="none";
+    external.style.display="block";
+  }else{
+    internal.style.display="block";
+    external.style.display="none";
+  }
+
+}
+
+async function externalTransfer(){
+
+  try{
+
+    const beneficiaryName=
+      document.getElementById("externalBeneficiaryName").value.trim();
+
+    const beneficiaryCountry=
+      document.getElementById("externalBeneficiaryCountry").value.trim();
+
+    const bankName=
+      document.getElementById("externalBankName").value.trim();
+
+    const accountNo=
+      document.getElementById("externalAccountNo").value.trim();
+
+    const iban=
+      document.getElementById("externalIban").value.trim();
+
+    const bic=
+      document.getElementById("externalBic").value.trim();
+
+    const amount=
+      document.getElementById("externalAmount").value;
+
+    const currency=
+      document.getElementById("externalCurrency").value;
+
+    const reason=
+      document.getElementById("externalReason").value.trim();
+
+    const beneficiaryEmail=
+      document.getElementById("externalBeneficiaryEmail").value.trim();
+
+    const beneficiaryPhone=
+      document.getElementById("externalBeneficiaryPhone").value.trim();
+
+    const notificationMethod=
+      document.getElementById("externalNotificationMethod").value;
+
+    const notificationLanguage=
+      document.getElementById("externalNotificationLanguage").value;
+
+
+    if(!beneficiaryName ||
+       !beneficiaryCountry ||
+       !bankName ||
+       (!accountNo && !iban) ||
+       !bic ||
+       !amount){
+
+      alert(
+        lang==="ar"
+        ?"يرجى إكمال معلومات التحويل"
+        :lang==="en"
+        ?"Please complete the transfer information"
+        :"Veuillez compléter les informations du virement"
+      );
+
+      return;
+
+    }
+
+
+    const result=await api(
+      "/api/external-transfers",
+      {
+        method:"POST",
+        body:JSON.stringify({
+
+          beneficiaryName,
+          beneficiaryCountry,
+          bankName,
+          accountNo,
+          iban,
+          bic,
+          amount,
+          currency,
+          reason,
+          beneficiaryEmail,
+          beneficiaryPhone,
+          notificationMethod,
+          notificationLanguage
+
+        })
+      }
+    );
+
+
+    alert(
+      lang==="ar"
+      ?"تم تسجيل طلب التحويل الخارجي بنجاح"
+      :lang==="en"
+      ?"The external transfer request has been submitted successfully"
+      :"La demande de virement externe a été enregistrée avec succès"
+    );
+
+
+    document.getElementById("externalBeneficiaryName").value="";
+    document.getElementById("externalBeneficiaryCountry").value="";
+    document.getElementById("externalBankName").value="";
+    document.getElementById("externalAccountNo").value="";
+    document.getElementById("externalIban").value="";
+    document.getElementById("externalBic").value="";
+    document.getElementById("externalAmount").value="";
+    document.getElementById("externalReason").value="";
+    document.getElementById("externalBeneficiaryEmail").value="";
+    document.getElementById("externalBeneficiaryPhone").value="";
+    document.getElementById("externalNotificationMethod").value="email";
+    document.getElementById("externalNotificationLanguage").value="fr";
+
+    await load();
+
+
+  }catch(e){
+
+    console.error(e);
+
+    alert(
+      lang==="ar"
+      ?"تعذر تسجيل التحويل الخارجي"
+      :lang==="en"
+      ?"Unable to submit the external transfer"
+      :"Impossible d'enregistrer le virement externe"
     );
 
   }

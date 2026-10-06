@@ -5,7 +5,9 @@ const crypto=require('crypto');
 const fs=require('fs');
 const path=require('path');
 const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 const app=express();
 const dataDir=process.env.DATA_DIR || path.join(__dirname,'data');
@@ -45,6 +47,37 @@ CREATE TABLE IF NOT EXISTS incoming_transfers(
  FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
+CREATE TABLE IF NOT EXISTS external_transfers(
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ source_type TEXT NOT NULL,
+ source_user_id INTEGER,
+ source_admin_id INTEGER,
+ beneficiary_name TEXT NOT NULL,
+ beneficiary_country TEXT NOT NULL DEFAULT '',
+ bank_name TEXT NOT NULL DEFAULT '',
+ account_no TEXT NOT NULL DEFAULT '',
+ iban TEXT NOT NULL DEFAULT '',
+ bic TEXT NOT NULL DEFAULT '',
+ amount_cents INTEGER NOT NULL,
+ currency TEXT NOT NULL DEFAULT 'USD',
+ reason TEXT NOT NULL DEFAULT '',
+ beneficiary_email TEXT NOT NULL DEFAULT '',
+ beneficiary_phone TEXT NOT NULL DEFAULT '',
+ notification_method TEXT NOT NULL DEFAULT 'email',
+ notification_language TEXT NOT NULL DEFAULT 'fr',
+ status TEXT NOT NULL DEFAULT 'pending_verification',
+ condition_text TEXT NOT NULL DEFAULT '',
+ condition_completed INTEGER NOT NULL DEFAULT 0,
+ provider TEXT NOT NULL DEFAULT '',
+ provider_transfer_id TEXT NOT NULL DEFAULT '',
+ provider_status TEXT NOT NULL DEFAULT '',
+ created_at TEXT NOT NULL,
+ updated_at TEXT NOT NULL,
+ completed_at TEXT,
+ FOREIGN KEY(source_user_id) REFERENCES users(id),
+ FOREIGN KEY(source_admin_id) REFERENCES admins(id)
+);
+
 CREATE TABLE IF NOT EXISTS admins(
  id INTEGER PRIMARY KEY AUTOINCREMENT,
  name TEXT NOT NULL,
@@ -62,6 +95,15 @@ function addUserColumn(sql){
   db.prepare(sql).run();
  }catch(e){}
 }
+
+function addExternalTransferColumn(sql){
+ try{
+  db.prepare(sql).run();
+ }catch(e){}
+}
+addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN notification_method TEXT NOT NULL DEFAULT 'email'");
+addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN notification_language TEXT NOT NULL DEFAULT 'fr'");
+
 addUserColumn("ALTER TABLE users ADD COLUMN first_name TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN last_name TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN birth_date TEXT");
@@ -126,6 +168,7 @@ addUserColumn("ALTER TABLE users ADD COLUMN bic TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN bank_country TEXT DEFAULT 'MA'");
 addUserColumn("ALTER TABLE users ADD COLUMN notification_method TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN notification_language TEXT NOT NULL DEFAULT 'fr'");
+
 app.set('trust proxy',1);
 app.use(express.json());
 app.use(session({
@@ -147,6 +190,11 @@ async function sendAccountCreationEmail({
   bic,
     language = 'fr'
 }) {
+
+  if (!resend) {
+    console.log('Resend non configuré : email de création de compte ignoré en local.');
+    return;
+  }
 
   const lang = ['fr', 'en', 'ar'].includes(language)
     ? language
@@ -293,6 +341,11 @@ async function sendTransactionEmail({
   showBalance=true,
   language='fr'
 }) {
+
+  if (!resend) {
+    console.log('Resend non configuré : email de transaction ignoré en local.');
+    return;
+  }
 
   const lang = ['fr','en','ar'].includes(language)
     ? language
@@ -975,7 +1028,6 @@ app.post('/api/transfer',auth,(req,res)=>{
 
 const client=db.prepare(`
   SELECT name,email,balance_cents,notification_language
-  language:client.notification_language || 'fr'
   FROM users
   WHERE id=?
 `).get(req.session.uid);
@@ -997,9 +1049,11 @@ if(client && client.email){
       b.name +
       '.',
 
-    amountCents:amountCents,
+        amountCents:amountCents,
 
-    balanceCents:client.balance_cents
+    balanceCents:client.balance_cents,
+
+    language:client.notification_language || 'fr'
 
   });
 
@@ -1599,6 +1653,640 @@ app.get('/api/admin/users/:id/transactions',adminAuth,(req,res)=>{
 // ADMIN — VIREMENTS ENTRANTS 
 // ===============================
 
+
+app.post('/api/external-transfers',auth,(req,res)=>{
+  try{
+
+    const userId=req.session.uid;
+
+    const beneficiaryName=String(req.body.beneficiaryName||'').trim();
+    const beneficiaryCountry=String(req.body.beneficiaryCountry||'').trim();
+    const bankName=String(req.body.bankName||'').trim();
+    const accountNo=String(req.body.accountNo||'').trim();
+    const iban=String(req.body.iban||'').trim();
+    const bic=String(req.body.bic||'').trim();
+    const currency=String(req.body.currency||'USD').trim().toUpperCase();
+    const reason=String(req.body.reason||'').trim();
+    const beneficiaryEmail=String(req.body.beneficiaryEmail||'').trim();
+    const beneficiaryPhone=String(req.body.beneficiaryPhone||'').trim();
+    const notificationMethod=String(req.body.notificationMethod||'email').trim().toLowerCase();
+    const notificationLanguage=String(req.body.notificationLanguage||'fr').trim().toLowerCase();
+    const amountCents=parseCents(req.body.amount);
+
+    if(!['email','sms'].includes(notificationMethod)){
+      return res.status(400).json({error:'INVALID_NOTIFICATION_METHOD'});
+    }
+
+    if(!['fr','en','ar'].includes(notificationLanguage)){
+      return res.status(400).json({error:'INVALID_NOTIFICATION_LANGUAGE'});
+    }
+
+    if(!beneficiaryName){
+      return res.status(400).json({error:'BENEFICIARY_NAME_REQUIRED'});
+    }
+
+    if(!beneficiaryCountry){
+      return res.status(400).json({error:'BENEFICIARY_COUNTRY_REQUIRED'});
+    }
+
+    if(!bankName){
+      return res.status(400).json({error:'BANK_NAME_REQUIRED'});
+    }
+
+    if(!accountNo && !iban){
+      return res.status(400).json({error:'ACCOUNT_OR_IBAN_REQUIRED'});
+    }
+
+    if(!bic){
+      return res.status(400).json({error:'BIC_REQUIRED'});
+    }
+
+    if(!Number.isFinite(amountCents) || amountCents<=0){
+      return res.status(400).json({error:'INVALID_AMOUNT'});
+    }
+
+    const now=new Date().toISOString();
+
+    const result=db.prepare(`
+      INSERT INTO external_transfers(
+        source_type,
+        source_user_id,
+        beneficiary_name,
+        beneficiary_country,
+        bank_name,
+        account_no,
+        iban,
+        bic,
+        amount_cents,
+        currency,
+        reason,
+        beneficiary_email,
+beneficiary_phone,
+notification_method,
+notification_language,
+status,
+        condition_text,
+        condition_completed,
+        provider,
+        provider_transfer_id,
+        provider_status,
+        created_at,
+        updated_at
+      )
+      VALUES(
+        'client',
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        'pending_verification',
+        'Vérification des informations du bénéficiaire requise avant l''envoi du virement.',
+        0,
+        '',
+        '',
+        '',
+        ?,
+        ?
+      )
+    `).run(
+      userId,
+      beneficiaryName,
+      beneficiaryCountry,
+      bankName,
+      accountNo,
+      iban,
+      bic,
+      amountCents,
+      currency,
+      reason,
+      beneficiaryEmail,
+      beneficiaryPhone,
+            notificationMethod,
+      notificationLanguage,
+      now(),
+      now()
+    );
+
+    res.json({
+      ok:true,
+      transferId:result.lastInsertRowid,
+      status:'pending_verification'
+    });
+
+  }catch(error){
+
+    console.error('Erreur création virement externe client:',error);
+
+    res.status(500).json({
+      error:'EXTERNAL_TRANSFER_CREATE_FAILED'
+    });
+
+  }
+});
+
+app.get('/api/admin/external-transfers',adminAuth,(req,res)=>{
+  try{
+
+    const rows=db.prepare(`
+      SELECT
+        et.*,
+        u.name AS source_user_name,
+        u.email AS source_user_email
+      FROM external_transfers et
+      LEFT JOIN users u
+        ON u.id=et.source_user_id
+      ORDER BY et.id DESC
+    `).all();
+
+    res.json(rows);
+
+  }catch(error){
+
+    console.error(
+      'Erreur chargement virements externes admin:',
+      error
+    );
+
+    res.status(500).json({
+      error:'ADMIN_EXTERNAL_TRANSFERS_LOAD_FAILED'
+    });
+
+  }
+});
+
+
+app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
+  try{
+
+    const adminId=req.session.admin.id;
+
+    const sourceUserId=Number(req.body.sourceUserId);
+
+    const beneficiaryName=String(req.body.beneficiaryName||'').trim();
+    const beneficiaryCountry=String(req.body.beneficiaryCountry||'').trim();
+    const bankName=String(req.body.bankName||'').trim();
+    const accountNo=String(req.body.accountNo||'').trim();
+    const iban=String(req.body.iban||'').trim();
+    const bic=String(req.body.bic||'').trim();
+    const currency=String(req.body.currency||'USD').trim().toUpperCase();
+    const reason=String(req.body.reason||'').trim();
+    const beneficiaryEmail=String(req.body.beneficiaryEmail||'').trim();
+    const beneficiaryPhone=String(req.body.beneficiaryPhone||'').trim();
+    const notificationMethod=String(req.body.notificationMethod||'email').trim().toLowerCase();
+    const notificationLanguage=String(req.body.notificationLanguage||'fr').trim().toLowerCase();
+    const amountCents=parseCents(req.body.amount);
+
+    if(!['email','sms'].includes(notificationMethod)){
+      return res.status(400).json({error:'INVALID_NOTIFICATION_METHOD'});
+    }
+
+    if(!['fr','en','ar'].includes(notificationLanguage)){
+      return res.status(400).json({error:'INVALID_NOTIFICATION_LANGUAGE'});
+    }
+
+    if(!Number.isInteger(sourceUserId) || sourceUserId<=0){
+      return res.status(400).json({error:'SOURCE_ACCOUNT_REQUIRED'});
+    }
+
+    const sourceUser=db.prepare(`
+      SELECT id,name,email,balance_cents
+      FROM users
+      WHERE id=?
+    `).get(sourceUserId);
+
+    if(!sourceUser){
+      return res.status(404).json({error:'SOURCE_ACCOUNT_NOT_FOUND'});
+    }
+
+    if(!beneficiaryName){
+      return res.status(400).json({error:'BENEFICIARY_NAME_REQUIRED'});
+    }
+
+    if(!beneficiaryCountry){
+      return res.status(400).json({error:'BENEFICIARY_COUNTRY_REQUIRED'});
+    }
+
+    if(!bankName){
+      return res.status(400).json({error:'BANK_NAME_REQUIRED'});
+    }
+
+    if(!accountNo && !iban){
+      return res.status(400).json({error:'ACCOUNT_OR_IBAN_REQUIRED'});
+    }
+
+    if(!bic){
+      return res.status(400).json({error:'BIC_REQUIRED'});
+    }
+
+    if(!Number.isFinite(amountCents) || amountCents<=0){
+      return res.status(400).json({error:'INVALID_AMOUNT'});
+    }
+
+    const now=new Date().toISOString();
+
+    const result=db.prepare(`
+      INSERT INTO external_transfers(
+        source_type,
+        source_user_id,
+        source_admin_id,
+        beneficiary_name,
+        beneficiary_country,
+        bank_name,
+        account_no,
+        iban,
+        bic,
+        amount_cents,
+        currency,
+        reason,
+        beneficiary_email,
+        beneficiary_phone,
+        notification_method,
+        notification_language,
+        status,
+        condition_text,
+        condition_completed,
+        provider,
+        provider_transfer_id,
+        provider_status,
+        created_at,
+        updated_at
+      )
+      VALUES(
+        'admin',
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        'pending_verification',
+        'Vérification des informations du bénéficiaire requise avant l''envoi du virement.',
+        0,
+        '',
+        '',
+        '',
+        ?,
+        ?
+      )
+    `).run(
+      sourceUserId,
+      adminId,
+      beneficiaryName,
+      beneficiaryCountry,
+      bankName,
+      accountNo,
+      iban,
+      bic,
+      amountCents,
+      currency,
+      reason,
+      beneficiaryEmail,
+      beneficiaryPhone,
+      notificationMethod,
+      notificationLanguage,
+      now,
+      now
+    );
+
+    res.json({
+      ok:true,
+      transferId:result.lastInsertRowid,
+      status:'pending_verification',
+      sourceAccount:{
+        id:sourceUser.id,
+        name:sourceUser.name
+      }
+    });
+
+  }catch(error){
+
+    console.error('Erreur création virement externe admin:',error);
+
+    res.status(500).json({
+      error:'ADMIN_EXTERNAL_TRANSFER_CREATE_FAILED'
+    });
+
+  }
+});
+
+
+app.patch('/api/admin/external-transfers/:id/status',adminAuth,(req,res)=>{
+  try{
+
+    const transferId=Number(req.params.id);
+    const nextStatus=String(req.body.status||'').trim().toLowerCase();
+    const provider=String(req.body.provider||'').trim();
+    const providerTransferId=String(req.body.providerTransferId||'').trim();
+    const providerStatus=String(req.body.providerStatus||'').trim();
+
+    if(!Number.isInteger(transferId) || transferId<=0){
+      return res.status(400).json({
+        error:'INVALID_TRANSFER_ID'
+      });
+    }
+
+    if(!['verified','processing','completed','failed'].includes(nextStatus)){
+      return res.status(400).json({
+        error:'INVALID_EXTERNAL_TRANSFER_STATUS'
+      });
+    }
+
+    const transfer=db.prepare(`
+      SELECT *
+      FROM external_transfers
+      WHERE id=?
+    `).get(transferId);
+
+    if(!transfer){
+      return res.status(404).json({
+        error:'EXTERNAL_TRANSFER_NOT_FOUND'
+      });
+    }
+
+    const currentStatus=String(transfer.status||'');
+
+    const allowed={
+      pending_verification:['verified','failed'],
+      verified:['processing','failed'],
+      processing:['completed','failed'],
+      completed:[],
+      failed:[]
+    };
+
+    if(!allowed[currentStatus] ||
+       !allowed[currentStatus].includes(nextStatus)){
+      return res.status(409).json({
+        error:'INVALID_STATUS_TRANSITION',
+        currentStatus,
+        nextStatus
+      });
+    }
+
+    const nowValue=now();
+
+    const processTransfer=db.transaction(()=>{
+
+      if(nextStatus==='verified'){
+
+        db.prepare(`
+          UPDATE external_transfers
+          SET status='verified',
+              condition_completed=1,
+              provider=?,
+              provider_transfer_id=?,
+              provider_status=?,
+              updated_at=?
+          WHERE id=?
+            AND status='pending_verification'
+        `).run(
+          provider,
+          providerTransferId,
+          providerStatus,
+          nowValue,
+          transferId
+        );
+
+      }else if(nextStatus==='processing'){
+
+        const sourceUser=db.prepare(`
+          SELECT id,name,balance_cents
+          FROM users
+          WHERE id=?
+        `).get(transfer.source_user_id);
+
+        if(!sourceUser){
+          const error=new Error('SOURCE_ACCOUNT_NOT_FOUND');
+          error.code='SOURCE_ACCOUNT_NOT_FOUND';
+          throw error;
+        }
+
+        if(sourceUser.balance_cents < transfer.amount_cents){
+          const error=new Error('INSUFFICIENT_BALANCE');
+          error.code='INSUFFICIENT_BALANCE';
+          throw error;
+        }
+
+        const newBalance=
+          sourceUser.balance_cents-transfer.amount_cents;
+
+        db.prepare(`
+          UPDATE users
+          SET balance_cents=?
+          WHERE id=?
+        `).run(
+          newBalance,
+          sourceUser.id
+        );
+
+        db.prepare(`
+          INSERT INTO transactions(
+            user_id,
+            kind,
+            label,
+            amount_cents,
+            balance_after_cents,
+            created_at
+          )
+          VALUES(?,?,?,?,?,?)
+        `).run(
+          sourceUser.id,
+          'debit',
+          'Virement bancaire externe #'+transfer.id,
+          -transfer.amount_cents,
+          newBalance,
+          nowValue
+        );
+
+        const processingUpdate=db.prepare(`
+          UPDATE external_transfers
+          SET status='processing',
+              provider=?,
+              provider_transfer_id=?,
+              provider_status=?,
+              updated_at=?
+          WHERE id=?
+            AND status='verified'
+        `).run(
+          provider,
+          providerTransferId,
+          providerStatus,
+          nowValue,
+          transferId
+        );
+
+        if(processingUpdate.changes!==1){
+          const error=new Error('EXTERNAL_TRANSFER_STATUS_CHANGED');
+          error.code='EXTERNAL_TRANSFER_STATUS_CHANGED';
+          throw error;
+        }
+
+      }else if(nextStatus==='completed'){
+
+     const completedUpdate=db.prepare(`
+  UPDATE external_transfers
+  SET status='completed',
+      provider=?,
+      provider_transfer_id=?,
+      provider_status=?,
+      completed_at=?,
+      updated_at=?
+  WHERE id=?
+    AND status='processing'
+`).run(
+  provider,
+  providerTransferId,
+  providerStatus || 'completed',
+  nowValue,
+  nowValue,
+  transferId
+);
+
+if(completedUpdate.changes!==1){
+  const error=new Error('EXTERNAL_TRANSFER_STATUS_CHANGED');
+  error.code='EXTERNAL_TRANSFER_STATUS_CHANGED';
+  throw error;
+}   
+      }else if(nextStatus==='failed'){
+
+        if(currentStatus==='processing'){
+
+          const sourceUser=db.prepare(`
+            SELECT id,name,balance_cents
+            FROM users
+            WHERE id=?
+          `).get(transfer.source_user_id);
+
+          if(!sourceUser){
+            const error=new Error('SOURCE_ACCOUNT_NOT_FOUND');
+            error.code='SOURCE_ACCOUNT_NOT_FOUND';
+            throw error;
+          }
+
+          const newBalance=
+            sourceUser.balance_cents+transfer.amount_cents;
+
+          db.prepare(`
+            UPDATE users
+            SET balance_cents=?
+            WHERE id=?
+          `).run(
+            newBalance,
+            sourceUser.id
+          );
+
+          db.prepare(`
+            INSERT INTO transactions(
+              user_id,
+              kind,
+              label,
+              amount_cents,
+              balance_after_cents,
+              created_at
+            )
+            VALUES(?,?,?,?,?,?)
+          `).run(
+            sourceUser.id,
+            'credit',
+            'Remboursement virement externe #'+transfer.id,
+            transfer.amount_cents,
+            newBalance,
+            nowValue
+          );
+
+        }
+
+        const failedUpdate=db.prepare(`
+          UPDATE external_transfers
+          SET status='failed',
+              provider=?,
+              provider_transfer_id=?,
+              provider_status=?,
+              updated_at=?
+          WHERE id=?
+            AND status=?
+        `).run(
+          provider,
+          providerTransferId,
+          providerStatus || 'failed',
+          nowValue,
+          transferId,
+          currentStatus
+        );
+
+        if(failedUpdate.changes!==1){
+          const error=new Error('EXTERNAL_TRANSFER_STATUS_CHANGED');
+          error.code='EXTERNAL_TRANSFER_STATUS_CHANGED';
+          throw error;
+        }
+
+      }
+
+    });
+
+    processTransfer();
+
+    const updated=db.prepare(`
+      SELECT *
+      FROM external_transfers
+      WHERE id=?
+    `).get(transferId);
+
+    res.json({
+      ok:true,
+      transfer:updated
+    });
+
+  }catch(error){
+
+    console.error(
+      'Erreur traitement virement externe:',
+      error
+    );
+
+    if(error.code==='SOURCE_ACCOUNT_NOT_FOUND'){
+      return res.status(404).json({
+        error:'SOURCE_ACCOUNT_NOT_FOUND'
+      });
+    }
+
+    if(error.code==='INSUFFICIENT_BALANCE'){
+      return res.status(400).json({
+        error:'INSUFFICIENT_BALANCE'
+      });
+    }
+
+    if(error.code==='EXTERNAL_TRANSFER_STATUS_CHANGED'){
+      return res.status(409).json({
+        error:'EXTERNAL_TRANSFER_STATUS_CHANGED'
+      });
+    }
+
+    res.status(500).json({
+      error:'EXTERNAL_TRANSFER_STATUS_UPDATE_FAILED'
+    });
+
+  }
+});
+
 app.post('/api/admin/incoming-transfers',adminAuth,(req,res)=>{
   const userId=Number(req.body.userId);
   const amountCents=parseCents(req.body.amount);
@@ -1620,7 +2308,7 @@ app.post('/api/admin/incoming-transfers',adminAuth,(req,res)=>{
   }
 
   const user=db.prepare(`
-    SELECT id,name,email
+    SELECT id,name,email,notification_language
     FROM users
     WHERE id=?
   `).get(userId);
@@ -1683,7 +2371,7 @@ if(user.email){
         'SELECT balance_cents FROM users WHERE id=?'
       ).get(userId).balance_cents
     ),
-language:client.notification_language || 'fr'
+language:user.notification_language || 'fr'
   });
 
 }
@@ -1902,6 +2590,10 @@ app.get('/admin.html',(req,res)=>{
 
 app.get('/client',(req,res)=>{
   res.sendFile(path.join(__dirname,'index.html'));
+});
+
+app.get('/',(req,res)=>{
+  res.sendFile(path.join(__dirname,'home.html'));
 });
 
 app.get('*',(req,res)=>{
