@@ -2764,10 +2764,9 @@ function closeModal(){
       <option value="email">📧 E-mail</option>
       <option value="sms">📱 SMS</option>
     </select>
-    <label>Langue des notifications</label>
-
-<select id="cNotificationLanguage">
-  <option value="fr">🇫🇷 Français</option>
+   <label>Langue du client</label>
+<select id="cInterfaceLanguage">
+  <option value="fr" selected>🇫🇷 Français</option>
   <option value="en">🇬🇧 English</option>
   <option value="ar">🇸🇦 العربية</option>
 </select>
@@ -3058,7 +3057,9 @@ bankCountry:$('cBankCountry').value,
 
 notificationMethod:$('cNotificationMethod').value,
 
-notificationLanguage:$('cNotificationLanguage').value,
+notificationLanguage:$('cInterfaceLanguage').value,
+
+interfaceLanguage:$('cInterfaceLanguage').value,
 
 password:password,
             

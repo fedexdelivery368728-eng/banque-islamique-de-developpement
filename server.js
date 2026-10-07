@@ -182,32 +182,114 @@ app.use(session({
 
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 const now=()=>new Date().toISOString();
+async function sendInfobipSms({to, text}){
+
+  const baseUrl =
+    String(
+      process.env.INFOBIP_BASE_URL ||
+      'https://api.infobip.com'
+    ).replace(/\/+$/, '');
+
+  const apiKey =
+    String(process.env.INFOBIP_API_KEY || '').trim();
+
+  const sender =
+    String(process.env.INFOBIP_SENDER_ID || '').trim();
+
+  if(!apiKey){
+    throw new Error('INFOBIP_API_KEY is not configured');
+  }
+
+  if(!sender){
+    throw new Error('INFOBIP_SENDER_ID is not configured');
+  }
+
+  let phone =
+    String(to || '')
+      .trim()
+      .replace(/[^\d+]/g,'');
+
+  if(phone.startsWith('00')){
+    phone = '+' + phone.slice(2);
+  }
+
+  if(!phone.startsWith('+')){
+    throw new Error('PHONE_MUST_USE_INTERNATIONAL_FORMAT');
+  }
+
+  const response =
+    await fetch(
+      `${baseUrl}/sms/3/messages`,
+      {
+        method:'POST',
+
+        headers:{
+          Authorization:`App ${apiKey}`,
+          'Content-Type':'application/json',
+          Accept:'application/json'
+        },
+
+        body:JSON.stringify({
+          messages:[
+            {
+              sender:sender,
+
+              destinations:[
+                {
+                  to:phone
+                }
+              ],
+
+              content:{
+                text:String(text || '')
+              }
+            }
+          ]
+        })
+      }
+    );
+
+  const data =
+    await response.json().catch(
+      ()=>({})
+    );
+
+  if(!response.ok){
+
+    throw new Error(
+      `Infobip SMS error ${response.status}: ` +
+      JSON.stringify(data)
+    );
+
+  }
+
+  return data;
+}
 async function sendAccountCreationEmail({
   to,
   firstName,
   lastName,
   email,
   password,
-    iban,
+  iban,
   bic,
-    language = 'fr'
+  language = 'fr'
 }) {
 
   if (!resend) {
-    console.log('Resend non configuré : email de création de compte ignoré en local.');
+    console.log(
+      'Resend non configuré : email de création de compte ignoré en local.'
+    );
     return;
   }
-
-  const lang = ['fr', 'en', 'ar'].includes(language)
-    ? language
-    : 'fr';
 
   const translations = {
 
     fr: {
       subject: 'Confirmation de création de votre compte',
       greeting: `Bonjour ${firstName} ${lastName},`,
-      created: 'Votre compte auprès de la Banque Islamique de Développement a été créé avec succès.',
+      created:
+        'Votre compte auprès de la Banque Islamique de Développement a été créé avec succès.',
       loginInfo: 'Informations de connexion',
       email: 'E-mail',
       password: 'Mot de passe',
@@ -216,30 +298,34 @@ async function sendAccountCreationEmail({
       address: 'Adresse',
       iban: 'IBAN',
       bic: 'BIC',
-      access: 'Vous pouvez accéder à votre espace client en cliquant sur le bouton ci-dessous.',
+      access:
+        'Vous pouvez accéder à votre espace client en cliquant sur le bouton ci-dessous.',
       button: '🔐 Se connecter à mon espace client'
     },
 
     en: {
-      subject: 'Confirmation of your account creation',
+      subject: 'Account Creation Confirmation',
       greeting: `Hello ${firstName} ${lastName},`,
-      created: 'Your account with Banque Islamique de Développement has been successfully created.',
-      loginInfo: 'Login information',
+      created:
+        'Your account with Banque Islamique de Développement has been successfully created.',
+      loginInfo: 'Login Information',
       email: 'Email',
       password: 'Password',
-      bankInfo: 'Bank details',
+      bankInfo: 'Bank Details',
       bank: 'Bank',
       address: 'Address',
       iban: 'IBAN',
       bic: 'BIC',
-      access: 'You can access your client area by clicking the button below.',
-      button: '🔐 Sign in to your client area'
+      access:
+        'You can access your client area by clicking the button below.',
+      button: '🔐 Sign in to my client area'
     },
 
     ar: {
       subject: 'تأكيد إنشاء حسابك',
       greeting: `مرحباً ${firstName} ${lastName}،`,
-      created: 'تم إنشاء حسابك لدى بنك التنمية الإسلامي بنجاح.',
+      created:
+        'تم إنشاء حسابك لدى بنك التنمية الإسلامي بنجاح.',
       loginInfo: 'معلومات تسجيل الدخول',
       email: 'البريد الإلكتروني',
       password: 'كلمة المرور',
@@ -248,15 +334,15 @@ async function sendAccountCreationEmail({
       address: 'العنوان',
       iban: 'IBAN',
       bic: 'BIC',
-      access: 'يمكنك الدخول إلى مساحة العميل الخاصة بك من خلال الضغط على الزر أدناه.',
+      access:
+        'يمكنك الدخول إلى مساحة العميل الخاصة بك من خلال الضغط على الزر أدناه.',
       button: '🔐 تسجيل الدخول إلى مساحة العميل'
     }
 
   };
 
-  const t = translations[lang];
-
-  const direction = lang === 'ar' ? 'rtl' : 'ltr';
+  const subject =
+    'Confirmation de création de votre compte | Account Creation Confirmation | تأكيد إنشاء حسابك';
 
   try {
 
@@ -266,55 +352,176 @@ async function sendAccountCreationEmail({
 
       to: [to],
 
-      subject: t.subject,
+      subject: subject,
 
       html: `
-        <div style="font-family:Arial,sans-serif;line-height:1.6">
 
-        <h2>Banque Islamique de Développement</h2>
+        <div style="font-family:Arial,sans-serif;line-height:1.6;color:#222;">
 
-<p>${t.greeting}</p>
+          <!-- FRANÇAIS -->
 
-<p>
-  ${t.created}
-</p>
+          <div style="padding:20px;border-bottom:1px solid #ddd;">
 
-<h3>${t.loginInfo}</h3>
+            <h2 style="color:#073d34;">
+              Banque Islamique de Développement
+            </h2>
 
-          <p>
-          <strong>${t.email} :</strong> ${email}<br>
-<strong>${t.password} :</strong> ${password}
+            <h3>${translations.fr.greeting}</h3>
+
+            <p>
+              ${translations.fr.created}
+            </p>
+
+            <h3>${translations.fr.loginInfo}</h3>
+
+            <p>
+              <strong>${translations.fr.email} :</strong> ${email}<br>
+              <strong>${translations.fr.password} :</strong> ${password}
+            </p>
+
+            <h3>${translations.fr.bankInfo}</h3>
+
+            <p>
+              <strong>${translations.fr.bank} :</strong>
+              Banque Islamique de Développement<br>
+
+              <strong>${translations.fr.address} :</strong>
+              10, Avenue du Développement, Casablanca, Maroc<br>
+
+              <strong>${translations.fr.iban} :</strong>
+              ${iban}<br>
+
+              <strong>${translations.fr.bic} :</strong>
+              ${bic}
+            </p>
+
+            <p>
+              ${translations.fr.access}
+            </p>
+
+            <p style="margin:25px 0;">
+              <a
+                href="https://virtual-bank-demo-production.up.railway.app"
+                style="display:inline-block;padding:12px 22px;background:#087f68;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;"
+              >
+                ${translations.fr.button}
+              </a>
+            </p>
+
+          </div>
 
 
-          <h3>${t.bankInfo}</h3>
+          <!-- ENGLISH -->
 
-<p>
-  <strong>${t.bank} :</strong>
-  Banque Islamique de Développement<br>
+          <div style="padding:20px;border-bottom:1px solid #ddd;">
 
-  <strong>${t.address} :</strong>
-  10, Avenue du Développement, Casablanca, Maroc<br>
+            <h2 style="color:#073d34;">
+              Banque Islamique de Développement
+            </h2>
 
-  <strong>${t.iban} :</strong> ${iban}<br>
+            <h3>${translations.en.greeting}</h3>
 
-  <strong>${t.bic} :</strong> ${bic}
-</p>
+            <p>
+              ${translations.en.created}
+            </p>
 
-          <p>
-  ${t.access}
-</p>
+            <h3>${translations.en.loginInfo}</h3>
 
-<p style="margin:25px 0;">
-  <a
-    href="https://virtual-bank-demo-production.up.railway.app"
-    style="display:inline-block;padding:12px 22px;background:#087f68;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;"
-  >
-    ${t.button}
-  </a>
-</p>
+            <p>
+              <strong>${translations.en.email} :</strong> ${email}<br>
+              <strong>${translations.en.password} :</strong> ${password}
+            </p>
 
+            <h3>${translations.en.bankInfo}</h3>
+
+            <p>
+              <strong>${translations.en.bank} :</strong>
+              Banque Islamique de Développement<br>
+
+              <strong>${translations.en.address} :</strong>
+              10, Avenue du Développement, Casablanca, Maroc<br>
+
+              <strong>${translations.en.iban} :</strong>
+              ${iban}<br>
+
+              <strong>${translations.en.bic} :</strong>
+              ${bic}
+            </p>
+
+            <p>
+              ${translations.en.access}
+            </p>
+
+            <p style="margin:25px 0;">
+              <a
+                href="https://virtual-bank-demo-production.up.railway.app"
+                style="display:inline-block;padding:12px 22px;background:#087f68;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;"
+              >
+                ${translations.en.button}
+              </a>
+            </p>
+
+          </div>
+
+
+          <!-- العربية -->
+
+          <div
+            dir="rtl"
+            lang="ar"
+            style="padding:20px;text-align:right;"
+          >
+
+            <h2 style="color:#073d34;">
+              بنك التنمية الإسلامي
+            </h2>
+
+            <h3>${translations.ar.greeting}</h3>
+
+            <p>
+              ${translations.ar.created}
+            </p>
+
+            <h3>${translations.ar.loginInfo}</h3>
+
+            <p>
+              <strong>${translations.ar.email} :</strong> ${email}<br>
+              <strong>${translations.ar.password} :</strong> ${password}
+            </p>
+
+            <h3>${translations.ar.bankInfo}</h3>
+
+            <p>
+              <strong>${translations.ar.bank} :</strong>
+              Banque Islamique de Développement<br>
+
+              <strong>${translations.ar.address} :</strong>
+              10, Avenue du Développement, Casablanca, Maroc<br>
+
+              <strong>${translations.ar.iban} :</strong>
+              ${iban}<br>
+
+              <strong>${translations.ar.bic} :</strong>
+              ${bic}
+            </p>
+
+            <p>
+              ${translations.ar.access}
+            </p>
+
+            <p style="margin:25px 0;">
+              <a
+                href="https://virtual-bank-demo-production.up.railway.app"
+                style="display:inline-block;padding:12px 22px;background:#087f68;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;"
+              >
+                ${translations.ar.button}
+              </a>
+            </p>
+
+          </div>
 
         </div>
+
       `
 
     });
@@ -1438,6 +1645,7 @@ app.get('/api/me',auth,(req,res)=>{
       balance_cents,
       created_at,
       account_currency,
+      notification_language,
       bank_code,
       branch_code,
       rib_account_number,
@@ -1688,6 +1896,30 @@ String(req.body.notificationMethod || '')
     
 const userId = Number(r.lastInsertRowid);
 
+const interfaceLanguage =
+  ['fr', 'en', 'ar'].includes(
+    String(
+      req.body.interfaceLanguage ||
+      req.body.notificationLanguage ||
+      'fr'
+    )
+  )
+    ? String(
+        req.body.interfaceLanguage ||
+        req.body.notificationLanguage ||
+        'fr'
+      )
+    : 'fr';
+
+db.prepare(`
+  UPDATE users
+  SET notification_language=?
+  WHERE id=?
+`).run(
+  interfaceLanguage,
+  userId
+);
+
 const rib = saveRibData(
   userId,
   bankCountry
@@ -1696,22 +1928,79 @@ if(String(req.body.notificationMethod || '') === 'email'){
 
   try{
 
- await sendAccountCreationEmail({
-  to:email,
-  firstName:firstName,
-  lastName:lastName,
-  email:email,
-  password:password,
-  iban:rib.iban,
-  bic:rib.bic,
-  language:String(req.body.notificationLanguage || 'fr')
-});
+    await sendAccountCreationEmail({
+      to:email,
+      firstName:firstName,
+      lastName:lastName,
+      email:email,
+      password:password,
+      iban:rib.iban,
+      bic:rib.bic,
+      language:String(req.body.notificationLanguage || 'fr')
+    });
 
   }catch(emailError){
 
     console.error(
       'Erreur lors de l’envoi de l’e-mail :',
       emailError
+    );
+
+  }
+
+}else if(String(req.body.notificationMethod || '') === 'sms'){
+
+  try{
+
+    let smsText='';
+
+    if(interfaceLanguage === 'en'){
+
+      smsText =
+        `Banque Islamique de Développement: ` +
+        `Your account has been created successfully. ` +
+        `Email: ${email}. ` +
+        `Temporary password: ${password}. ` +
+        `IBAN: ${rib.iban}. ` +
+        `BIC: ${rib.bic}.`;
+
+    }else if(interfaceLanguage === 'ar'){
+
+      smsText =
+        `بنك التنمية الإسلامي: ` +
+        `تم إنشاء حسابك بنجاح. ` +
+        `البريد الإلكتروني: ${email}. ` +
+        `كلمة المرور المؤقتة: ${password}. ` +
+        `IBAN: ${rib.iban}. ` +
+        `BIC: ${rib.bic}.`;
+
+    }else{
+
+      smsText =
+        `Banque Islamique de Développement : ` +
+        `Votre compte a été créé avec succès. ` +
+        `E-mail : ${email}. ` +
+        `Mot de passe temporaire : ${password}. ` +
+        `IBAN : ${rib.iban}. ` +
+        `BIC : ${rib.bic}.`;
+
+    }
+
+    await sendInfobipSms({
+      to:phone,
+      text:smsText
+    });
+
+    console.log(
+      'SMS Infobip envoyé avec succès à',
+      phone
+    );
+
+  }catch(smsError){
+
+    console.error(
+      'Erreur lors de l’envoi du SMS Infobip :',
+      smsError
     );
 
   }

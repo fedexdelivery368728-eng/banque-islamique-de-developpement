@@ -1344,6 +1344,10 @@ async function load(){
 
   me=await api("/api/me");
 
+  lang = ["fr","en","ar"].includes(me.notification_language)
+    ? me.notification_language
+    : "fr";
+  setLanguage(lang);
   hello.textContent=
     (
       lang==="ar"
