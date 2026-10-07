@@ -709,6 +709,35 @@ th{
     <h2>
       Gestion des comptes
     </h2>
+    <div
+  style="
+    margin:15px 0;
+    padding:15px;
+    border:1px solid #dce8e3;
+    border-radius:10px;
+    background:#f3f7f5;
+  "
+>
+  <strong>Banque Islamique de Développement</strong>
+
+  <div style="margin-top:6px">
+    Adresse :
+    10, Avenue du Développement, Casablanca, Maroc
+  </div>
+
+  <div style="margin-top:4px">
+    BIC / SWIFT :
+    MADMMA01
+  </div>
+
+  <div style="margin-top:4px">
+    Code banque :
+    022
+    &nbsp;&nbsp;
+    Code agence :
+    450
+  </div>
+</div>
 
 
     <div class="search">
@@ -2545,7 +2574,17 @@ async function loadUsers(){
       <tr>
 
         <td>
-        <b>${esc(u.iban || u.account_no || '—')}</b>
+    <b>${esc(u.iban || u.account_no || '—')}</b>
+
+<div
+  style="
+    margin-top:4px;
+    font-size:12px;
+    color:#666;
+  "
+>
+  BIC : ${esc(u.bic || 'MADMMA01')}
+</div>
         </td>
 
 
@@ -2792,7 +2831,7 @@ function closeModal(){
   <h3>Pièce d'identité</h3>
 
   <p class="small muted">
-   Utiliser uniquement des informations fictives pour cette démonstration.
+   Utiliser uniquement des informations réelles.
   </p>
 
   <div class="formgrid">
@@ -3141,7 +3180,7 @@ async function editUser(id){
     >
 
       <b>Compte :</b>
-      ${esc(user.account_no || '—')}
+${esc(user.iban || user.account_no || '—')}
 
       <br>
 
@@ -3177,7 +3216,10 @@ async function editUser(id){
       ${esc(user.iban || '—')}
 
       <br><br>
+<b>BIC / SWIFT :</b>
+${esc(user.bic || 'MADMMA01')}
 
+<br><br>
       <b>BIC :</b>
       ${esc(user.bic || '—')}
 
