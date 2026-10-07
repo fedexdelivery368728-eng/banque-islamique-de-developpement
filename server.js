@@ -12,8 +12,9 @@ const resend = process.env.RESEND_API_KEY
   : null;
 
 const app=express();
-const dataDir=process.env.DATA_DIR || path.join(__dirname,'data');
+const dataDir=process.env.DATA_DIR || '/var/data';
 fs.mkdirSync(dataDir,{recursive:true});
+
 const dbPath=process.env.DB_PATH || path.join(dataDir,'Banque Islamique de Développement.sqlite');
 const db=new Database(dbPath);
 db.pragma('journal_mode=WAL');
