@@ -806,6 +806,42 @@ td,th{
   <div id="internalTransfer">
 
     <select id="beneficiary"></select>
+    <input
+  id="internalBeneficiaryCountry"
+  type="text"
+  placeholder="Pays du bénéficiaire"
+>
+
+<input
+  id="internalBankName"
+  type="text"
+  value="Banque Islamique de Développement"
+  placeholder="Nom de la banque"
+>
+
+<input
+  id="internalAccountNo"
+  type="text"
+  placeholder="Numéro de compte"
+>
+
+<input
+  id="internalIban"
+  type="text"
+  placeholder="IBAN"
+>
+
+<input
+  id="internalBic"
+  type="text"
+  value="MADMMA01"
+  placeholder="BIC / SWIFT"
+  <input
+  id="internalReason"
+  type="text"
+  placeholder="Motif du virement"
+>
+>
 
     <input
       id="amount"
@@ -873,49 +909,13 @@ td,th{
       placeholder="Montant"
     >
 
-    <select id="externalCurrency">
-      <option value="USD">USD</option>
-      <option value="EUR">EUR</option>
-      <option value="GBP">GBP</option>
-      <option value="MAD">MAD</option>
-      <option value="CAD">CAD</option>
-      <option value="CHF">CHF</option>
-      <option value="AED">AED</option>
-      <option value="XAF">XAF</option>
-    </select>
+    
 
     <input
       id="externalReason"
       type="text"
       placeholder="Motif du virement"
     >
-
-    <input
-      id="externalBeneficiaryEmail"
-      type="email"
-      placeholder="E-mail du bénéficiaire"
-    >
-
-    <input
-      id="externalBeneficiaryPhone"
-      type="tel"
-      placeholder="Téléphone du bénéficiaire"
-    >
-
-    <label for="externalNotificationMethod">Méthode de notification</label>
-
-    <select id="externalNotificationMethod">
-      <option value="email">Email</option>
-      <option value="sms">SMS</option>
-    </select>
-
-    <label for="externalNotificationLanguage">Langue de notification</label>
-
-    <select id="externalNotificationLanguage">
-      <option value="fr">Français</option>
-      <option value="en">English</option>
-      <option value="ar">العربية</option>
-    </select>
 
     <button
       class="primary"
@@ -934,9 +934,9 @@ td,th{
 
     <div class="form">
 
-      <input id="bname">
+      <input id="bname" placeholder="Nom du bénéficiaire">
 
-      <input id="baccount">
+      <input id="baccount" placeholder="N° de compte / IBAN">
 
       <button
         class="primary"
@@ -1548,23 +1548,10 @@ async function externalTransfer(){
       document.getElementById("externalAmount").value;
 
     const currency=
-      document.getElementById("externalCurrency").value;
+  me.account_currency || "USD";
 
-    const reason=
-      document.getElementById("externalReason").value.trim();
-
-    const beneficiaryEmail=
-      document.getElementById("externalBeneficiaryEmail").value.trim();
-
-    const beneficiaryPhone=
-      document.getElementById("externalBeneficiaryPhone").value.trim();
-
-    const notificationMethod=
-      document.getElementById("externalNotificationMethod").value;
-
-    const notificationLanguage=
-      document.getElementById("externalNotificationLanguage").value;
-
+const reason=
+  document.getElementById("externalReason").value.trim();
 
     if(!beneficiaryName ||
        !beneficiaryCountry ||
@@ -1593,19 +1580,16 @@ async function externalTransfer(){
         body:JSON.stringify({
 
           beneficiaryName,
-          beneficiaryCountry,
-          bankName,
-          accountNo,
-          iban,
-          bic,
-          amount,
-          currency,
-          reason,
-          beneficiaryEmail,
-          beneficiaryPhone,
-          notificationMethod,
-          notificationLanguage
-
+beneficiaryCountry,
+bankName,
+accountNo,
+iban,
+bic,
+amount,
+currency,
+reason,
+beneficiaryPhone,
+        
         })
       }
     );
@@ -1628,11 +1612,7 @@ async function externalTransfer(){
     document.getElementById("externalBic").value="";
     document.getElementById("externalAmount").value="";
     document.getElementById("externalReason").value="";
-    document.getElementById("externalBeneficiaryEmail").value="";
-    document.getElementById("externalBeneficiaryPhone").value="";
-    document.getElementById("externalNotificationMethod").value="email";
-    document.getElementById("externalNotificationLanguage").value="fr";
-
+    
     await load();
 
 

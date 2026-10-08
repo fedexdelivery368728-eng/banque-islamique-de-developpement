@@ -12,7 +12,7 @@ const resend = process.env.RESEND_API_KEY
   : null;
 
 const app=express();
-const dataDir=process.env.DATA_DIR || '/var/data';
+const dataDir=process.env.DATA_DIR || path.join(__dirname,'data');
 fs.mkdirSync(dataDir,{recursive:true});
 
 const dbPath=process.env.DB_PATH || path.join(dataDir,'Banque Islamique de Développement.sqlite');
@@ -2278,6 +2278,22 @@ app.post('/api/external-transfers',auth,(req,res)=>{
   try{
 
     const userId=req.session.uid;
+    const sourceUser=db.prepare(`
+  SELECT account_currency
+  FROM users
+  WHERE id=?
+`).get(userId);
+
+if(!sourceUser){
+  return res.status(404).json({
+    error:'SOURCE_ACCOUNT_NOT_FOUND'
+  });
+}
+
+const currency=
+  String(sourceUser.account_currency||'USD')
+    .trim()
+    .toUpperCase();
 
     const beneficiaryName=String(req.body.beneficiaryName||'').trim();
     const beneficiaryCountry=String(req.body.beneficiaryCountry||'').trim();
@@ -2285,13 +2301,9 @@ app.post('/api/external-transfers',auth,(req,res)=>{
     const accountNo=String(req.body.accountNo||'').trim();
     const iban=String(req.body.iban||'').trim();
     const bic=String(req.body.bic||'').trim();
-    const currency=String(req.body.currency||'USD').trim().toUpperCase();
     const reason=String(req.body.reason||'').trim();
     const conditionText=String(req.body.conditionText||'').trim();
-    const beneficiaryEmail=String(req.body.beneficiaryEmail||'').trim();
     const beneficiaryPhone=String(req.body.beneficiaryPhone||'').trim();
-    const notificationMethod=String(req.body.notificationMethod||'email').trim().toLowerCase();
-    const notificationLanguage=String(req.body.notificationLanguage||'fr').trim().toLowerCase();
     const bankOriginCountry=String(req.body.bankOriginCountry||'').trim().toUpperCase();
 
     const bankOrigins={
@@ -2312,14 +2324,6 @@ app.post('/api/external-transfers',auth,(req,res)=>{
     }
 
     const amountCents=parseCents(req.body.amount);
-
-    if(!['email','sms'].includes(notificationMethod)){
-      return res.status(400).json({error:'INVALID_NOTIFICATION_METHOD'});
-    }
-
-    if(!['fr','en','ar'].includes(notificationLanguage)){
-      return res.status(400).json({error:'INVALID_NOTIFICATION_LANGUAGE'});
-    }
 
     if(!beneficiaryName){
       return res.status(400).json({error:'BENEFICIARY_NAME_REQUIRED'});
@@ -2363,12 +2367,12 @@ app.post('/api/external-transfers',auth,(req,res)=>{
         bic,
         amount_cents,
         currency,
-        reason,
+               reason,
         beneficiary_email,
-beneficiary_phone,
-notification_method,
-notification_language,
-status,
+        beneficiary_phone,
+        notification_method,
+        notification_language,
+        status,
         condition_text,
         condition_completed,
         provider,
@@ -2416,11 +2420,11 @@ status,
       bic,
       amountCents,
       currency,
-      reason,
-      beneficiaryEmail,
+            reason,
+      '',
       beneficiaryPhone,
-            notificationMethod,
-      notificationLanguage,
+      '',
+      '',
       now(),
       now()
     );
@@ -2560,11 +2564,7 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
     const currency=String(req.body.currency||'USD').trim().toUpperCase();
     const reason=String(req.body.reason||'').trim();
     const conditionText=String(req.body.conditionText||'').trim();
-    const beneficiaryEmail=String(req.body.beneficiaryEmail||'').trim();
     const beneficiaryPhone=String(req.body.beneficiaryPhone||'').trim();
-    const notificationMethod=String(req.body.notificationMethod||'email').trim().toLowerCase();
-    const notificationLanguage=String(req.body.notificationLanguage||'fr').trim().toLowerCase();
-
     const bankOriginCountry=String(req.body.bankOriginCountry||'').trim().toUpperCase();
 
     const bankOrigins={
@@ -2585,14 +2585,6 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
     }
 
     const amountCents=parseCents(req.body.amount);
-
-    if(!['email','sms'].includes(notificationMethod)){
-      return res.status(400).json({error:'INVALID_NOTIFICATION_METHOD'});
-    }
-
-    if(!['fr','en','ar'].includes(notificationLanguage)){
-      return res.status(400).json({error:'INVALID_NOTIFICATION_LANGUAGE'});
-    }
 
     if(!Number.isInteger(sourceUserId) || sourceUserId<=0){
       return res.status(400).json({error:'SOURCE_ACCOUNT_REQUIRED'});
