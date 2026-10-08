@@ -558,6 +558,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
   });
 
   const orderNumber=
+    transfer.order_number ||
     'OV-'+String(transfer.id).padStart(8,'0');
 
   const verificationUrl=
@@ -687,49 +688,333 @@ async function generateExternalTransferPdf(transfer, sourceUser){
     doc.moveDown(0.15);
   }
 
-  sectionTitle('Banque émettrice');
+    sectionTitle('Banque émettrice');
 
   field(
     'Banque',
-    'Banque Islamique de Développement'
+    transfer.bank_name || 'Banque Islamique de Développement'
   );
 
   field(
     'Pays / implantation',
-    transfer.bank_origin_country
+    transfer.bank_origin_country || transfer.sender_bank_country || 'Maroc'
   );
 
   field(
     'Adresse',
-    transfer.bank_origin_address
+    transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
+  );
+
+  field(
+    'BIC / SWIFT',
+    transfer.bank_bic || 'MADMMA01'
   );
 
   sectionTitle('Donneur d’ordre');
 
-  field('Nom',sourceName);
+  field(
+    'Nom',
+    sourceName
+  );
 
   field(
-    'Compte',
-    sourceUser?.iban || sourceUser?.rib_account_number || '—'
+    'RIB',
+    transfer.sender_rib || sourceUser?.rib_account_number || '—'
+  );
+
+  field(
+    'IBAN',
+    transfer.sender_iban || sourceUser?.iban || '—'
+  );
+
+  field(
+    'BIC / SWIFT',
+    transfer.sender_bic || sourceUser?.bic || 'MADMMA01'
   );
 
   sectionTitle('Bénéficiaire');
 
-  field('Nom',transfer.beneficiary_name);
+  field(
+    'Nom',
+    transfer.beneficiary_name
+  );
 
-  field('Pays',transfer.beneficiary_country);
+  field(
+    'Pays',
+    transfer.beneficiary_country || transfer.beneficiary_bank_country || 'Maroc'
+  );
+
+  field(
+    'RIB',
+    transfer.beneficiary_rib || '—'
+  );
+
+  field(
+    'IBAN',
+    transfer.beneficiary_iban || '—'
+  );
+
+  field(
+    'BIC / SWIFT',
+    transfer.beneficiary_bic || 'MADMMA01'
+  );
 
   sectionTitle('Banque bénéficiaire');
 
-  field('Banque',transfer.bank_name);
+  field(
+    'Banque',
+    transfer.bank_name || 'Banque Islamique de Développement'
+  );
+
+  field(
+    'Adresse',
+    transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
+  );
 
   field(
     'Compte / IBAN',
-    transfer.iban || transfer.account_no || '—'
+    transfer.beneficiary_iban || transfer.beneficiary_rib || '—'
   );
 
-  field('BIC / SWIFT',transfer.bic);
+  field(
+    'BIC / SWIFT',
+    transfer.bank_bic || transfer.beneficiary_bic || 'MADMMA01'
+  );
 
+  field(
+    'Notification',
+    transfer.notification_method === 'sms' ? 'SMS' : 'Email'
+  );
+
+  field(
+    'Contact de notification',
+    transfer.notification_method === 'sms'
+      ? (transfer.beneficiary_phone || '—')
+      : (transfer.beneficiary_email || '—')
+  );
+
+  field(
+    'Langue de notification',
+    transfer.notification_language || 'fr'
+  );
+  sectionTitle('Banque émettrice');
+
+  field(
+    'Banque',
+    transfer.bank_name || 'Banque Islamique de Développement'
+  );
+
+  field(
+    'Pays / implantation',
+    transfer.bank_origin_country || transfer.sender_bank_country || 'Maroc'
+  );
+
+  field(
+    'Adresse',
+    transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
+  );
+
+  field(
+    'BIC / SWIFT',
+    transfer.bank_bic || 'MADMMA01'
+  );
+
+  sectionTitle('Donneur d’ordre');
+
+  field(
+    'Nom',
+    sourceName
+  );
+
+  field(
+    'RIB',
+    transfer.sender_rib || sourceUser?.rib_account_number || '—'
+  );
+
+  field(
+    'IBAN',
+    transfer.sender_iban || sourceUser?.iban || '—'
+  );
+
+  field(
+    'BIC / SWIFT',
+    transfer.sender_bic || sourceUser?.bic || 'MADMMA01'
+  );
+
+  sectionTitle('Bénéficiaire');
+
+  field(
+    'Nom',
+    transfer.beneficiary_name
+  );
+
+  field(
+    'Pays',
+    transfer.beneficiary_country || transfer.beneficiary_bank_country || 'Maroc'
+  );
+
+  field(
+    'RIB',
+    transfer.beneficiary_rib || '—'
+  );
+
+  field(
+    'IBAN',
+    transfer.beneficiary_iban || '—'
+  );
+
+  field(
+    'BIC / SWIFT',
+    transfer.beneficiary_bic || 'MADMMA01'
+  );
+
+  sectionTitle('Banque bénéficiaire');
+
+  field(
+    'Banque',
+    transfer.bank_name || 'Banque Islamique de Développement'
+  );
+
+  field(
+    'Adresse',
+    transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
+  );
+
+  field(
+    'Compte / IBAN',
+    transfer.beneficiary_iban || transfer.beneficiary_rib || '—'
+  );
+
+  field(
+    'BIC / SWIFT',
+    transfer.bank_bic || transfer.beneficiary_bic || 'MADMMA01'
+  );
+
+  field(
+    'Notification',
+    transfer.notification_method === 'sms' ? 'SMS' : 'Email'
+  );
+
+  field(
+    'Contact de notification',
+    transfer.notification_method === 'sms'
+      ? (transfer.beneficiary_phone || '—')
+      : (transfer.beneficiary_email || '—')
+  );
+
+  field(
+    'Langue de notification',
+    transfer.notification_language || 'fr'
+  );
+  sectionTitle('Banque émettrice');
+
+  field(
+    'Banque',
+    transfer.bank_name || 'Banque Islamique de Développement'
+  );
+
+  field(
+    'Pays / implantation',
+    transfer.bank_origin_country || transfer.sender_bank_country || 'Maroc'
+  );
+
+  field(
+    'Adresse',
+    transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
+  );
+
+  field(
+    'BIC / SWIFT',
+    transfer.bank_bic || 'MADMMA01'
+  );
+
+  sectionTitle('Donneur d’ordre');
+
+  field(
+    'Nom',
+    sourceName
+  );
+
+  field(
+    'RIB',
+    transfer.sender_rib || sourceUser?.rib_account_number || '—'
+  );
+
+  field(
+    'IBAN',
+    transfer.sender_iban || sourceUser?.iban || '—'
+  );
+
+  field(
+    'BIC / SWIFT',
+    transfer.sender_bic || sourceUser?.bic || 'MADMMA01'
+  );
+
+  sectionTitle('Bénéficiaire');
+
+  field(
+    'Nom',
+    transfer.beneficiary_name
+  );
+
+  field(
+    'Pays',
+    transfer.beneficiary_country || transfer.beneficiary_bank_country || 'Maroc'
+  );
+
+  field(
+    'RIB',
+    transfer.beneficiary_rib || '—'
+  );
+
+  field(
+    'IBAN',
+    transfer.beneficiary_iban || '—'
+  );
+
+  field(
+    'BIC / SWIFT',
+    transfer.beneficiary_bic || 'MADMMA01'
+  );
+
+  sectionTitle('Banque bénéficiaire');
+
+  field(
+    'Banque',
+    transfer.bank_name || 'Banque Islamique de Développement'
+  );
+
+  field(
+    'Adresse',
+    transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
+  );
+
+  field(
+    'Compte / IBAN',
+    transfer.beneficiary_iban || transfer.beneficiary_rib || '—'
+  );
+
+  field(
+    'BIC / SWIFT',
+    transfer.bank_bic || transfer.beneficiary_bic || 'MADMMA01'
+  );
+
+  field(
+    'Notification',
+    transfer.notification_method === 'sms' ? 'SMS' : 'Email'
+  );
+
+  field(
+    'Contact de notification',
+    transfer.notification_method === 'sms'
+      ? (transfer.beneficiary_phone || '—')
+      : (transfer.beneficiary_email || '—')
+  );
+
+  field(
+    'Langue de notification',
+    transfer.notification_language || 'fr'
+  );
   sectionTitle('Détails du virement');
 
   field(
@@ -1448,94 +1733,794 @@ res.json(rows.map(row=>({
   });
 });
 
+app.post('/api/account-transfer',auth,(req,res)=>{
+  try{
+
+    const amountCents=parseCents(req.body.amount);
+    const creditAccount=String(req.body.creditAccount||'').trim();
+
+    if(!Number.isFinite(amountCents)||amountCents<=0){
+      return res.status(400).json({
+        error:'INVALID_AMOUNT'
+      });
+    }
+
+    if(!creditAccount){
+      return res.status(400).json({
+        error:'CREDIT_ACCOUNT_REQUIRED'
+      });
+    }
+
+    const sender=db.prepare(`
+      SELECT
+        id,
+        name,
+        email,
+        phone,
+        iban,
+        rib_account_number,
+        balance_cents
+      FROM users
+      WHERE id=?
+    `).get(req.session.uid);
+
+    if(!sender){
+      return res.status(401).json({
+        error:'AUTH_REQUIRED'
+      });
+    }
+
+    const beneficiaryUser=db.prepare(`
+      SELECT
+        id,
+        name,
+        email,
+        phone,
+        iban,
+        rib_account_number,
+        balance_cents,
+        notification_method,
+        notification_language
+      FROM users
+      WHERE
+        iban=?
+        OR rib_account_number=?
+    `).get(
+      creditAccount,
+      creditAccount
+    );
+
+    if(!beneficiaryUser){
+      return res.status(404).json({
+        error:'BENEFICIARY_ACCOUNT_NOT_FOUND'
+      });
+    }
+
+    if(beneficiaryUser.id===sender.id){
+      return res.status(400).json({
+        error:'SELF_TRANSFER_NOT_ALLOWED'
+      });
+    }
+
+    if(sender.balance_cents<amountCents){
+      return res.status(400).json({
+        error:'INSUFFICIENT_BALANCE'
+      });
+    }
+
+    const reference=
+      'CT-' +
+      Date.now().toString().slice(-8) +
+      '-' +
+      Math.floor(1000+Math.random()*9000);
+
+    const conditionText=
+      'Le virement compte à compte reste en attente jusqu’à sa validation par la Banque Islamique de Développement. ' +
+      'Les fonds ne seront débités du compte émetteur et crédités sur le compte bénéficiaire qu’après validation.';
+
+    const result=db.prepare(`
+      INSERT INTO internal_transfers(
+        reference,
+        sender_user_id,
+        beneficiary_user_id,
+        beneficiary_name,
+        amount_cents,
+        currency,
+        condition_text,
+        status,
+        created_at
+      )
+      VALUES(?,?,?,?,?,?,?,?,?)
+    `).run(
+      reference,
+      sender.id,
+      beneficiaryUser.id,
+      beneficiaryUser.name,
+      amountCents,
+      'USD',
+      conditionText,
+      'pending',
+      new Date().toISOString()
+    );
+
+    res.json({
+      ok:true,
+      id:result.lastInsertRowid,
+      reference,
+      status:'pending'
+    });
+
+  }catch(error){
+
+    console.error(
+      'Erreur création virement compte à compte:',
+      error
+    );
+
+    res.status(500).json({
+      error:'ACCOUNT_TRANSFER_CREATE_FAILED'
+    });
+
+  }
+});
+
 app.post('/api/transfer',auth,(req,res)=>{
-  const amountCents=parseCents(req.body.amount);
-  const beneficiaryId=Number(req.body.beneficiaryId);
+  try{
 
-  if(!Number.isFinite(amountCents)||amountCents<=0){
-    return res.status(400).json({
-      error:'INVALID_AMOUNT'
-    });
-  }
+    const amountCents=parseCents(req.body.amount);
+    const beneficiaryId=Number(req.body.beneficiaryId);
 
-  const b=db.prepare(
-    'SELECT * FROM beneficiaries WHERE id=? AND user_id=?'
-  ).get(
-    beneficiaryId,
-    req.session.uid
-  );
+    if(!Number.isFinite(amountCents)||amountCents<=0){
+      return res.status(400).json({
+        error:'INVALID_AMOUNT'
+      });
+    }
 
-  const u=db.prepare(
-    'SELECT balance_cents FROM users WHERE id=?'
-  ).get(req.session.uid);
+    if(!Number.isInteger(beneficiaryId)||beneficiaryId<=0){
+      return res.status(400).json({
+        error:'INVALID_BENEFICIARY'
+      });
+    }
 
-  if(!b||!u||u.balance_cents<amountCents){
-    return res.status(400).json({
-      error:'INSUFFICIENT_OR_INVALID'
-    });
-  }
-
-  const tx=db.transaction(()=>{
-    const nb=u.balance_cents-amountCents;
-
-    db.prepare(
-      'UPDATE users SET balance_cents=? WHERE id=?'
-    ).run(
-      nb,
+    const beneficiary=db.prepare(`
+      SELECT
+        b.id,
+        b.name,
+        b.account_no
+      FROM beneficiaries b
+      WHERE b.id=?
+        AND b.user_id=?
+    `).get(
+      beneficiaryId,
       req.session.uid
     );
 
-    db.prepare(
-      'INSERT INTO transactions(user_id,kind,label,amount_cents,balance_after_cents,created_at) VALUES(?,?,?,?,?,?)'
-    ).run(
-      req.session.uid,
-      'debit',
-      'Transfer to '+b.name,
-      -amountCents,
-      nb,
+    if(!beneficiary){
+      return res.status(404).json({
+        error:'BENEFICIARY_NOT_FOUND'
+      });
+    }
+
+    /*
+     * Le bénéficiaire est recherché dans les comptes clients
+     * à partir du numéro de compte enregistré.
+     */
+    const beneficiaryUser=db.prepare(`
+      SELECT
+        id,
+        name,
+        email,
+        phone,
+        iban,
+        rib_account_number,
+        balance_cents,
+        notification_method,
+        notification_language
+      FROM users
+      WHERE
+        iban=?
+        OR rib_account_number=?
+    `).get(
+      beneficiary.account_no,
+      beneficiary.account_no
+    );
+
+    if(!beneficiaryUser){
+      return res.status(404).json({
+        error:'BENEFICIARY_ACCOUNT_NOT_FOUND'
+      });
+    }
+
+    if(beneficiaryUser.id===req.session.uid){
+      return res.status(400).json({
+        error:'SELF_TRANSFER_NOT_ALLOWED'
+      });
+    }
+
+    const sender=db.prepare(`
+      SELECT
+        id,
+        name,
+        email,
+        phone,
+        balance_cents
+      FROM users
+      WHERE id=?
+    `).get(req.session.uid);
+
+    if(!sender){
+      return res.status(401).json({
+        error:'AUTH_REQUIRED'
+      });
+    }
+
+    if(sender.balance_cents<amountCents){
+      return res.status(400).json({
+        error:'INSUFFICIENT_BALANCE'
+      });
+    }
+
+    /*
+     * Référence unique du virement.
+     */
+    const reference=
+      'VT-' +
+      Date.now().toString().slice(-8) +
+      '-' +
+      Math.floor(1000+Math.random()*9000);
+
+    const conditionText=
+      'Le virement reste en attente jusqu’à sa validation par la Banque Islamique de Développement. ' +
+      'Les fonds ne seront débités du compte émetteur et crédités sur le compte bénéficiaire ' +
+      'qu’après validation.';
+
+    const result=db.prepare(`
+      INSERT INTO internal_transfers(
+        reference,
+        sender_user_id,
+        beneficiary_user_id,
+        beneficiary_name,
+        amount_cents,
+        currency,
+        condition_text,
+        status,
+        created_at
+      )
+      VALUES(?,?,?,?,?,?,?,?,?)
+    `).run(
+      reference,
+      sender.id,
+      beneficiaryUser.id,
+      beneficiaryUser.name,
+      amountCents,
+      'USD',
+      conditionText,
+      'pending',
       now()
     );
-  });
 
-  tx();
+    /*
+     * Notification du bénéficiaire.
+     * Aucun crédit n'est encore effectué.
+     */
+    const notificationMethod=
+      String(beneficiaryUser.notification_method||'email')
+        .trim()
+        .toLowerCase();
 
-const client=db.prepare(`
-  SELECT name,email,balance_cents,notification_language
-  FROM users
-  WHERE id=?
-`).get(req.session.uid);
+    const amountText=
+      (amountCents/100).toFixed(2);
 
-if(client && client.email){
+    const notificationMessage=
+      'Un virement interne de ' +
+      sender.name +
+      ' d’un montant de ' +
+      amountText +
+      ' USD est actuellement en attente sur votre compte. ' +
+      'Référence : ' +
+      reference +
+      '. ' +
+      conditionText;
 
-  sendTransactionEmail({
+    if(
+      notificationMethod==='sms' &&
+      beneficiaryUser.phone
+    ){
 
-    to:client.email,
+      sendInfobipSms({
+        to:beneficiaryUser.phone,
+        text:
+          'Banque Islamique de Développement : ' +
+          notificationMessage
+      }).catch(error=>{
+        console.error(
+          'Erreur notification SMS virement interne:',
+          error
+        );
+      });
 
-    name:client.name,
+    }else if(
+      notificationMethod==='email' &&
+      beneficiaryUser.email
+    ){
 
-    subject:'Confirmation de votre virement',
-
-    title:'Virement effectué',
-
-    message:
-      'Votre virement a été effectué avec succès vers ' +
-      b.name +
-      '.',
-
+      sendTransactionEmail({
+        to:beneficiaryUser.email,
+        name:beneficiaryUser.name,
+        subject:'Virement interne en attente — '+reference,
+        title:'Virement interne en attente',
+        message:
+          notificationMessage +
+          '<br><br><strong>Référence :</strong> ' +
+          reference,
         amountCents:amountCents,
+        balanceCents:beneficiaryUser.balance_cents,
+        showBalance:false,
+        language:beneficiaryUser.notification_language||'fr'
+      });
 
-    balanceCents:client.balance_cents,
+    }
 
-    language:client.notification_language || 'fr'
+    res.json({
+      ok:true,
+      id:result.lastInsertRowid,
+      reference,
+      status:'pending'
+    });
 
-  });
+  }catch(error){
 
-}
+    console.error(
+      'Erreur création virement interne:',
+      error
+    );
 
-res.json({
-  ok:true
+    res.status(500).json({
+      error:'INTERNAL_TRANSFER_CREATE_FAILED'
+    });
+
+  }
 });
- });
+
+// ===============================
+// ADMIN — VIREMENTS INTERNES
+// ===============================
+
+app.get('/api/admin/internal-transfers',adminAuth,(req,res)=>{
+  try{
+
+    const rows=db.prepare(`
+      SELECT
+        it.*,
+        su.name AS sender_name,
+        su.email AS sender_email,
+        su.phone AS sender_phone,
+        su.rib_account_number AS sender_rib,
+        su.iban AS sender_iban,
+        su.bic AS sender_bic,
+        su.bank_country AS sender_bank_country,
+        bu.name AS beneficiary_full_name,
+        bu.email AS beneficiary_email,
+        bu.phone AS beneficiary_phone,
+        bu.rib_account_number AS beneficiary_rib,
+        bu.iban AS beneficiary_iban,
+        bu.bic AS beneficiary_bic,
+        bu.bank_country AS beneficiary_bank_country,
+        bu.notification_method AS notification_method,
+        bu.notification_language AS notification_language,
+        'Banque Islamique de Développement' AS bank_name,
+        '10, Avenue du Développement, Casablanca, Maroc' AS bank_address,
+        'MADMMA01' AS bank_bic
+      FROM internal_transfers it
+      ORDER BY it.id DESC
+    `).all();
+
+    res.json(rows);
+
+  }catch(error){
+
+    console.error(
+      'Erreur chargement virements internes admin:',
+      error
+    );
+
+    res.status(500).json({
+      error:'ADMIN_INTERNAL_TRANSFERS_LOAD_FAILED'
+    });
+
+  }
+});
+
+app.get('/api/admin/internal-transfers/:id/pdf',adminAuth,async(req,res)=>{
+
+  try{
+
+    const id=Number(req.params.id);
+
+    if(!Number.isInteger(id) || id<=0){
+      return res.status(400).json({
+        error:'INVALID_TRANSFER_ID'
+      });
+    }
+
+    const transfer=db.prepare(`
+      SELECT
+        it.*,
+        su.name AS sender_name,
+        su.email AS sender_email,
+        su.phone AS sender_phone,
+        su.iban AS sender_iban,
+        su.rib_account_number AS sender_rib,
+        su.bic AS sender_bic,
+        su.bank_country AS sender_bank_country,
+
+        bu.name AS beneficiary_full_name,
+        bu.email AS beneficiary_email,
+        bu.phone AS beneficiary_phone,
+        bu.iban AS beneficiary_iban,
+        bu.rib_account_number AS beneficiary_rib,
+        bu.bic AS beneficiary_bic,
+        bu.bank_country AS beneficiary_bank_country,
+        bu.notification_method,
+        bu.notification_language,
+
+        'Banque Islamique de Développement' AS bank_name,
+        '10, Avenue du Développement, Casablanca, Maroc' AS bank_address,
+        'MADMMA01' AS bank_bic
+      FROM internal_transfers it
+      LEFT JOIN users su
+        ON su.id=it.sender_user_id
+      LEFT JOIN users bu
+        ON bu.id=it.beneficiary_user_id
+      WHERE it.id=?
+    `).get(id);
+
+    if(!transfer){
+      return res.status(404).json({
+        error:'INTERNAL_TRANSFER_NOT_FOUND'
+      });
+    }
+
+    const sourceUser=db.prepare(`
+      SELECT *
+      FROM users
+      WHERE id=?
+    `).get(transfer.sender_user_id);
+
+    if(!sourceUser){
+      return res.status(404).json({
+        error:'SENDER_NOT_FOUND'
+      });
+    }
+
+    transfer.order_number =
+      'OV-I-' +
+      String(transfer.id).padStart(8,'0');
+
+    transfer.beneficiary_name =
+      transfer.beneficiary_full_name ||
+      transfer.beneficiary_name ||
+      '—';
+
+    transfer.iban =
+      transfer.beneficiary_iban ||
+      transfer.beneficiary_rib ||
+      '—';
+
+    transfer.account_no =
+      transfer.beneficiary_iban ||
+      transfer.beneficiary_rib ||
+      '—';
+
+    transfer.bic =
+      'MADMMA01';
+
+    transfer.bank_name =
+      'Banque Islamique de Développement';
+
+    transfer.beneficiary_country =
+      'Maroc';
+
+    const pdf=
+      await generateExternalTransferPdf(
+        transfer,
+        sourceUser
+      );
+
+    res.setHeader(
+      'Content-Type',
+      'application/pdf'
+    );
+
+    res.setHeader(
+      'Content-Disposition',
+      'inline; filename="ordre-virement-interne-' +
+      transfer.id +
+      '.pdf"'
+    );
+
+    res.send(pdf);
+
+  }catch(error){
+
+    console.error(
+      'Erreur génération PDF virement interne:',
+      error
+    );
+
+    res.status(500).json({
+      error:'INTERNAL_TRANSFER_PDF_FAILED'
+    });
+
+  }
+
+});
+
+
+app.post('/api/admin/internal-transfers/:id/validate',adminAuth,(req,res)=>{
+
+  try{
+
+    const id=Number(req.params.id);
+
+    if(!Number.isInteger(id) || id<=0){
+      return res.status(400).json({
+        error:'INVALID_TRANSFER_ID'
+      });
+    }
+
+    const result=db.transaction(()=>{
+
+      const transfer=db.prepare(`
+        SELECT *
+        FROM internal_transfers
+        WHERE id=?
+      `).get(id);
+
+      if(!transfer){
+        throw new Error('INTERNAL_TRANSFER_NOT_FOUND');
+      }
+
+      if(transfer.status!=='pending'){
+        throw new Error('INTERNAL_TRANSFER_NOT_PENDING');
+      }
+
+      const sender=db.prepare(`
+        SELECT *
+        FROM users
+        WHERE id=?
+      `).get(transfer.sender_user_id);
+
+      const beneficiary=db.prepare(`
+        SELECT *
+        FROM users
+        WHERE id=?
+      `).get(transfer.beneficiary_user_id);
+
+      if(!sender){
+        throw new Error('SENDER_NOT_FOUND');
+      }
+
+      if(!beneficiary){
+        throw new Error('BENEFICIARY_NOT_FOUND');
+      }
+
+      const amountCents=Number(transfer.amount_cents||0);
+
+      if(!Number.isInteger(amountCents) || amountCents<=0){
+        throw new Error('INVALID_TRANSFER_AMOUNT');
+      }
+
+      const senderBalance=Number(sender.balance_cents||0);
+
+      if(senderBalance<amountCents){
+        throw new Error('INSUFFICIENT_FUNDS');
+      }
+
+      const nowValue=new Date().toISOString();
+
+      const newSenderBalance=
+        senderBalance-amountCents;
+
+      const beneficiaryBalance=
+        Number(beneficiary.balance_cents||0);
+
+      const newBeneficiaryBalance=
+        beneficiaryBalance+amountCents;
+
+      db.prepare(`
+        UPDATE users
+        SET balance_cents=?
+        WHERE id=?
+      `).run(
+        newSenderBalance,
+        sender.id
+      );
+
+      db.prepare(`
+        UPDATE users
+        SET balance_cents=?
+        WHERE id=?
+      `).run(
+        newBeneficiaryBalance,
+        beneficiary.id
+      );
+
+      db.prepare(`
+        INSERT INTO transactions(
+          user_id,
+          kind,
+          label,
+          amount_cents,
+          balance_after_cents,
+          created_at
+        )
+        VALUES(?,?,?,?,?,?)
+      `).run(
+        sender.id,
+        'debit',
+        'Virement interne #'+transfer.reference,
+        -amountCents,
+        newSenderBalance,
+        nowValue
+      );
+
+      db.prepare(`
+        INSERT INTO transactions(
+          user_id,
+          kind,
+          label,
+          amount_cents,
+          balance_after_cents,
+          created_at
+        )
+        VALUES(?,?,?,?,?,?)
+      `).run(
+        beneficiary.id,
+        'credit',
+        'Virement interne #'+transfer.reference,
+        amountCents,
+        newBeneficiaryBalance,
+        nowValue
+      );
+
+      const update=db.prepare(`
+        UPDATE internal_transfers
+        SET
+          status='completed',
+          validated_at=?,
+          completed_at=?
+        WHERE id=?
+          AND status='pending'
+      `).run(
+        nowValue,
+        nowValue,
+        id
+      );
+
+      if(update.changes!==1){
+        throw new Error('INTERNAL_TRANSFER_STATUS_UPDATE_FAILED');
+      }
+
+      return {
+        transfer,
+        sender,
+        beneficiary,
+        newSenderBalance,
+        newBeneficiaryBalance,
+        nowValue
+      };
+
+    })();
+
+    const amountText=
+      (Number(result.transfer.amount_cents||0)/100)
+        .toLocaleString('fr-FR',{
+          minimumFractionDigits:2,
+          maximumFractionDigits:2
+        });
+
+    const message=
+      'Votre virement interne de ' +
+      amountText +
+      ' USD a été validé et crédité sur votre compte. ' +
+      'Référence : ' +
+      result.transfer.reference +
+      '. Les fonds sont maintenant disponibles.';
+
+    const method=
+      String(
+        result.beneficiary.notification_method || 'email'
+      ).toLowerCase();
+
+    if(
+      method==='sms' &&
+      result.beneficiary.phone
+    ){
+
+      sendInfobipSms({
+        to:result.beneficiary.phone,
+        message
+      }).catch(error=>{
+        console.error(
+          'Erreur SMS validation virement interne:',
+          error
+        );
+      });
+
+    }else if(
+      result.beneficiary.email
+    ){
+
+      sendTransactionEmail({
+        to:result.beneficiary.email,
+        name:result.beneficiary.name,
+        subject:
+          'Virement interne validé — ' +
+          result.transfer.reference,
+        title:'Virement interne validé',
+        message,
+        amountCents:result.transfer.amount_cents,
+        balanceCents:result.newBeneficiaryBalance,
+        showBalance:true,
+        language:
+          result.beneficiary.notification_language || 'fr'
+      }).catch(error=>{
+        console.error(
+          'Erreur email validation virement interne:',
+          error
+        );
+      });
+
+    }
+
+    res.json({
+      ok:true,
+      id,
+      reference:result.transfer.reference,
+      status:'completed'
+    });
+
+  }catch(error){
+
+    console.error(
+      'Erreur validation virement interne:',
+      error
+    );
+
+    const knownErrors=[
+      'INTERNAL_TRANSFER_NOT_FOUND',
+      'INTERNAL_TRANSFER_NOT_PENDING',
+      'SENDER_NOT_FOUND',
+      'BENEFICIARY_NOT_FOUND',
+      'INVALID_TRANSFER_AMOUNT',
+      'INSUFFICIENT_FUNDS',
+      'INTERNAL_TRANSFER_STATUS_UPDATE_FAILED'
+    ];
+
+    const code=
+      knownErrors.includes(error.message)
+        ? error.message
+        : 'INTERNAL_TRANSFER_VALIDATION_FAILED';
+
+    const status=
+      code==='INTERNAL_TRANSFER_NOT_FOUND'
+        ? 404
+        : code==='INTERNAL_TRANSFER_NOT_PENDING'
+          ? 409
+          : code==='INSUFFICIENT_FUNDS'
+            ? 400
+            : 500;
+
+    res.status(status).json({
+      error:code
+    });
+
+  }
+
+});
+
+
 app.post('/api/admin/setup',(req,res)=>{
   const count=db.prepare(
     'SELECT COUNT(*) AS total FROM admins'
@@ -2325,6 +3310,24 @@ const currency=
 
     const amountCents=parseCents(req.body.amount);
 
+    const balanceUser=db.prepare(`
+      SELECT balance_cents
+      FROM users
+      WHERE id=?
+    `).get(userId);
+
+    if(!balanceUser){
+      return res.status(404).json({
+        error:'SOURCE_ACCOUNT_NOT_FOUND'
+      });
+    }
+
+    if(balanceUser.balance_cents < amountCents){
+      return res.status(400).json({
+        error:'INSUFFICIENT_BALANCE'
+      });
+    }
+
     if(!beneficiaryName){
       return res.status(400).json({error:'BENEFICIARY_NAME_REQUIRED'});
     }
@@ -2425,8 +3428,8 @@ const currency=
       beneficiaryPhone,
       '',
       '',
-      now(),
-      now()
+      now,
+      now
     );
 
     res.json({

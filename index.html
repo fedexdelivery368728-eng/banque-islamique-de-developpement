@@ -304,10 +304,43 @@ td,th{
     font-size:27px
   }
 }
+
+.bank-logo-top{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:100%;
+  padding:28px 20px 10px;
+}
+
+.bank-logo-top img{
+  width:180px;
+  max-width:85%;
+  height:auto;
+  display:block;
+  object-fit:contain;
+}
+
+.client-bank-logo{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:100%;
+  padding:10px 20px 18px;
+}
+
+.client-bank-logo img{
+  width:150px;
+  max-width:60%;
+  height:auto;
+  display:block;
+  object-fit:contain;
+}
 </style>
 </head>
 
 <body>
+
 
 <header>
 
@@ -329,10 +362,8 @@ td,th{
 
   <div class="login-title">
 
-    <img src="IMG_4145.jpeg" alt="Logo">
-
     <h1>
-      Bienvenue dans votre espace de la banque islamique de déloppement
+      Bienvenue dans votre espace de la banque islamique de développement
     </h1>
 
   </div>
@@ -668,6 +699,10 @@ td,th{
   
 <section id="app" class="app">
 
+  <div class="client-bank-logo">
+    <img src="IMG_4145.jpeg" alt="Banque Islamique de Développement">
+  </div>
+
   <div class="card">
   <h3>Coordonnées bancaires</h3>
 
@@ -797,131 +832,226 @@ td,th{
 
   <label for="transferType">Type de virement</label>
 
-  <select id="transferType" onchange="toggleTransferType()">
-    <option value="internal">Virement vers un compte BID</option>
-    <option value="external">Virement bancaire externe</option>
+  <select
+    id="transferType"
+    onchange="toggleTransferType()"
+  >
+    <option value="account">Compte à compte</option>
+    <option value="internal">Virement interne</option>
+    <option value="interbank">Virement interbancaire</option>
+    <option value="international">Virement international</option>
   </select>
 
-  <!-- VIREMENT INTERNE -->
-  <div id="internalTransfer">
+  <!-- COMPTE À COMPTE -->
+  <div id="accountTransfer">
 
-    <select id="beneficiary"></select>
+    <label>Compte à débiter</label>
     <input
-  id="internalBeneficiaryCountry"
-  type="text"
-  placeholder="Pays du bénéficiaire"
->
-
-<input
-  id="internalBankName"
-  type="text"
-  value="Banque Islamique de Développement"
-  placeholder="Nom de la banque"
->
-
-<input
-  id="internalAccountNo"
-  type="text"
-  placeholder="Numéro de compte"
->
-
-<input
-  id="internalIban"
-  type="text"
-  placeholder="IBAN"
->
-
-<input
-  id="internalBic"
-  type="text"
-  value="MADMMA01"
-  placeholder="BIC / SWIFT"
-  <input
-  id="internalReason"
-  type="text"
-  placeholder="Motif du virement"
->
->
-
-    <input
-      id="amount"
-      type="number"
-      min="1"
-      placeholder="500.00"
-      step="0.01"
-    >
-
-    <button
-      class="primary"
-      onclick="transfer()"
-      data-k="send"
-    ></button>
-
-  </div>
-
-  <!-- VIREMENT EXTERNE -->
-  <div
-    id="externalTransfer"
-    style="display:none;"
-  >
-
-    <input
-      id="externalBeneficiaryName"
+      id="accountDebit"
       type="text"
-      placeholder="Nom du bénéficiaire"
+      placeholder="Compte à débiter"
     >
 
+    <label>Compte à créditer</label>
     <input
-      id="externalBeneficiaryCountry"
+      id="accountCredit"
       type="text"
-      placeholder="Pays du bénéficiaire"
+      placeholder="Compte à créditer"
     >
 
+    <label>Montant</label>
     <input
-      id="externalBankName"
-      type="text"
-      placeholder="Nom de la banque"
-    >
-
-    <input
-      id="externalAccountNo"
-      type="text"
-      placeholder="Numéro de compte"
-    >
-
-    <input
-      id="externalIban"
-      type="text"
-      placeholder="IBAN"
-    >
-
-    <input
-      id="externalBic"
-      type="text"
-      placeholder="BIC / SWIFT"
-    >
-
-    <input
-      id="externalAmount"
+      id="accountAmount"
       type="number"
       min="1"
       step="0.01"
       placeholder="Montant"
     >
 
-    
+    <button
+      class="primary"
+      type="button"
+      onclick="submitAccountTransfer()"
+    >
+      Effectuer le virement
+    </button>
 
+  </div>
+
+  <!-- VIREMENT INTERNE -->
+<div
+  id="internalTransfer"
+  style="display:none;"
+>
+
+  <label>Bénéficiaire</label>
+
+  <select id="internalBeneficiary">
+    <option value="">Sélectionner un bénéficiaire</option>
+  </select>
+
+  <label>Montant</label>
+
+  <input
+    id="internalAmount"
+    type="number"
+    min="1"
+    step="0.01"
+    placeholder="Montant"
+  >
+
+  <label>Motif</label>
+
+  <input
+    id="internalReason"
+    type="text"
+    placeholder="Motif du virement"
+  >
+
+  <button
+    class="primary"
+    type="button"
+    onclick="submitInternalTransfer()"
+  >
+    Effectuer le virement
+  </button>
+
+</div>
+
+<!-- VIREMENT INTERBANCAIRE -->
+  <div
+    id="interbankTransfer"
+    style="display:none;"
+  >
+
+    <label>RIB complet</label>
     <input
-      id="externalReason"
+      id="interbankRib"
+      type="text"
+      placeholder="RIB complet"
+    >
+
+    <label>Nom complet du bénéficiaire</label>
+    <input
+      id="interbankBeneficiaryName"
+      type="text"
+      placeholder="Nom complet du bénéficiaire"
+    >
+
+    <label>Montant</label>
+    <input
+      id="interbankAmount"
+      type="number"
+      min="1"
+      step="0.01"
+      placeholder="Montant"
+    >
+
+    <label>Motif</label>
+    <input
+      id="interbankReason"
       type="text"
       placeholder="Motif du virement"
     >
 
     <button
       class="primary"
-      onclick="externalTransfer()"
+      type="button"
+      onclick="submitInterbankTransfer()"
     >
-      Effectuer le virement externe
+      Effectuer le virement
+    </button>
+
+  </div>
+
+  <!-- VIREMENT INTERNATIONAL -->
+  <div
+    id="internationalTransfer"
+    style="display:none;"
+  >
+
+    <label>Nom complet du bénéficiaire</label>
+    <input
+      id="internationalBeneficiaryName"
+      type="text"
+      placeholder="Nom complet du bénéficiaire"
+    >
+
+    <label>Adresse du bénéficiaire</label>
+    <input
+      id="internationalBeneficiaryAddress"
+      type="text"
+      placeholder="Adresse du bénéficiaire"
+    >
+
+    <label>IBAN complet</label>
+    <input
+      id="internationalIban"
+      type="text"
+      placeholder="IBAN complet"
+    >
+
+    <label>Code SWIFT / BIC de la banque bénéficiaire</label>
+    <input
+      id="internationalBic"
+      type="text"
+      placeholder="Code SWIFT / BIC"
+    >
+
+    <label>Nom complet de la banque</label>
+    <input
+      id="internationalBankName"
+      type="text"
+      placeholder="Nom complet de la banque"
+    >
+
+    <label>Pays</label>
+    <input
+      id="internationalCountry"
+      type="text"
+      placeholder="Pays"
+    >
+
+    <label>Montant</label>
+    <input
+      id="internationalAmount"
+      type="number"
+      min="1"
+      step="0.01"
+      placeholder="Montant"
+    >
+
+    <label>Devise</label>
+    <select id="internationalCurrency">
+      <option value="USD">USD</option>
+      <option value="EUR">EUR</option>
+      <option value="GBP">GBP</option>
+      <option value="CAD">CAD</option>
+      <option value="CHF">CHF</option>
+      <option value="AED">AED</option>
+      <option value="MAD">MAD</option>
+    </select>
+
+    <label>Motif précis</label>
+    <input
+      id="internationalReason"
+      type="text"
+      placeholder="Motif précis du virement"
+    >
+
+    <label>Justificatif</label>
+    <input
+      id="internationalDocument"
+      type="file"
+      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+    >
+
+    <button
+      class="primary"
+      type="button"
+      onclick="submitInternationalTransfer()"
+    >
+      Effectuer le virement
     </button>
 
   </div>
@@ -1140,6 +1270,14 @@ async function api(url,opt={}){
   }
 
   if(!r.ok){
+
+    if(d.error === "INSUFFICIENT_BALANCE"){
+      throw {
+        error:"INSUFFICIENT_BALANCE",
+        message:"Solde insuffisant"
+      };
+    }
+
     throw d;
   }
 
@@ -1449,7 +1587,7 @@ incomingCard.style.display =
       }).join("");
 
   }
-  beneficiary.innerHTML=
+  internalBeneficiary.innerHTML=
     bs.map(
       b=>`<option value="${b.id}">
         ${b.name} — ${b.account_no}
@@ -1470,162 +1608,331 @@ incomingCard.style.display =
 
 async function transfer(){
 
-  try{
+  const type =
+    document.getElementById("transferType").value;
 
-    await api(
-      "/api/transfer",
-      {
-        method:"POST",
-        body:JSON.stringify({
-          beneficiaryId:beneficiary.value,
-          amount:amount.value
-        })
-      }
-    );
+  if(type === "account"){
+    return submitAccountTransfer();
+  }
 
-    amount.value="";
+  if(type === "internal"){
+    return submitInternalTransfer();
+  }
 
-    await load();
+  if(type === "interbank"){
+    return submitInterbankTransfer();
+  }
 
-    show(
-      "history",
-      document.querySelectorAll(".tabs button")[3]
-    );
-
-  }catch(e){
-
-    alert(
-      lang==="ar"
-      ?"الرصيد غير كاف"
-      :lang==="en"
-      ?"Insufficient balance"
-      :"Solde insuffisant"
-    );
-
+  if(type === "international"){
+    return submitInternationalTransfer();
   }
 
 }
+
 
 function toggleTransferType(){
 
-  const type=document.getElementById("transferType").value;
-  const internal=document.getElementById("internalTransfer");
-  const external=document.getElementById("externalTransfer");
+  const type =
+    document.getElementById("transferType").value;
 
-  if(type==="external"){
-    internal.style.display="none";
-    external.style.display="block";
-  }else{
-    internal.style.display="block";
-    external.style.display="none";
+  const sections = {
+    account:
+      document.getElementById("accountTransfer"),
+
+    internal:
+      document.getElementById("internalTransfer"),
+
+    interbank:
+      document.getElementById("interbankTransfer"),
+
+    international:
+      document.getElementById("internationalTransfer")
+  };
+
+  Object.values(sections).forEach(section=>{
+    if(section){
+      section.style.display = "none";
+    }
+  });
+
+  if(sections[type]){
+    sections[type].style.display = "block";
   }
 
 }
 
-async function externalTransfer(){
+
+async function submitAccountTransfer(){
+
+  const credit =
+    document.getElementById("accountCredit").value.trim();
+
+  const amount =
+    document.getElementById("accountAmount").value;
+
+  if(!credit || !amount){
+
+    alert(
+      lang==="ar"
+      ?"يرجى إكمال معلومات التحويل"
+      :lang==="en"
+      ?"Please complete the transfer information"
+      :"Veuillez compléter les informations du virement"
+    );
+
+    return;
+  }
 
   try{
 
-    const beneficiaryName=
-      document.getElementById("externalBeneficiaryName").value.trim();
-
-    const beneficiaryCountry=
-      document.getElementById("externalBeneficiaryCountry").value.trim();
-
-    const bankName=
-      document.getElementById("externalBankName").value.trim();
-
-    const accountNo=
-      document.getElementById("externalAccountNo").value.trim();
-
-    const iban=
-      document.getElementById("externalIban").value.trim();
-
-    const bic=
-      document.getElementById("externalBic").value.trim();
-
-    const amount=
-      document.getElementById("externalAmount").value;
-
-    const currency=
-  me.account_currency || "USD";
-
-const reason=
-  document.getElementById("externalReason").value.trim();
-
-    if(!beneficiaryName ||
-       !beneficiaryCountry ||
-       !bankName ||
-       (!accountNo && !iban) ||
-       !bic ||
-       !amount){
-
-      alert(
-        lang==="ar"
-        ?"يرجى إكمال معلومات التحويل"
-        :lang==="en"
-        ?"Please complete the transfer information"
-        :"Veuillez compléter les informations du virement"
+    const result =
+      await api(
+        "/api/account-transfer",
+        {
+          method:"POST",
+          body:JSON.stringify({
+            creditAccount:credit,
+            amount
+          })
+        }
       );
 
-      return;
-
-    }
-
-
-    const result=await api(
-      "/api/external-transfers",
-      {
-        method:"POST",
-        body:JSON.stringify({
-
-          beneficiaryName,
-beneficiaryCountry,
-bankName,
-accountNo,
-iban,
-bic,
-amount,
-currency,
-reason,
-beneficiaryPhone,
-        
-        })
-      }
-    );
-
-
     alert(
-      lang==="ar"
-      ?"تم تسجيل طلب التحويل الخارجي بنجاح"
-      :lang==="en"
-      ?"The external transfer request has been submitted successfully"
-      :"La demande de virement externe a été enregistrée avec succès"
+      "Virement compte à compte enregistré.\n\n" +
+      "Référence : " +
+      (result.reference || "—") +
+      "\n\n" +
+      "Statut : En attente de validation."
     );
 
+    document.getElementById("accountCredit").value="";
+    document.getElementById("accountAmount").value="";
 
-    document.getElementById("externalBeneficiaryName").value="";
-    document.getElementById("externalBeneficiaryCountry").value="";
-    document.getElementById("externalBankName").value="";
-    document.getElementById("externalAccountNo").value="";
-    document.getElementById("externalIban").value="";
-    document.getElementById("externalBic").value="";
-    document.getElementById("externalAmount").value="";
-    document.getElementById("externalReason").value="";
-    
     await load();
 
+  }catch(error){
 
-  }catch(e){
+    alert(
+      error?.message ||
+      "Impossible d'effectuer le virement."
+    );
 
-    console.error(e);
+  }
+
+}
+
+
+async function submitInternalTransfer(){
+
+  const beneficiaryId =
+    Number(
+      document.getElementById("internalBeneficiary").value
+    );
+
+  const amount =
+    document.getElementById("internalAmount").value;
+
+  const reason =
+    document.getElementById("internalReason").value.trim();
+
+  if(
+    !Number.isInteger(beneficiaryId) ||
+    beneficiaryId <= 0
+  ){
+    alert("Veuillez sélectionner un bénéficiaire.");
+    return;
+  }
+
+  if(!amount || Number(amount) <= 0){
+    alert("Veuillez saisir un montant valide.");
+    return;
+  }
+
+  try{
+
+    const result =
+      await api(
+        "/api/transfer",
+        {
+          method:"POST",
+          body:JSON.stringify({
+            beneficiaryId,
+            amount
+          })
+        }
+      );
+
+    alert(
+      "Virement interne enregistré.\n\n" +
+      "Référence : " +
+      (result.reference || "—") +
+      "\n\n" +
+      "Statut : En attente de validation."
+    );
+
+    document.getElementById("internalAmount").value="";
+    document.getElementById("internalReason").value="";
+    document.getElementById("internalBeneficiary").value="";
+
+    await load();
+
+  }catch(error){
+
+    alert(
+      error?.message ||
+      "Impossible d'effectuer le virement."
+    );
+
+  }
+
+}
+
+
+async function submitInterbankTransfer(){
+
+  const rib =
+    document.getElementById("interbankRib").value.trim();
+
+  const beneficiaryName =
+    document.getElementById("interbankBeneficiaryName").value.trim();
+
+  const amount =
+    document.getElementById("interbankAmount").value;
+
+  const reason =
+    document.getElementById("interbankReason").value.trim();
+
+  if(!rib || !beneficiaryName || !amount || !reason){
 
     alert(
       lang==="ar"
-      ?"تعذر تسجيل التحويل الخارجي"
+      ?"يرجى إكمال معلومات التحويل"
       :lang==="en"
-      ?"Unable to submit the external transfer"
-      :"Impossible d'enregistrer le virement externe"
+      ?"Please complete the transfer information"
+      :"Veuillez compléter les informations du virement"
+    );
+
+    return;
+  }
+
+  alert(
+    "Le virement interbancaire sera connecté au traitement bancaire à l'étape suivante."
+  );
+}
+
+
+async function submitInternationalTransfer(){
+
+  const beneficiaryName =
+    document.getElementById("internationalBeneficiaryName").value.trim();
+
+  const beneficiaryAddress =
+    document.getElementById("internationalBeneficiaryAddress").value.trim();
+
+  const iban =
+    document.getElementById("internationalIban").value.trim();
+
+  const bic =
+    document.getElementById("internationalBic").value.trim();
+
+  const bankName =
+    document.getElementById("internationalBankName").value.trim();
+
+  const country =
+    document.getElementById("internationalCountry").value.trim();
+
+  const amount =
+    document.getElementById("internationalAmount").value;
+
+  const currency =
+    document.getElementById("internationalCurrency").value;
+
+  const reason =
+    document.getElementById("internationalReason").value.trim();
+
+  const documentFile =
+    document.getElementById("internationalDocument").files[0];
+
+  if(
+    !beneficiaryName ||
+    !beneficiaryAddress ||
+    !iban ||
+    !bic ||
+    !bankName ||
+    !country ||
+    !amount ||
+    !currency ||
+    !reason ||
+    !documentFile
+  ){
+
+    alert(
+      lang==="ar"
+      ?"يرجى إكمال جميع معلومات التحويل وإرفاق المستند"
+      :lang==="en"
+      ?"Please complete all transfer information and attach the document"
+      :"Veuillez compléter toutes les informations du virement et joindre le justificatif"
+    );
+
+    return;
+  }
+
+  try{
+
+    const result =
+      await api(
+        "/api/external-transfers",
+        {
+          method:"POST",
+          body:JSON.stringify({
+
+            beneficiaryName,
+            beneficiaryCountry:country,
+            bankName,
+
+            accountNo:"",
+            iban,
+            bic,
+
+            amount,
+            reason,
+
+            conditionText:
+              "Le virement international reste en attente jusqu’à sa validation par la Banque Islamique de Développement.",
+
+            beneficiaryPhone:"",
+
+            bankOriginCountry:"MA"
+
+          })
+        }
+      );
+
+    alert(
+      "Virement international enregistré.\n\n" +
+      "Référence : " +
+      (result.transferId || "—") +
+      "\n\n" +
+      "Statut : En attente de validation."
+    );
+
+    document.getElementById("internationalBeneficiaryName").value="";
+    document.getElementById("internationalBeneficiaryAddress").value="";
+    document.getElementById("internationalIban").value="";
+    document.getElementById("internationalBic").value="";
+    document.getElementById("internationalBankName").value="";
+    document.getElementById("internationalCountry").value="";
+    document.getElementById("internationalAmount").value="";
+    document.getElementById("internationalReason").value="";
+    document.getElementById("internationalDocument").value="";
+
+    await load();
+
+  }catch(error){
+
+    alert(
+      error?.message ||
+      "Impossible d'effectuer le virement international."
     );
 
   }

@@ -638,7 +638,64 @@ th{
 </section>
 
 <!-- ========================= -->
-<!-- VIREMENTS BANCAIRES EXTERNES -->
+<!-- VIREMENTS INTERNES -->
+<!-- ========================= -->
+
+<section class="card">
+
+  <div class="top" style="margin-bottom:15px">
+
+    <div>
+      <h2 style="margin:0">
+        Virements internes
+      </h2>
+
+      <p class="muted" style="margin:6px 0 0">
+        Contrôle et validation des virements entre clients de la Banque Islamique de Développement.
+      </p>
+    </div>
+
+  </div>
+
+  <div style="overflow:auto">
+
+    <table style="min-width:1400px">
+
+      <thead>
+        <tr>
+          <th>Référence / Date</th>
+          <th>Donneur d'ordre</th>
+          <th>Bénéficiaire</th>
+          <th>Banque</th>
+          <th>Notification</th>
+          <th>Montant</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="internalTransfersTable">
+
+        <tr>
+          <td
+            colspan="8"
+            class="muted"
+            style="text-align:center;padding:30px"
+          >
+            Aucun virement interne.
+          </td>
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+<!-- ========================= -->
+<!-- VIREMENTS BANCAIRES EXTERNES --><!-- VIREMENTS BANCAIRES EXTERNES -->
 <!-- ========================= -->
 
 <section class="card">
@@ -673,8 +730,11 @@ th{
           <th>Compte source</th>
           <th>Bénéficiaire</th>
           <th>Banque</th>
+          <th>IBAN</th>
+          <th>BIC / SWIFT</th>
           <th>Banque émettrice</th>
-          <th>Montant</th>
+          <th>Montant / Devise</th>
+          <th>Motif</th>
           <th>Notification</th>
           <th>Statut</th>
           <th>Actions</th>
@@ -1053,38 +1113,34 @@ async function adminLogin(){
 
   $('loginError').textContent='';
 
-
   try{
 
     await api(
       '/api/admin/login',
       {
         method:'POST',
-
         body:JSON.stringify({
-
           email:$('adminEmail').value,
-
           password:$('adminPassword').value
-
         })
       }
     );
 
-
     await start();
 
   }
-
   catch(error){
 
+    console.error('Erreur Admin:',error);
+
     $('loginError').textContent =
-      'Identifiants administrateur incorrects.';
+      error?.error ||
+      error?.message ||
+      'Erreur lors de la connexion administrateur.';
 
   }
 
 }
-
 
 
 /* ========================= */
@@ -1093,6 +1149,212 @@ async function adminLogin(){
 // =====================================================
 // VIREMENTS ENTRANTS — 
 // =====================================================
+
+async function loadInternalTransfers(){
+
+  const rows = await api('/api/admin/internal-transfers');
+
+  const tbody = $('internalTransfersTable');
+
+  if(!rows || !rows.length){
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="muted" style="text-align:center;padding:30px">
+          Aucun virement interne.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  tbody.innerHTML = rows.map(row => {
+
+    const amount =
+      (Number(row.amount_cents || 0) / 100)
+      .toLocaleString('fr-FR',{
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }) + ' ' + (row.currency || 'USD');
+
+    const status =
+      row.status === 'pending'
+        ? 'En attente'
+        : row.status === 'completed'
+          ? 'Terminé'
+          : row.status;
+
+    const notification =
+      row.notification_method === 'sms'
+        ? 'SMS'
+        : 'Email';
+
+    const notificationContact =
+      row.notification_method === 'sms'
+        ? (row.beneficiary_phone || '—')
+        : (row.beneficiary_email || '—');
+
+    const date =
+      row.created_at
+        ? new Date(row.created_at).toLocaleString('fr-FR')
+        : '—';
+
+    return `
+      <tr>
+
+        <td>
+          <strong>${row.reference || '—'}</strong>
+          <br>
+          <span class="muted">${date}</span>
+        </td>
+
+        <td>
+          <strong>DONNEUR D'ORDRE</strong>
+          <br>
+          ${row.sender_name || '—'}
+          <br>
+          <span class="muted">
+            RIB : ${row.sender_rib || '—'}
+          </span>
+          <br>
+          <span class="muted">
+            IBAN : ${row.sender_iban || '—'}
+          </span>
+          <br>
+          <span class="muted">
+            BIC : ${row.sender_bic || 'MADMMA01'}
+          </span>
+        </td>
+
+        <td>
+          <strong>BÉNÉFICIAIRE</strong>
+          <br>
+          ${row.beneficiary_full_name || row.beneficiary_name || '—'}
+          <br>
+          <span class="muted">
+            RIB : ${row.beneficiary_rib || '—'}
+          </span>
+          <br>
+          <span class="muted">
+            IBAN : ${row.beneficiary_iban || '—'}
+          </span>
+          <br>
+          <span class="muted">
+            BIC : ${row.beneficiary_bic || 'MADMMA01'}
+          </span>
+        </td>
+
+        <td>
+          <strong>BANQUE</strong>
+          <br>
+          ${row.bank_name || 'Banque Islamique de Développement'}
+          <br>
+          <span class="muted">
+            ${row.bank_address || '10, Avenue du Développement, Casablanca, Maroc'}
+          </span>
+          <br>
+          <span class="muted">
+            BIC : ${row.bank_bic || 'MADMMA01'}
+          </span>
+        </td>
+
+        <td>
+          <strong>NOTIFICATION</strong>
+          <br>
+          <span class="muted">
+            Méthode : ${notification}
+          </span>
+          <br>
+          <span class="muted">
+            Contact : ${notificationContact}
+          </span>
+          <br>
+          <span class="muted">
+            Langue : ${row.notification_language || 'fr'}
+          </span>
+        </td>
+
+        <td>
+          <strong>${amount}</strong>
+        </td>
+
+        <td>
+          <strong>${status}</strong>
+        </td>
+
+        <td>
+          <button
+            class="secondary"
+            onclick="openInternalTransferPdf(${row.id})"
+          >
+            Ordre / PDF
+          </button>
+
+          ${
+            row.status === 'pending'
+              ? `
+                <button
+                  class="primary"
+                  onclick="validateInternalTransfer(${row.id})"
+                >
+                  Valider
+                </button>
+              `
+              : ''
+          }
+        </td>
+
+      </tr>
+    `;
+
+  }).join('');
+}
+
+
+async function validateInternalTransfer(id){
+
+  if(!confirm(
+    'Confirmer la validation de ce virement interne ?\n\n' +
+    'Le compte émetteur sera débité et le compte bénéficiaire sera crédité.'
+  )){
+    return;
+  }
+
+  try{
+
+    await api(
+      '/api/admin/internal-transfers/' + id + '/validate',
+      {
+        method:'POST'
+      }
+    );
+
+    alert('Virement interne validé avec succès.');
+
+    await loadInternalTransfers();
+
+  }catch(error){
+
+    alert(
+      error.message ||
+      'Impossible de valider le virement interne.'
+    );
+
+  }
+
+}
+
+
+function openInternalTransferPdf(id){
+
+  window.open(
+    '/api/admin/internal-transfers/' + id + '/pdf',
+    '_blank'
+  );
+
+}
+
 
 async function loadIncomingTransfers(){
 
@@ -1104,7 +1366,7 @@ async function loadIncomingTransfers(){
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" class="muted" style="text-align:center">
+        <td colspan="8" class="muted" style="text-align:center">
           Aucun virement entrant.
         </td>
       </tr>
@@ -1406,7 +1668,7 @@ async function loadExternalTransfers(){
       tbody.innerHTML = `
         <tr>
           <td
-            colspan="8"
+            colspan="12"
             class="muted"
             style="text-align:center"
           >
@@ -1435,11 +1697,20 @@ async function loadExternalTransfers(){
       const bank =
         row.bank_name || '—';
 
+      const iban =
+        row.iban || row.account_no || '—';
+
+      const bic =
+        row.bic || '—';
+
       const bankOrigin =
         row.bank_origin_country || '—';
 
       const bankOriginAddress =
         row.bank_origin_address || '—';
+
+      const reason =
+        row.reason || '—';
 
       const notification =
         row.notification_method === 'sms'
@@ -1471,6 +1742,14 @@ async function loadExternalTransfers(){
           </td>
 
           <td>
+            ${esc(iban)}
+          </td>
+
+          <td>
+            ${esc(bic)}
+          </td>
+
+          <td>
             <strong>${esc(bankOrigin)}</strong>
             <br>
             <span class="small muted">
@@ -1481,6 +1760,10 @@ async function loadExternalTransfers(){
           <td>
             ${esc(amount)}
             ${esc(row.currency || 'USD')}
+          </td>
+
+          <td>
+            ${esc(reason)}
           </td>
 
           <td>
@@ -1519,7 +1802,6 @@ async function loadExternalTransfers(){
   }
 
 }
-
 
 // -----------------------------------------------------
 // TRAITEMENT DES VIREMENTS BANCAIRES EXTERNES
