@@ -556,7 +556,7 @@ th{
         multiple
         accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.txt"
       >
-      <p class="muted">PDF, images, documents Office ou TXT. Taille totale maximale : 1 Mo.</p>
+      <p class="muted">PDF, images, documents Office ou TXT. Taille totale maximale : 10 Mo.</p>
     </div>
 
   </div>
@@ -3192,7 +3192,7 @@ function closeModal(){
    </div>
 
    <div>
-    <label>Photo du client (facultative, JPEG/PNG/WebP, 1 Mo maximum)</label>
+    <label>Photo du client (facultative, JPEG/PNG/WebP, 5 Mo maximum)</label>
     <input id="cPhoto" type="file" accept="image/jpeg,image/png,image/webp">
    </div>
 
@@ -3556,7 +3556,7 @@ ${esc(user.bic || 'MADMMA01')}
       ` : '<p class="small muted">Aucune photo enregistrée.</p>'}
       <label>Choisir une nouvelle photo (facultatif)</label>
       <input id="ePhoto" type="file" accept="image/jpeg,image/png,image/webp">
-      <p class="small muted">JPEG, PNG ou WebP, 1 Mo maximum. Laisser vide pour conserver la photo actuelle.</p>
+      <p class="small muted">JPEG, PNG ou WebP, 5 Mo maximum. Laisser vide pour conserver la photo actuelle.</p>
     </div>
 
     <h3>Informations personnelles</h3>

@@ -2761,7 +2761,7 @@ if(!['MA','AE'].includes(bankCountry)){
   const photoData = req.body.photoData || null;
   if (photoData !== null && (
     typeof photoData !== 'string' ||
-    photoData.length > 7000000 ||
+    photoData.length > 7100000 ||
     !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(photoData)
   )) {
     return res.status(400).json({ error: 'INVALID_PHOTO' });
@@ -3137,7 +3137,7 @@ app.patch('/api/admin/users/:id',adminAuth,(req,res)=>{
   const body=req.body;
 
   if (typeof body.photoData === 'string' && body.photoData !== '' && (
-    body.photoData.length > 7000000 ||
+    body.photoData.length > 7100000 ||
     !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(body.photoData)
   )) {
     return res.status(400).json({ error: 'INVALID_PHOTO' });
