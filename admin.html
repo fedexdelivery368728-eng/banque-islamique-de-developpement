@@ -676,7 +676,7 @@ th{
         <tr>
           <th>Référence / Date</th>
           <th>Donneur d'ordre</th>
-          <th>Bénéficiaire</th>
+          <th>Bénéficiaire / Pays</th>
           <th>Banque</th>
           <th>Notification</th>
           <th>Montant</th>
@@ -739,13 +739,13 @@ th{
       <thead>
         <tr>
           <th>Compte source</th>
-          <th>Bénéficiaire</th>
+          <th>Bénéficiaire / Pays</th>
           <th>Banque</th>
           <th>IBAN</th>
           <th>BIC / SWIFT</th>
           <th>Banque émettrice</th>
           <th>Montant / Devise</th>
-          <th>Motif</th>
+          <th>Motif / Condition</th>
           <th>Notification</th>
           <th>Statut</th>
           <th>Actions</th>
@@ -757,7 +757,7 @@ th{
 
         <tr>
           <td
-            colspan="9"
+            colspan="12"
             class="muted"
             style="text-align:center"
           >
@@ -1705,6 +1705,12 @@ async function loadExternalTransfers(){
       const beneficiary =
         row.beneficiary_name || '—';
 
+      const beneficiaryCountry =
+        row.beneficiary_country || 'Pays non renseigné';
+
+      const condition =
+        row.condition_text || 'Aucune condition indiquée';
+
       const bank =
         row.bank_name || '—';
 
@@ -1745,7 +1751,9 @@ async function loadExternalTransfers(){
           </td>
 
           <td>
-            ${esc(beneficiary)}
+            <strong>${esc(beneficiary)}</strong>
+            <br>
+            <span class="small muted">${esc(beneficiaryCountry)}</span>
           </td>
 
           <td>
@@ -1774,7 +1782,9 @@ async function loadExternalTransfers(){
           </td>
 
           <td>
-            ${esc(reason)}
+            <strong>Motif :</strong> ${esc(reason)}
+            <br>
+            <span class="small muted"><strong>Condition :</strong> ${esc(condition)}</span>
           </td>
 
           <td>

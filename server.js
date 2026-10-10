@@ -2114,6 +2114,8 @@ app.get('/api/admin/internal-transfers',adminAuth,(req,res)=>{
         '10, Avenue du Développement, Casablanca, Maroc' AS bank_address,
         'MADMMA01' AS bank_bic
       FROM internal_transfers it
+      LEFT JOIN users su ON su.id=it.sender_user_id
+      LEFT JOIN users bu ON bu.id=it.beneficiary_user_id
       ORDER BY it.id DESC
     `).all();
 
@@ -3607,6 +3609,10 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
     const reason=String(req.body.reason||'').trim();
     const conditionText=String(req.body.conditionText||'').trim();
     const beneficiaryPhone=String(req.body.beneficiaryPhone||'').trim();
+    const beneficiaryEmail=String(req.body.beneficiaryEmail||'').trim();
+    const notificationMethod=String(req.body.notificationMethod||'email').trim().toLowerCase();
+    const notificationLanguage=String(req.body.notificationLanguage||'fr').trim().toLowerCase();
+
     const bankOriginCountry=String(req.body.bankOriginCountry||'').trim().toUpperCase();
 
     const bankOrigins={
