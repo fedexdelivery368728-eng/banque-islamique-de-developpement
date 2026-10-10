@@ -548,6 +548,17 @@ th{
       ></textarea>
     </div>
 
+    <div style="grid-column:1/-1">
+      <label for="adminEmailAttachments">Pièces jointes (facultatif)</label>
+      <input
+        id="adminEmailAttachments"
+        type="file"
+        multiple
+        accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.txt"
+      >
+      <p class="muted">PDF, images, documents Office ou TXT. Taille totale maximale : 1 Mo.</p>
+    </div>
+
   </div>
 
   <div style="margin-top:15px;display:flex;align-items:center;gap:12px">
@@ -3180,6 +3191,11 @@ function closeModal(){
     <input id="cIncomeSource" type="text" placeholder="Salaire, activité, entreprise...">
    </div>
 
+   <div>
+    <label>Photo du client (facultative, JPEG/PNG/WebP, 1 Mo maximum)</label>
+    <input id="cPhoto" type="file" accept="image/jpeg,image/png,image/webp">
+   </div>
+
   </div>
 
 
@@ -3252,6 +3268,26 @@ function closeModal(){
 
 }
 
+
+async function readOptionalPhoto(inputId) {
+  const input = $(inputId);
+  const file = input && input.files && input.files[0];
+  if (!file) return null;
+
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    throw new Error('PHOTO_FORMAT');
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('PHOTO_TOO_LARGE');
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error('PHOTO_READ_FAILED'));
+    reader.readAsDataURL(file);
+  });
+}
 
 async function createUser(){
 
@@ -3385,7 +3421,8 @@ interfaceLanguage:$('cInterfaceLanguage').value,
 password:password,
             
 
-            balance:$('cBalance').value
+            balance:$('cBalance').value,
+            photoData:await readOptionalPhoto('cPhoto')
 
           })
         }
@@ -3445,6 +3482,9 @@ async function editUser(id){
   if(!user){
     return;
   }
+
+  const photoResult = await api('/api/admin/users/'+id+'/photo');
+  user.photo_data = photoResult.photo_data || '';
 
   openModal(
 
@@ -3507,6 +3547,17 @@ ${esc(user.bic || 'MADMMA01')}
 
     </div>
 
+
+    <h3>Photo du client</h3>
+    <div style="margin:12px 0 18px">
+      ${user.photo_data ? `
+        <img src="${user.photo_data}" alt="Photo du client"
+          style="width:120px;height:120px;object-fit:cover;border-radius:12px;display:block;margin-bottom:10px">
+      ` : '<p class="small muted">Aucune photo enregistrée.</p>'}
+      <label>Choisir une nouvelle photo (facultatif)</label>
+      <input id="ePhoto" type="file" accept="image/jpeg,image/png,image/webp">
+      <p class="small muted">JPEG, PNG ou WebP, 1 Mo maximum. Laisser vide pour conserver la photo actuelle.</p>
+    </div>
 
     <h3>Informations personnelles</h3>
 
@@ -4035,6 +4086,7 @@ async function saveUser(id){
 
           account_type:$('eAccountType').value,
           account_currency:$('eCurrency').value,
+          photoData:await readOptionalPhoto('ePhoto'),
 
           password:$('ePass').value,
 
@@ -4450,6 +4502,43 @@ async function transactions(id){
 
 
 
+async function readAdminEmailAttachments(){
+  const input = document.getElementById('adminEmailAttachments');
+  const files = Array.from(input.files || []);
+  const allowed = /\\.(pdf|jpe?g|png|webp|docx?|xlsx?|txt)$/i;
+  const maxTotal = 10 * 1024 * 1024
+  let total = 0;
+  const attachments = [];
+
+  for (const file of files) {
+    if (!allowed.test(file.name)) {
+      throw new Error('Format de pièce jointe non autorisé : ' + file.name);
+    }
+
+    total += file.size;
+    if (total > maxTotal) {
+      throw new Error('La taille totale des pièces jointes dépasse 10 Mo.');
+    }
+    if (file.size === 0) {
+      throw new Error('Le fichier ' + file.name + ' est vide.');
+    }
+
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Lecture impossible : ' + file.name));
+      reader.readAsDataURL(file);
+    });
+
+    attachments.push({
+      filename: file.name,
+      content: String(dataUrl).split(',')[1]
+    });
+  }
+
+  return attachments;
+}
+
 async function sendAdminExternalEmail(){
 
   const from=document.getElementById('adminEmailFrom').value.trim();
@@ -4479,6 +4568,8 @@ async function sendAdminExternalEmail(){
 
   try{
 
+    const attachments = await readAdminEmailAttachments();
+
     const r=await fetch('/api/admin/send-email',{
       method:'POST',
       headers:{
@@ -4488,23 +4579,24 @@ async function sendAdminExternalEmail(){
         from,
         to,
         subject,
-        message
+        message,
+        attachments
       })
     });
 
     const data=await r.json().catch(()=>({}));
 
     if(!r.ok){
-
-      if(data.error==='INVALID_EMAIL'){
-        throw new Error('Adresse email invalide.');
-      }
-
-      if(data.error==='EMAIL_SERVICE_NOT_CONFIGURED'){
-        throw new Error('Le service email n’est pas configuré.');
-      }
-
-      throw new Error('Impossible d’envoyer l’email.');
+      const errors = {
+        INVALID_EMAIL: 'Adresse email invalide.',
+        EMAIL_SERVICE_NOT_CONFIGURED: 'Le service email n’est pas configuré.',
+        INVALID_ATTACHMENTS: 'Une ou plusieurs pièces jointes sont invalides.',
+        ATTACHMENTS_TOO_LARGE: 'La taille totale des pièces jointes dépasse 10 Mo.',
+        EMAIL_SEND_FAILED: 'Le fournisseur email a échoué. Vérifiez sa configuration.',
+        SUBJECT_REQUIRED: 'Veuillez saisir l’objet de l’email.',
+        MESSAGE_REQUIRED: 'Veuillez saisir un message.'
+      };
+      throw new Error(errors[data.error] || ('Envoi impossible, code HTTP ' + r.status + '.'));
     }
 
     status.textContent='Email envoyé avec succès.';
@@ -4512,6 +4604,7 @@ async function sendAdminExternalEmail(){
     document.getElementById('adminEmailTo').value='';
     document.getElementById('adminEmailSubject').value='';
     document.getElementById('adminEmailMessage').value='';
+    document.getElementById('adminEmailAttachments').value='';
 
   }catch(e){
 

@@ -101,6 +101,8 @@ function addUserColumn(sql){
  }catch(e){}
 }
 
+addUserColumn("ALTER TABLE users ADD COLUMN photo_data TEXT");
+
 function addExternalTransferColumn(sql){
  try{
   db.prepare(sql).run();
@@ -173,7 +175,7 @@ addUserColumn("ALTER TABLE users ADD COLUMN notification_method TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN notification_language TEXT NOT NULL DEFAULT 'fr'");
 
 app.set('trust proxy',1);
-app.use(express.json());
+app.use(express.json({ limit: '20mb' }));
 app.use(session({
  secret:process.env.SESSION_SECRET || 'change-this-secret-before-production',
  resave:false,saveUninitialized:false,
@@ -2756,6 +2758,15 @@ if(!['MA','AE'].includes(bankCountry)){
   }
 
 
+  const photoData = req.body.photoData || null;
+  if (photoData !== null && (
+    typeof photoData !== 'string' ||
+    photoData.length > 7000000 ||
+    !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(photoData)
+  )) {
+    return res.status(400).json({ error: 'INVALID_PHOTO' });
+  }
+
   try{
 
     const r =
@@ -2881,6 +2892,11 @@ String(req.body.notificationMethod || '')
 
     
 const userId = Number(r.lastInsertRowid);
+
+if (photoData) {
+  db.prepare("UPDATE users SET photo_data=? WHERE id=?")
+    .run(photoData, userId);
+}
 
 const interfaceLanguage =
   ['fr', 'en', 'ar'].includes(
@@ -3093,6 +3109,17 @@ app.delete('/api/admin/users/:id',adminAuth,(req,res)=>{
   }
 });
 
+app.get('/api/admin/users/:id/photo',adminAuth,(req,res)=>{
+  const id = Number(req.params.id);
+  const user = db.prepare(
+    'SELECT photo_data FROM users WHERE id=?'
+  ).get(id);
+  if (!user) {
+    return res.status(404).json({ error: 'USER_NOT_FOUND' });
+  }
+  res.json({ photo_data: user.photo_data || null });
+});
+
 app.patch('/api/admin/users/:id',adminAuth,(req,res)=>{
 
   const id=Number(req.params.id);
@@ -3108,6 +3135,13 @@ app.patch('/api/admin/users/:id',adminAuth,(req,res)=>{
   }
 
   const body=req.body;
+
+  if (typeof body.photoData === 'string' && body.photoData !== '' && (
+    body.photoData.length > 7000000 ||
+    !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(body.photoData)
+  )) {
+    return res.status(400).json({ error: 'INVALID_PHOTO' });
+  }
 
   const name=String(
     body.name!==undefined ? body.name : user.name
@@ -3197,6 +3231,11 @@ app.patch('/api/admin/users/:id',adminAuth,(req,res)=>{
 
       id
     );
+
+    if (typeof body.photoData === 'string') {
+      db.prepare("UPDATE users SET photo_data=? WHERE id=?")
+        .run(body.photoData || null, id);
+    }
 
     if(body.password){
 
@@ -4332,6 +4371,42 @@ app.post('/api/admin/send-email',adminAuth,async (req,res)=>{
     const subject=String(req.body.subject||'').trim();
     const message=String(req.body.message||'').trim();
 
+    const rawAttachments = req.body.attachments ?? [];
+    if (!Array.isArray(rawAttachments) || rawAttachments.length > 10) {
+      return res.status(400).json({error:'INVALID_ATTACHMENTS'});
+    }
+
+    const allowedAttachment = /\.(pdf|jpe?g|png|webp|docx?|xlsx?|txt)$/i;
+    const emailAttachments = [];
+    let attachmentBytes = 0;
+
+    for (const file of rawAttachments) {
+      if (!file || typeof file.filename !== 'string' ||
+          typeof file.content !== 'string' ||
+          !allowedAttachment.test(file.filename) ||
+          !/^[A-Za-z0-9+/]*={0,2}$/.test(file.content) ||
+          file.content.length % 4 !== 0) {
+        return res.status(400).json({error:'INVALID_ATTACHMENTS'});
+      }
+
+      const bytes = Buffer.from(file.content, 'base64');
+      if (!bytes.length || bytes.toString('base64') !== file.content) {
+        return res.status(400).json({error:'INVALID_ATTACHMENTS'});
+      }
+
+      attachmentBytes += bytes.length;
+      if (attachmentBytes > 10 * 1024 * 1024) {
+        return res.status(413).json({error:'ATTACHMENTS_TOO_LARGE'});
+      }
+
+      emailAttachments.push({
+        filename: file.filename.replace(/[\\/\r\n]/g, '_'),
+        content: file.content
+      });
+    }
+
+
+
     if(!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){
       return res.status(400).json({
         error:'INVALID_EMAIL'
@@ -4354,7 +4429,8 @@ app.post('/api/admin/send-email',adminAuth,async (req,res)=>{
       from:`Banque Islamique de Développement <${from}>`,
       to:[to],
       subject:subject,
-      text:message
+      text:message,
+      ...(emailAttachments.length ? {attachments:emailAttachments} : {})
     });
 
     if(result.error){
