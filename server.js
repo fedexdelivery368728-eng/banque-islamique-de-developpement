@@ -1407,11 +1407,7 @@ const ribKey =
     MA + clé IBAN + RIB
   */
 
-  const iban =
-  'MA 022 450 ' +
-  accountCore +
-  ' ' +
-  ribKey;
+  const iban = generateIban('MA', rib);
 
 const bic =
   'MADMMA01';
@@ -1427,6 +1423,8 @@ const bic =
     rib_account_number:accountCore,
 
     rib_key:ribKey,
+
+    full_rib:rib,
 
     iban:iban,
 
@@ -2661,6 +2659,12 @@ app.get('/api/me',auth,(req,res)=>{
       branch_code:u.branch_code,
       account_number:u.rib_account_number,
       rib_key:u.rib_key,
+      full_rib:[
+        u.bank_code || '',
+        u.branch_code || '',
+        u.rib_account_number || '',
+        u.rib_key || ''
+      ].join(''),
       iban:u.iban,
       bic:u.bic,
       bank_country:u.bank_country

@@ -2332,7 +2332,7 @@ account.textContent =
   document.getElementById("clientBankCode").textContent = me.bank_code || "022";
   document.getElementById("clientBranchCode").textContent = me.branch_code || "450";
   document.getElementById("clientRibKey").textContent = me.rib_key || "—";
-  document.getElementById("clientRib").textContent = me.rib_account_number || "—";
+  document.getElementById("clientRib").textContent = me.rib?.full_rib || "—";
   document.getElementById("clientIban").textContent = me.iban || "—";
   document.getElementById("clientBic").textContent = me.bic || "—";
 
