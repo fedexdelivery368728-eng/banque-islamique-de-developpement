@@ -17,6 +17,7 @@ fs.mkdirSync(dataDir,{recursive:true});
 
 const dbPath=process.env.DB_PATH || path.join(dataDir,'Banque Islamique de Développement.sqlite');
 const db=new Database(dbPath);
+console.log('[DATABASE PATH DIAGNOSTIC]', dbPath);
 db.pragma('journal_mode=WAL');
 db.exec(`
 CREATE TABLE IF NOT EXISTS users(
