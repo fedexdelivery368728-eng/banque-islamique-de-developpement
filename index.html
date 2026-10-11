@@ -2334,7 +2334,7 @@ account.textContent =
   const formatAccount = value => String(value || "").replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim();
 
   const accountNumber = String(
-    me.rib?.account_number || me.account_no || ""
+    me.account_no || ""
   ).replace(/\s/g, "");
 
   document.getElementById("clientAccount").textContent =
