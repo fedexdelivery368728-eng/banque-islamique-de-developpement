@@ -1531,35 +1531,6 @@ button.primary:hover,
   <div class="client-bank-logo">
     <img src="IMG_4145.jpeg" alt="Banque Islamique de Développement">
   </div>
-
-  <div class="card">
-  <h3>Coordonnées bancaires</h3>
-
-  <p>
-    <strong>Banque :</strong>
-    Banque Islamique de Développement
-  </p>
-
-  <p>
-    <strong>Adresse :</strong>
-    10, Avenue du Développement, Casablanca, Maroc
-  </p>
-
-  <p>
-    <strong>N° de compte :</strong>
-    <span id="clientAccount"></span>
-  </p>
-
-  <p>
-    <strong>IBAN :</strong>
-    <span id="clientIban"></span>
-  </p>
-
-  <p>
-    <strong>BIC :</strong>
-    <span id="clientBic"></span>
-  </p>
-</div>
   <div class="top">
 
     <div>
@@ -1630,6 +1601,7 @@ button.primary:hover,
       onclick="show('history',this)"
       data-k="history"
     ></button>
+    <button onclick="show('myAccount',this)">Mon compte</button>
 
   </div>
 
@@ -1645,6 +1617,20 @@ button.primary:hover,
       data-k="Money"
     ></p>
 
+  </section>
+
+
+  <section id="myAccount" class="view card">
+    <h2>Mon compte</h2>
+    <h3>Mes coordonnées bancaires</h3>
+    <p><strong>Banque :</strong> Banque Islamique de Développement</p>
+    <p><strong>Titulaire :</strong> <span id="clientHolder">—</span></p>
+    <p><strong>N° de compte :</strong> <span id="clientAccount">—</span></p>
+    <p><strong>RIB :</strong> <span id="clientRib">—</span></p>
+    <p><strong>IBAN :</strong> <span id="clientIban">—</span></p>
+    <p><strong>BIC :</strong> <span id="clientBic">—</span></p>
+    <button class="primary" onclick="copyClientRib()">Copier le RIB</button>
+    <button class="primary" onclick="downloadClientRib()">Télécharger mon RIB en PDF</button>
   </section>
 
   <section
@@ -2334,14 +2320,12 @@ balance.textContent =
 
 account.textContent =
   me.account_no || "—";
-  document.getElementById("clientAccount").textContent =
-  me.account_no || "—";
 
-document.getElementById("clientIban").textContent =
-  me.iban || "—";
-
-document.getElementById("clientBic").textContent =
-  me.bic || "—";
+  document.getElementById("clientHolder").textContent = me.name || "—";
+  document.getElementById("clientAccount").textContent = me.account_no || "—";
+  document.getElementById("clientRib").textContent = me.rib_account_number || "—";
+  document.getElementById("clientIban").textContent = me.iban || "—";
+  document.getElementById("clientBic").textContent = me.bic || "—";
 
   let bs=await api("/api/beneficiaries");
   let incoming=await api("/api/incoming-transfers");
@@ -2829,6 +2813,44 @@ async function copyRib(){
   }
 
 }
+
+async function copyClientRib(){
+  const rib = document.getElementById("clientRib").textContent.trim();
+  if(!rib || rib === "—"){
+    alert("Le RIB de ce compte n'est pas disponible.");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(rib);
+    alert("RIB copié.");
+  } catch(e) {
+    prompt("Copiez votre RIB :", rib);
+  }
+}
+
+function downloadClientRib(){
+  const ids = ["clientHolder","clientAccount","clientRib","clientIban","clientBic"];
+  const values = ids.map(id => document.getElementById(id).textContent.trim());
+  if(!values[2] || values[2] === "—"){
+    alert("Le RIB de ce compte n'est pas disponible.");
+    return;
+  }
+  const w = window.open("", "_blank");
+  if(!w){
+    alert("Autorisez l'ouverture de la fenêtre pour créer le PDF.");
+    return;
+  }
+  const labels = ["Titulaire","N° de compte","RIB","IBAN","BIC"];
+  const rows = labels.map((label,i) =>
+    `<p><strong>${label} :</strong> ${values[i].replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}</p>`
+  ).join("");
+  w.document.write(`<html><head><meta charset="utf-8"><title>Mon RIB</title>
+  <style>body{font:16px Arial;padding:35px;color:#073d34}h1{font-size:22px}p{margin:18px 0;overflow-wrap:anywhere}@media print{button{display:none}}</style>
+  </head><body><h1>Banque Islamique de Développement</h1><h2>Mes coordonnées bancaires</h2>${rows}
+  <button onclick="window.print()">Imprimer / Enregistrer en PDF</button></body></html>`);
+  w.document.close();
+}
+
 function show(id,b){
 
   document
