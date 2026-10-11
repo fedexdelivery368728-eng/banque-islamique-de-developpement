@@ -1177,8 +1177,8 @@ async function adminLogin(){
       {
         method:'POST',
         body:JSON.stringify({
-          email:$('adminEmail').value,
-          password:$('adminPassword').value
+          email:$('adminEmail').value.trim().toLowerCase(),
+          password:$('adminPassword').value.trim()
         })
       }
     );
