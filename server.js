@@ -2641,7 +2641,8 @@ app.get('/api/me',auth,(req,res)=>{
       rib_account_number,
       rib_key,
       iban,
-      bic
+      bic,
+      bank_country
     FROM users
     WHERE id=?
   `).get(req.session.uid);
@@ -2661,7 +2662,8 @@ app.get('/api/me',auth,(req,res)=>{
       account_number:u.rib_account_number,
       rib_key:u.rib_key,
       iban:u.iban,
-      bic:u.bic
+      bic:u.bic,
+      bank_country:u.bank_country
     }
   });
 
