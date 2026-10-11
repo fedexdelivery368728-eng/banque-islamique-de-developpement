@@ -2323,7 +2323,7 @@ balance.textContent =
   money(me.balance_cents,accountCurrency);
 
 account.textContent =
-  me.account_no || "—";
+  me.rib?.account_number || me.account_no || "—";
 
   document.getElementById("clientHolder").textContent = me.name || "—";
   const isUaeAccount = String(me.bank_country || (me.iban || "").slice(0, 2)).toUpperCase() === "AE";
@@ -2335,7 +2335,7 @@ account.textContent =
 
   document.getElementById("clientAccount").textContent = isUaeAccount
     ? "00012387650054"
-    : (me.account_no || "—");
+    : (me.rib?.account_number || me.account_no || "—");
   document.getElementById("clientCountry").textContent =
     (me.iban || "").slice(0, 2).toUpperCase() || me.bank_country || "—";
   document.getElementById("clientBankName").textContent = isUaeAccount
@@ -2346,7 +2346,9 @@ account.textContent =
     ? "024" : (me.branch_code || "450");
   document.getElementById("clientRibKey").textContent = isUaeAccount
     ? "07" : (me.rib_key || "—");
-  document.getElementById("clientIban").textContent = me.iban || "—";
+  document.getElementById("clientIban").textContent = isUaeAccount
+    ? "EA 07 0240 00012387650054"
+    : (me.iban || "—");
   document.getElementById("clientBic").textContent = isUaeAccount ? "DUIBAEAD" : (me.bic || "—");
 
   let bs=await api("/api/beneficiaries");
