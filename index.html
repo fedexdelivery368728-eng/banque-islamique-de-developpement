@@ -2863,7 +2863,7 @@ function downloadClientRib(){
   <title>Relevé d'identité bancaire</title>
   <style>
   body{font:16px Arial;color:#111;margin:35px auto;max-width:850px;padding:15px}
-  header{font-size:20px;font-weight:bold;color:#073d34;margin-bottom:35px}
+  header.rib-header{display:flex;align-items:center;gap:18px;font-size:20px;font-weight:bold;color:#073d34;margin-bottom:35px;border-bottom:4px solid #087f68;padding-bottom:18px}header.rib-header img{width:90px;height:75px;object-fit:contain}header.rib-header span{color:#073d34}
   .box{border:1px solid #555}h1{text-align:center;font-size:24px;padding:16px;margin:0;border-bottom:1px solid #555}
   .line{padding:18px 12px;border-bottom:1px solid #777}
   .swift{text-align:right;padding:12px;border:1px solid #777;margin:15px 0 0 auto;max-width:350px}
@@ -2872,7 +2872,10 @@ function downloadClientRib(){
   th{background:#eee;font-weight:normal}td{font-weight:bold}
   button{margin-top:22px;padding:12px}@media print{button{display:none}}
   </style></head><body>
-  <header>BANQUE ISLAMIQUE DE DÉVELOPPEMENT</header>
+  <header class="rib-header">
+    <img src="${window.location.origin}/IMG_4145.jpeg" alt="Logo de la banque">
+    <span>BANQUE ISLAMIQUE DE DÉVELOPPEMENT</span>
+  </header>
   <div class="box"><h1>Relevé d'Identité Bancaire</h1>
   <div class="line"><strong>Nom :</strong> ${esc(holder)}
   <div class="swift"><strong>Code Swift :</strong> ${esc(bic)}</div></div>
