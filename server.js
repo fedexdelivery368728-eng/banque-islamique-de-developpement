@@ -103,6 +103,7 @@ function addUserColumn(sql){
 }
 
 addUserColumn("ALTER TABLE users ADD COLUMN photo_data TEXT");
+addUserColumn("ALTER TABLE users ADD COLUMN account_no TEXT");
 
 function addExternalTransferColumn(sql){
  try{
@@ -1209,14 +1210,17 @@ async function sendTransactionEmail({
 }
 function auth(req,res,next){if(!req.session.uid)return res.status(401).json({error:'AUTH_REQUIRED'});next()}
 function accountNumber(id){
-  const row =
-    db.prepare(`
-      SELECT rib_account_number
-      FROM users
-      WHERE id=?
-    `).get(id);
+  const row = db.prepare(`
+    SELECT account_no
+    FROM users
+    WHERE id=?
+  `).get(id);
 
-  return row?.rib_account_number || '';
+  return String(row?.account_no || '').trim();
+}
+
+function generateAccountNumber(id){
+  return 'BID' + String(id).padStart(10, '0');
 }
 function parseCents(value){
   const n=Number(value);
@@ -1627,6 +1631,13 @@ String(req.body.notificationLanguage || 'fr')
     req.session.uid = r.lastInsertRowid;
 
     const userId = Number(r.lastInsertRowid);
+
+db.prepare(`
+  UPDATE users
+  SET account_no=?
+  WHERE id=? AND (account_no IS NULL OR account_no='')
+`).run(generateAccountNumber(userId), userId);
+
 
 const rib =
   saveRibData(
