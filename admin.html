@@ -261,7 +261,51 @@ th{
     font-size:13px;
   }
 }
-</style>
+
+/* Tableau de bord des virements */
+section.card:has(#incomingTransfersTable),
+section.card:has(#internalTransfersTable),
+section.card:has(#externalTransfersTable) {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #dce8e3;
+  border-radius: 16px;
+}
+section.card:has(#incomingTransfersTable) > .top,
+section.card:has(#internalTransfersTable) > .top,
+section.card:has(#externalTransfersTable) > .top {
+  padding: 20px;
+  margin-bottom: 0 !important;
+  background: #f3f7f5;
+  border-bottom: 1px solid #dce8e3;
+}
+section.card:has(#incomingTransfersTable) h2,
+section.card:has(#internalTransfersTable) h2,
+section.card:has(#externalTransfersTable) h2 {
+  color: #073d34;
+  font-size: 20px;
+}
+section.card:has(#incomingTransfersTable) th,
+section.card:has(#internalTransfersTable) th,
+section.card:has(#externalTransfersTable) th {
+  background: #edf5f1;
+  color: #073d34;
+  padding: 14px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+section.card:has(#incomingTransfersTable) td,
+section.card:has(#internalTransfersTable) td,
+section.card:has(#externalTransfersTable) td {
+  padding: 14px 12px;
+  vertical-align: middle;
+}
+section.card:has(#incomingTransfersTable) tbody tr:hover td,
+section.card:has(#internalTransfersTable) tbody tr:hover td,
+section.card:has(#externalTransfersTable) tbody tr:hover td {
+  background: #f3f7f5;
+}
+\n</style>
 </head>
 
 <body>
