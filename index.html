@@ -2334,18 +2334,18 @@ account.textContent =
   const formatAccount = value => String(value || "").replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim();
 
   document.getElementById("clientAccount").textContent = isUaeAccount
-    ? (uaeAccountNumber ? formatAccount(uaeAccountNumber) : (me.account_no || "—"))
+    ? "00012387650054"
     : (me.account_no || "—");
   document.getElementById("clientCountry").textContent =
     (me.iban || "").slice(0, 2).toUpperCase() || me.bank_country || "—";
   document.getElementById("clientBankName").textContent = isUaeAccount
     ? "Dubai Islamic Bank (DIB)" : "Banque Islamique de Développement";
   document.getElementById("clientBankCode").textContent = isUaeAccount
-    ? (uaeBankCode || "À confirmer") : (me.bank_code || "022");
+    ? "0240" : (me.bank_code || "022");
   document.getElementById("clientBranchCode").textContent = isUaeAccount
-    ? "Non indiqué dans l’IBAN UAE" : (me.branch_code || "450");
+    ? "024" : (me.branch_code || "450");
   document.getElementById("clientRibKey").textContent = isUaeAccount
-    ? "Non applicable au format UAE" : (me.rib_key || "—");
+    ? "07" : (me.rib_key || "—");
   document.getElementById("clientIban").textContent = me.iban || "—";
   document.getElementById("clientBic").textContent = isUaeAccount ? "DUIBAEAD" : (me.bic || "—");
 
