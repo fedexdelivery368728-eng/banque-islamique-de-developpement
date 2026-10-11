@@ -1636,7 +1636,7 @@ const rib =
 
 req.session.uid = userId;
 
-rres.json({
+res.json({
   ok:true,
   id:userId,
   account_no:accountNumber(userId),
