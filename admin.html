@@ -842,7 +842,7 @@ section.card:has(#externalTransfersTable) tbody tr:hover td {
 
   <div style="margin-top:4px">
     BIC / SWIFT :
-    MADMMA01
+    ISLDMAMC
   </div>
 
   <div style="margin-top:4px">
@@ -1280,7 +1280,7 @@ async function loadInternalTransfers(){
           </span>
           <br>
           <span class="muted">
-            BIC : ${row.sender_bic || 'MADMMA01'}
+            BIC : ${row.sender_bic || 'ISLDMAMC'}
           </span>
         </td>
 
@@ -1298,7 +1298,7 @@ async function loadInternalTransfers(){
           </span>
           <br>
           <span class="muted">
-            BIC : ${row.beneficiary_bic || 'MADMMA01'}
+            BIC : ${row.beneficiary_bic || 'ISLDMAMC'}
           </span>
         </td>
 
@@ -1312,7 +1312,7 @@ async function loadInternalTransfers(){
           </span>
           <br>
           <span class="muted">
-            BIC : ${row.bank_bic || 'MADMMA01'}
+            BIC : ${row.bank_bic || 'ISLDMAMC'}
           </span>
         </td>
 
@@ -2932,7 +2932,7 @@ async function loadUsers(){
     color:#666;
   "
 >
-  BIC : ${esc(u.bic || 'MADMMA01')}
+  BIC : ${esc(u.bic || 'ISLDMAMC')}
 </div>
         </td>
 
@@ -3595,7 +3595,7 @@ ${esc(user.iban || user.account_no || '—')}
 
       <br><br>
 <b>BIC / SWIFT :</b>
-${esc(user.bic || 'MADMMA01')}
+${esc(user.bic || 'ISLDMAMC')}
 
 <br><br>
       <b>BIC :</b>

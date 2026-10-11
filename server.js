@@ -710,7 +710,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
 
   field(
     'BIC / SWIFT',
-    transfer.bank_bic || 'MADMMA01'
+    transfer.bank_bic || 'ISLDMAMC'
   );
 
   sectionTitle('Donneur d’ordre');
@@ -732,7 +732,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
 
   field(
     'BIC / SWIFT',
-    transfer.sender_bic || sourceUser?.bic || 'MADMMA01'
+    transfer.sender_bic || sourceUser?.bic || 'ISLDMAMC'
   );
 
   sectionTitle('Bénéficiaire');
@@ -759,7 +759,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
 
   field(
     'BIC / SWIFT',
-    transfer.beneficiary_bic || 'MADMMA01'
+    transfer.beneficiary_bic || 'ISLDMAMC'
   );
 
   sectionTitle('Banque bénéficiaire');
@@ -781,7 +781,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
 
   field(
     'BIC / SWIFT',
-    transfer.bank_bic || transfer.beneficiary_bic || 'MADMMA01'
+    transfer.bank_bic || transfer.beneficiary_bic || 'ISLDMAMC'
   );
 
   field(
@@ -819,7 +819,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
 
   field(
     'BIC / SWIFT',
-    transfer.bank_bic || 'MADMMA01'
+    transfer.bank_bic || 'ISLDMAMC'
   );
 
   sectionTitle('Donneur d’ordre');
@@ -841,7 +841,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
 
   field(
     'BIC / SWIFT',
-    transfer.sender_bic || sourceUser?.bic || 'MADMMA01'
+    transfer.sender_bic || sourceUser?.bic || 'ISLDMAMC'
   );
 
   sectionTitle('Bénéficiaire');
@@ -868,7 +868,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
 
   field(
     'BIC / SWIFT',
-    transfer.beneficiary_bic || 'MADMMA01'
+    transfer.beneficiary_bic || 'ISLDMAMC'
   );
 
   sectionTitle('Banque bénéficiaire');
@@ -890,7 +890,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
 
   field(
     'BIC / SWIFT',
-    transfer.bank_bic || transfer.beneficiary_bic || 'MADMMA01'
+    transfer.bank_bic || transfer.beneficiary_bic || 'ISLDMAMC'
   );
 
   field(
@@ -928,7 +928,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
 
   field(
     'BIC / SWIFT',
-    transfer.bank_bic || 'MADMMA01'
+    transfer.bank_bic || 'ISLDMAMC'
   );
 
   sectionTitle('Donneur d’ordre');
@@ -950,7 +950,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
 
   field(
     'BIC / SWIFT',
-    transfer.sender_bic || sourceUser?.bic || 'MADMMA01'
+    transfer.sender_bic || sourceUser?.bic || 'ISLDMAMC'
   );
 
   sectionTitle('Bénéficiaire');
@@ -977,7 +977,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
 
   field(
     'BIC / SWIFT',
-    transfer.beneficiary_bic || 'MADMMA01'
+    transfer.beneficiary_bic || 'ISLDMAMC'
   );
 
   sectionTitle('Banque bénéficiaire');
@@ -999,7 +999,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
 
   field(
     'BIC / SWIFT',
-    transfer.bank_bic || transfer.beneficiary_bic || 'MADMMA01'
+    transfer.bank_bic || transfer.beneficiary_bic || 'ISLDMAMC'
   );
 
   field(
@@ -1411,7 +1411,7 @@ const ribKey =
   const iban = generateIban('MA', rib);
 
 const bic =
-  'MADMMA01';
+  'ISLDMAMC';
 
   return {
 
@@ -2114,7 +2114,7 @@ app.get('/api/admin/internal-transfers',adminAuth,(req,res)=>{
         bu.notification_language AS notification_language,
         'Banque Islamique de Développement' AS bank_name,
         '10, Avenue du Développement, Casablanca, Maroc' AS bank_address,
-        'MADMMA01' AS bank_bic
+        'ISLDMAMC' AS bank_bic
       FROM internal_transfers it
       LEFT JOIN users su ON su.id=it.sender_user_id
       LEFT JOIN users bu ON bu.id=it.beneficiary_user_id
@@ -2172,7 +2172,7 @@ app.get('/api/admin/internal-transfers/:id/pdf',adminAuth,async(req,res)=>{
 
         'Banque Islamique de Développement' AS bank_name,
         '10, Avenue du Développement, Casablanca, Maroc' AS bank_address,
-        'MADMMA01' AS bank_bic
+        'ISLDMAMC' AS bank_bic
       FROM internal_transfers it
       LEFT JOIN users su
         ON su.id=it.sender_user_id
@@ -2219,7 +2219,7 @@ app.get('/api/admin/internal-transfers/:id/pdf',adminAuth,async(req,res)=>{
       '—';
 
     transfer.bic =
-      'MADMMA01';
+      'ISLDMAMC';
 
     transfer.bank_name =
       'Banque Islamique de Développement';
