@@ -2332,7 +2332,7 @@ account.textContent =
   document.getElementById("clientBankCode").textContent = me.bank_code || "022";
   document.getElementById("clientBranchCode").textContent = me.branch_code || "450";
   document.getElementById("clientRibKey").textContent = me.rib_key || "—";
-  document.getElementById("clientRib").textContent = me.rib?.full_rib || "—";
+  // Ligne RIB masquée : aucun élément clientRib dans la page.
   document.getElementById("clientIban").textContent = me.iban || "—";
   document.getElementById("clientBic").textContent = me.bic || "—";
 
@@ -2823,19 +2823,7 @@ async function copyRib(){
 
 }
 
-async function copyClientRib(){
-  const rib = document.getElementById("clientRib").textContent.trim();
-  if(!rib || rib === "—"){
-    alert("Le RIB de ce compte n'est pas disponible.");
-    return;
-  }
-  try {
-    await navigator.clipboard.writeText(rib);
-    alert("RIB copié.");
-  } catch(e) {
-    prompt("Copiez votre RIB :", rib);
-  }
-}
+
 
 function downloadClientRib(){
   const language = ["fr","en","ar"].includes(lang) ? lang : "fr";
@@ -2847,7 +2835,7 @@ function downloadClientRib(){
 
   const get = id => document.getElementById(id)?.textContent.trim() || "—";
   const holder=get("clientHolder"), bank=get("clientBankCode");
-  const branch=get("clientBranchCode"), rib=get("clientRib").replace(/\s/g,"");
+  const branch=get("clientBranchCode"), rib=String(me?.rib?.full_rib || "").replace(/\s/g,"");
   const iban=get("clientIban"), bic=get("clientBic");
   const shownCurrency=get("clientCurrency");
   const currency=shownCurrency!=="—"?shownCurrency:(me?.account_currency||"USD");
