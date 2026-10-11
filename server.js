@@ -4942,6 +4942,10 @@ app.get('/client',(req,res)=>{
   res.sendFile(path.join(__dirname,'index.html'));
 });
 
+app.get('/app',(req,res)=>{
+  res.sendFile(path.join(__dirname,'index.html'));
+});
+
 app.get('/',(req,res)=>{
   res.sendFile(path.join(__dirname,'home.html'));
 });
