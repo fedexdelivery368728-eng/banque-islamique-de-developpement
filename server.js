@@ -3493,6 +3493,13 @@ const currency=
 app.get('/api/admin/external-transfers',adminAuth,(req,res)=>{
   try{
 
+    console.log('[DIAGNOSTIC BASE BANCAIRE]', {
+      dbPath,
+      workingDirectory: process.cwd(),
+      externalTransfers: db.prepare('SELECT COUNT(*) AS total FROM external_transfers').get().total,
+      users: db.prepare('SELECT COUNT(*) AS total FROM users').get().total
+    });
+
     const rows=db.prepare(`
       SELECT
         et.*,
