@@ -1673,7 +1673,10 @@ rres.json({
 app.post('/api/login',(req,res)=>{
  const email=String(req.body.email||'').trim().toLowerCase();
  const u=db.prepare('SELECT * FROM users WHERE email=?').get(email);
- if(!u||u.password_hash!==hash(String(req.body.password||'')))
+console.log('[LOGIN DIAGNOSTIC]', {
+  userFound: !!u,
+  passwordMatches: !!u && u.password_hash === hash(String(req.body.password || ''))
+}); if(!u||u.password_hash!==hash(String(req.body.password||'')))
   return res.status(401).json({error:'INVALID_LOGIN'});
 
 if(u.active===0)
