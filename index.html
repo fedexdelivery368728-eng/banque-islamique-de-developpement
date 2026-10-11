@@ -2838,28 +2838,53 @@ async function copyClientRib(){
 }
 
 function downloadClientRib(){
-  const ids = ["clientHolder","clientCountry","clientBankCode","clientBranchCode","clientAccount","clientRibKey","clientRib","clientIban","clientBic"];
-  const values = ids.map(id => document.getElementById(id).textContent.trim());
-  if(!values[2] || values[2] === "—"){
+  const get = id => document.getElementById(id)?.textContent.trim() || "—";
+  const holder = get("clientHolder");
+  const bank = get("clientBankCode");
+  const branch = get("clientBranchCode");
+  const rib = get("clientRib").replace(/\s/g, "");
+  const iban = get("clientIban");
+  const bic = get("clientBic");
+  const key = /^\d{24}$/.test(rib) ? rib.slice(22) : get("clientRibKey");
+  const account = /^\d{24}$/.test(rib) ? rib.slice(6,22) : get("clientAccount");
+  if (!rib || rib === "—") {
     alert("Le RIB de ce compte n'est pas disponible.");
     return;
   }
+  const esc = x => String(x).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
   const w = window.open("", "_blank");
-  if(!w){
-    alert("Autorisez l'ouverture de la fenêtre pour créer le PDF.");
+  if (!w) {
+    alert("Autorisez l'ouverture de la fenêtre pour imprimer le RIB.");
     return;
   }
-  const labels = ["Titulaire","N° de compte","RIB","IBAN","BIC"];
-  const rows = labels.map((label,i) =>
-    `<p><strong>${label} :</strong> ${values[i].replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}</p>`
-  ).join("");
-  w.document.write(`<html><head><meta charset="utf-8"><title>Mon RIB</title>
-  <style>body{font:16px Arial;padding:35px;color:#073d34}h1{font-size:22px}p{margin:18px 0;overflow-wrap:anywhere}@media print{button{display:none}}</style>
-  </head><body><h1>Banque Islamique de Développement</h1><h2>Mes coordonnées bancaires</h2>${rows}
-  <button onclick="window.print()">Imprimer / Enregistrer en PDF</button></body></html>`);
+  w.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8">
+  <title>Relevé d'identité bancaire</title>
+  <style>
+  body{font:16px Arial;color:#111;margin:35px auto;max-width:850px;padding:15px}
+  header{font-size:20px;font-weight:bold;color:#073d34;margin-bottom:35px}
+  .box{border:1px solid #555}h1{text-align:center;font-size:24px;padding:16px;margin:0;border-bottom:1px solid #555}
+  .line{padding:18px 12px;border-bottom:1px solid #777}
+  .swift{text-align:right;padding:12px;border:1px solid #777;margin:15px 0 0 auto;max-width:350px}
+  table{width:100%;border-collapse:collapse;table-layout:fixed}
+  th,td{border:1px solid #777;text-align:center;padding:12px 4px;overflow-wrap:anywhere}
+  th{background:#eee;font-weight:normal}td{font-weight:bold}
+  button{margin-top:22px;padding:12px}@media print{button{display:none}}
+  </style></head><body>
+  <header>BANQUE ISLAMIQUE DE DÉVELOPPEMENT</header>
+  <div class="box"><h1>Relevé d'Identité Bancaire</h1>
+  <div class="line"><strong>Nom :</strong> ${esc(holder)}
+  <div class="swift"><strong>Code Swift :</strong> ${esc(bic)}</div></div>
+  <div class="line"><strong>Agence :</strong> ${esc(branch)}</div>
+  <table><thead><tr><th>Banque</th><th>C. Ville</th><th>N° de Compte</th><th>Clé Rib</th></tr></thead>
+  <tbody><tr><td>${esc(bank)}</td><td>${esc(branch)}</td><td>${esc(account)}</td><td>${esc(key)}</td></tr></tbody></table>
+  <div class="line"><strong>IBAN :</strong> ${esc(iban)}</div>
+  <div class="line"><strong>Devise :</strong> ${esc(get("clientCurrency"))}</div></div>
+  <button onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+  </body></html>`);
   w.document.close();
 }
-
 function show(id,b){
 
   document
