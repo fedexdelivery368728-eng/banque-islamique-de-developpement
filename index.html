@@ -1623,7 +1623,7 @@ button.primary:hover,
   <section id="myAccount" class="view card">
     <h2>Mon compte</h2>
     <h3>Mes coordonnées bancaires</h3>
-    <p><strong>Banque :</strong> Banque Islamique de Développement</p>
+    <p><strong>Banque :</strong> <span id="clientBankName">Banque Islamique de Développement</span></p>
     <p><strong>Titulaire :</strong> <span id="clientHolder">—</span></p>
     <p><strong>N° de compte :</strong> <span id="clientAccount">—</span></p>
     <p><strong>Code pays :</strong> <span id="clientCountry">—</span></p>
@@ -2327,14 +2327,16 @@ account.textContent =
 
   document.getElementById("clientHolder").textContent = me.name || "—";
   document.getElementById("clientAccount").textContent = me.account_no || "—";
+  const isUaeAccount = String(me.bank_country || (me.iban || "").slice(0, 2)).toUpperCase() === "AE";
   document.getElementById("clientCountry").textContent =
-    (me.iban || "").slice(0, 2).toUpperCase() || "—";
-  document.getElementById("clientBankCode").textContent = me.bank_code || "022";
-  document.getElementById("clientBranchCode").textContent = me.branch_code || "450";
-  document.getElementById("clientRibKey").textContent = me.rib_key || "—";
-  // Ligne RIB masquée : aucun élément clientRib dans la page.
+    (me.iban || "").slice(0, 2).toUpperCase() || me.bank_country || "—";
+  document.getElementById("clientBankName").textContent = isUaeAccount
+    ? "Dubai Islamic Bank (DIB)" : "Banque Islamique de Développement";
+  document.getElementById("clientBankCode").textContent = isUaeAccount ? "—" : (me.bank_code || "022");
+  document.getElementById("clientBranchCode").textContent = isUaeAccount ? "—" : (me.branch_code || "450");
+  document.getElementById("clientRibKey").textContent = isUaeAccount ? "—" : (me.rib_key || "—");
   document.getElementById("clientIban").textContent = me.iban || "—";
-  document.getElementById("clientBic").textContent = me.bic || "—";
+  document.getElementById("clientBic").textContent = isUaeAccount ? "DUIBAEAD" : (me.bic || "—");
 
   let bs=await api("/api/beneficiaries");
   let incoming=await api("/api/incoming-transfers");
