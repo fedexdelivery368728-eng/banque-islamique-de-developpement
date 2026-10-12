@@ -2361,11 +2361,17 @@ account.textContent =
       ? formatAccount(me.rib?.iban || me.iban)
       : "À renseigner";
   } else {
+    const rawIban = String(me.rib?.iban || me.iban || "").replace(/\s/g, "").toUpperCase();
+    const ibanCheck = rawIban.startsWith("MA") ? rawIban.slice(2, 4) : "";
+    const bankCode = me.rib?.bank_code || me.bank_code || "";
+    const agenceCode = me.rib?.branch_code || me.branch_code || "";
     const accountNumber = me.account_no || me.rib?.account_number || me.rib_account_number || "";
     const ribKey = me.rib?.rib_key || me.rib_key || "";
-    clientIban.textContent = accountNumber && ribKey
-      ? `MA ${bankCode} ${agenceCode + accountNumber} ${ribKey}`
-      : "À renseigner";
+
+    clientIban.textContent =
+      ibanCheck && bankCode && agenceCode && accountNumber && ribKey
+        ? `MA${ibanCheck} ${bankCode} ${agenceCode} ${accountNumber} ${ribKey}`
+        : "À renseigner";
   }
 
   document.getElementById("clientBic").textContent =
