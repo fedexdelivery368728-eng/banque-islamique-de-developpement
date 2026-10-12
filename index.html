@@ -2326,7 +2326,7 @@ balance.textContent =
 account.textContent =
   me.account_no || me.rib?.account_number || "—";
 
-  document.getElementById("clientHolder").textContent = me.name || "—";
+  document.getElementById("clientHolder").textContent = me.name || [me.first_name, me.last_name].filter(Boolean).join(" ") || "—";
   const isUaeAccount = String(me.bank_country || (me.iban || "").slice(0, 2)).toUpperCase() === "AE";
   const rawIban = String(me.iban || "").replace(/\s/g, "").toUpperCase();
   const validUaeIban = /^AE\d{21}$/.test(rawIban);
@@ -2339,7 +2339,7 @@ account.textContent =
   ).replace(/\s/g, "");
 
   document.getElementById("clientAccount").textContent =
-    isUaeAccount ? "124358765005384" : (accountNumber || me.rib?.account_number || "À renseigner");
+    me.account_no || me.rib?.account_number || "À renseigner";
   document.getElementById("clientCountry").textContent =
     isUaeAccount ? "AE" : "MA";
   document.getElementById("clientBankName").textContent =

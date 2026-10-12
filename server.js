@@ -2644,6 +2644,8 @@ app.get('/api/me',auth,(req,res)=>{
     SELECT
       id,
       name,
+      first_name,
+      last_name,
       email,
       balance_cents,
       created_at,
