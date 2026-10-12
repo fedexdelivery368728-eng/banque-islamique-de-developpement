@@ -2343,21 +2343,26 @@ account.textContent =
   document.getElementById("clientCountry").textContent =
     isUaeAccount ? "AE" : "MA";
   document.getElementById("clientBankName").textContent =
-    isUaeAccount ? "Dubai Islamic Bank (DIB)" : "Banque Islamique de Développement";
+    isUaeAccount ? "Dubai Islamic Developpment Bank (DIB)" : "Banque Islamique de Développement";
   const bankAddress = document.getElementById("clientBankAddress");
   if (bankAddress) bankAddress.textContent = isUaeAccount
     ? "68 Al Maktoum Road, Port Saeed, Deira, P.O. Box 1080, Dubaï, Émirats arabes unis"
     : "10, Avenue du Développement, Casablanca, Maroc";
   document.getElementById("clientBankCode").textContent =
-    isUaeAccount ? "024" : (me.bank_code || "022");
-  document.getElementById("clientBranchCode").textContent =
-    isUaeAccount ? "124" : (me.branch_code || "450");
-  document.getElementById("clientRibKey").textContent =
-    isUaeAccount ? "81" : (me.rib_key || "À confirmer");
-  document.getElementById("clientIban").textContent =
-    isUaeAccount ? "AE81 1243 58765005 384" : (me.iban ? formatAccount(me.iban) : "À renseigner");
-  document.getElementById("clientBic").textContent =
-    isUaeAccount ? "DUIBAEAD" : (me.bic || "MADMMA01");
+    document.getElementById("clientBankCode").textContent =
+  isUaeAccount ? "024" : (me.bank_code || "022");
+
+document.getElementById("clientBranchCode").textContent =
+  isUaeAccount ? "124" : (me.branch_code || "450");
+
+document.getElementById("clientRibKey").textContent =
+  isUaeAccount ? "81" : (me.rib_key || "À confirmer");
+
+document.getElementById("clientIban").textContent =
+  isUaeAccount ? "AE81 1243 587650059384 024" : (me.iban ? formatAccount(me.iban) : "À renseigner");
+
+document.getElementById("clientBic").textContent =
+  isUaeAccount ? "DUIBAEAD" : (me.bic || "MADMMA01");
 
   let bs=await api("/api/beneficiaries");
   let incoming=await api("/api/incoming-transfers");
