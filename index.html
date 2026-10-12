@@ -1624,6 +1624,7 @@ button.primary:hover,
     <h2>Mon compte</h2>
     <h3>Mes coordonnées bancaires</h3>
     <p><strong>Banque :</strong> <span id="clientBankName">Banque Islamique de Développement</span></p>
+    <p><strong>Adresse de la banque :</strong> <span id="clientBankAddress">—</span></p>
     <p><strong>Titulaire :</strong> <span id="clientHolder">—</span></p>
     <p><strong>N° de compte :</strong> <span id="clientAccount">—</span></p>
     <p><strong>Code pays :</strong> <span id="clientCountry">—</span></p>
@@ -2338,19 +2339,23 @@ account.textContent =
   ).replace(/\s/g, "");
 
   document.getElementById("clientAccount").textContent =
-    accountNumber || me.rib?.account_number || "À renseigner";
+    isUaeAccount ? "124358765005384" : (accountNumber || me.rib?.account_number || "À renseigner");
   document.getElementById("clientCountry").textContent =
     isUaeAccount ? "AE" : "MA";
-  document.getElementById("clientBankName").textContent = isUaeAccount
-    ? "Dubai Islamic Development Bank" : "Banque Islamique de Développement";
+  document.getElementById("clientBankName").textContent =
+    isUaeAccount ? "Dubai Islamic Bank (DIB)" : "Banque Islamique de Développement";
+  const bankAddress = document.getElementById("clientBankAddress");
+  if (bankAddress) bankAddress.textContent = isUaeAccount
+    ? "68 Al Maktoum Road, Port Saeed, Deira, P.O. Box 1080, Dubaï, Émirats arabes unis"
+    : "10, Avenue du Développement, Casablanca, Maroc";
   document.getElementById("clientBankCode").textContent =
-    isUaeAccount ? "033" : (me.bank_code || "022");
+    isUaeAccount ? "024" : (me.bank_code || "022");
   document.getElementById("clientBranchCode").textContent =
     isUaeAccount ? "124" : (me.branch_code || "450");
   document.getElementById("clientRibKey").textContent =
-    isUaeAccount ? "07" : (me.rib_key || "À confirmer");
+    isUaeAccount ? "81" : (me.rib_key || "À confirmer");
   document.getElementById("clientIban").textContent =
-    isUaeAccount ? "À confirmer" : (me.iban ? formatAccount(me.iban) : "À renseigner");
+    isUaeAccount ? "AE81 1243 58765005 384" : (me.iban ? formatAccount(me.iban) : "À renseigner");
   document.getElementById("clientBic").textContent =
     isUaeAccount ? "DUIBAEAD" : (me.bic || "MADMMA01");
 
