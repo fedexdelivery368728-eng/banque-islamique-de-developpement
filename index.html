@@ -2323,7 +2323,7 @@ balance.textContent =
   money(me.balance_cents,accountCurrency);
 
 account.textContent =
-  me.rib?.account_number || me.account_no || "—";
+  me.account_no || me.rib?.account_number || "—";
 
   document.getElementById("clientHolder").textContent = me.name || "—";
   const isUaeAccount = String(me.bank_country || (me.iban || "").slice(0, 2)).toUpperCase() === "AE";
@@ -2338,21 +2338,21 @@ account.textContent =
   ).replace(/\s/g, "");
 
   document.getElementById("clientAccount").textContent =
-    accountNumber || "À renseigner";
+    accountNumber || me.rib?.account_number || "À renseigner";
   document.getElementById("clientCountry").textContent =
     isUaeAccount ? "AE" : "MA";
   document.getElementById("clientBankName").textContent = isUaeAccount
-    ? "Dubai Islamic Bank (DIB)" : "Banque Islamique de Développement";
+    ? "Dubai Islamic Development Bank" : "Banque Islamique de Développement";
   document.getElementById("clientBankCode").textContent =
-    me.bank_code || (isUaeAccount ? "0240" : "022");
+    isUaeAccount ? "033" : (me.bank_code || "022");
   document.getElementById("clientBranchCode").textContent =
-    me.branch_code || (isUaeAccount ? "À confirmer" : "450");
+    isUaeAccount ? "124" : (me.branch_code || "450");
   document.getElementById("clientRibKey").textContent =
-    me.rib_key || "À confirmer";
+    isUaeAccount ? "07" : (me.rib_key || "À confirmer");
   document.getElementById("clientIban").textContent =
-    me.iban ? formatAccount(me.iban) : "À renseigner";
+    isUaeAccount ? "À confirmer" : (me.iban ? formatAccount(me.iban) : "À renseigner");
   document.getElementById("clientBic").textContent =
-    me.bic || (isUaeAccount ? "À confirmer" : "MADMMA01");
+    isUaeAccount ? "DUIBAEAD" : (me.bic || "MADMMA01");
 
   let bs=await api("/api/beneficiaries");
   let incoming=await api("/api/incoming-transfers");
