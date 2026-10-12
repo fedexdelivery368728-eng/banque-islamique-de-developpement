@@ -2325,21 +2325,19 @@ balance.textContent =
 
 account.textContent =
   me.account_no || me.rib?.account_number || "—";
+  document.getElementById("clientHolder").textContent =
+    me.name || [me.first_name, me.last_name].filter(Boolean).join(" ") || "—";
+    const isUaeAccount =
+    String(me.bank_country || (me.iban || "").slice(0, 2))
+      .toUpperCase() === "AE";
 
-  document.getElementById("clientHolder").textContent = me.name || [me.first_name, me.last_name].filter(Boolean).join(" ") || "—";
-  const isUaeAccount = String(me.bank_country || (me.iban || "").slice(0, 2)).toUpperCase() === "AE";
-  const rawIban = String(me.iban || "").replace(/\s/g, "").toUpperCase();
-  const validUaeIban = /^AE\d{21}$/.test(rawIban);
-  const uaeBankCode = validUaeIban ? rawIban.slice(4, 7) : "";
-  const uaeAccountNumber = validUaeIban ? rawIban.slice(7) : "";
-  const formatAccount = value => String(value || "").replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim();
+  const formatAccount = value =>
+    String(value || "").replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim();
 
-  const accountNumber = String(
-    me.account_no || ""
-  ).replace(/\s/g, "");
-
-  document.getElementById("clientAccount").textContent =
-    me.account_no || me.rib?.account_number || "À renseigner";
+    document.getElementById("clientAccount").textContent =
+    isUaeAccount
+      ? (me.rib?.account_number || me.rib_account_number || me.account_no || "À renseigner")
+      : (me.account_no || me.rib?.account_number || me.rib_account_number || "À renseigner");
   document.getElementById("clientCountry").textContent =
     isUaeAccount ? "AE" : "MA";
   document.getElementById("clientBankName").textContent =
@@ -2348,21 +2346,30 @@ account.textContent =
   if (bankAddress) bankAddress.textContent = isUaeAccount
     ? "68 Al Maktoum Road, Port Saeed, Deira, P.O. Box 1080, Dubaï, Émirats arabes unis"
     : "10, Avenue du Développement, Casablanca, Maroc";
-  document.getElementById("clientBankCode").textContent =
-    document.getElementById("clientBankCode").textContent =
-  isUaeAccount ? "024" : (me.bank_code || "022");
+      document.getElementById("clientBankCode").textContent =
+    me.rib?.bank_code || me.bank_code || "À renseigner";
 
-document.getElementById("clientBranchCode").textContent =
-  isUaeAccount ? "124" : (me.branch_code || "450");
+  document.getElementById("clientBranchCode").textContent =
+    me.rib?.branch_code || me.branch_code || "À renseigner";
 
-document.getElementById("clientRibKey").textContent =
-  isUaeAccount ? "81" : (me.rib_key || "À confirmer");
+  document.getElementById("clientRibKey").textContent =
+    me.rib?.rib_key || me.rib_key || "À renseigner";
 
-document.getElementById("clientIban").textContent =
-  isUaeAccount ? "AE81 1243 587650059384 024" : (me.iban ? formatAccount(me.iban) : "À renseigner");
+  const clientIban = document.getElementById("clientIban");
+  if (isUaeAccount) {
+    clientIban.textContent = (me.rib?.iban || me.iban)
+      ? formatAccount(me.rib?.iban || me.iban)
+      : "À renseigner";
+  } else {
+    const accountNumber = me.account_no || me.rib?.account_number || me.rib_account_number || "";
+    const ribKey = me.rib?.rib_key || me.rib_key || "";
+    clientIban.textContent = accountNumber && ribKey
+      ? `MA ${bankCode} ${agenceCode + accountNumber} ${ribKey}`
+      : "À renseigner";
+  }
 
-document.getElementById("clientBic").textContent =
-  isUaeAccount ? "DUIBAEAD" : (me.bic || "MADMMA01");
+  document.getElementById("clientBic").textContent =
+    me.rib?.bic || me.bic || "À renseigner";
 
   let bs=await api("/api/beneficiaries");
   let incoming=await api("/api/incoming-transfers");
