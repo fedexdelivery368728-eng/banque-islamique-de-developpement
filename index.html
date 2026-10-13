@@ -1621,23 +1621,20 @@ button.primary:hover,
 
 
   <section id="myAccount" class="view card">
-    <h2>Mon compte</h2>
-    <h3>Mes coordonnées bancaires</h3>
-    <p><strong>Banque :</strong> <span id="clientBankName">Banque Islamique de Développement</span></p>
-    <p><strong>Adresse de la banque :</strong> <span id="clientBankAddress">—</span></p>
-    <p><strong>Titulaire :</strong> <span id="clientHolder">—</span></p>
-    <p><strong>N° de compte :</strong> <span id="clientAccount">—</span></p>
-    <p><strong>Code pays :</strong> <span id="clientCountry">—</span></p>
-    <p><strong>Code banque :</strong> <span id="clientBankCode">—</span></p>
-    <p><strong>Code agence :</strong> <span id="clientBranchCode">—</span></p>
-    <p><strong>Clé RIB :</strong> <span id="clientRibKey">—</span></p>
-
-    <p><strong>IBAN :</strong> <span id="clientIban">—</span></p>
-    <p><strong>BIC :</strong> <span id="clientBic">—</span></p>
-
-    <button class="primary" onclick="downloadClientRib()">Télécharger mon RIB en PDF</button>
-  </section>
-
+    <h2 data-k="myAccount"></h2>
+    <h3 data-k="bankDetails"></h3>
+    <p><strong data-k="bankName"></strong> : <span id="clientBankName">Banque Islamique de Développement</span></p>
+    <p><strong data-k="bankAddress"></strong> : <span id="clientBankAddress">—</span></p>
+    <p><strong data-k="holder"></strong> : <span id="clientHolder">—</span></p>
+    <p><strong data-k="accountNumber"></strong> : <span id="clientAccount">—</span></p>
+    <p><strong data-k="countryCode"></strong> : <span id="clientCountry">—</span></p>
+    <p><strong data-k="bankCode"></strong> : <span id="clientBankCode">—</span></p>
+    <p><strong data-k="branchCode"></strong> : <span id="clientBranchCode">—</span></p>
+    <p><strong data-k="ribKey"></strong> : <span id="clientRibKey">—</span></p>
+    <p><strong data-k="iban"></strong> : <span id="clientIban">—</span></p>
+    <p><strong data-k="bic"></strong> : <span id="clientBic">—</span></p>
+    <button class="primary" onclick="downloadClientRib()" data-k="downloadRib"></button>
+</section>
   <section
   id="transfer"
   class="view card"
@@ -1968,7 +1965,20 @@ operation:"Opération",
 date:"Date",
 amount:"Montant",
 after:"Solde après",
-footer:""
+footer:"",
+myAccount:"Mon compte",
+bankDetails:"Mes coordonnées bancaires",
+bankName:"Banque",
+bankAddress:"Adresse de la banque",
+holder:"Titulaire",
+accountNumber:"N° de compte",
+countryCode:"Code pays",
+bankCode:"Code banque",
+branchCode:"Code agence",
+ribKey:"Clé RIB",
+iban:"IBAN",
+bic:"BIC",
+downloadRib:"Télécharger mon RIB en PDF"
 },
 
 en:{
@@ -2001,7 +2011,20 @@ operation:"Operation",
 date:"Date",
 amount:"Amount",
 after:"Balance after",
-footer:""
+footer:"",
+myAccount:"My account",
+bankDetails:"My bank details",
+bankName:"Bank",
+bankAddress:"Bank address",
+holder:"Account holder",
+accountNumber:"Account number",
+countryCode:"Country code",
+bankCode:"Bank code",
+branchCode:"Branch code",
+ribKey:"RIB key",
+iban:"IBAN",
+bic:"BIC",
+downloadRib:"Download my bank details (PDF)"
 },
 
 ar:{
@@ -2034,7 +2057,20 @@ operation:"العملية",
 date:"التاريخ",
 amount:"المبلغ",
 after:"الرصيد بعد العملية",
-footer:""
+footer:"",
+myAccount:"حسابي",
+bankDetails:"بياناتي المصرفية",
+bankName:"البنك",
+bankAddress:"عنوان البنك",
+holder:"صاحب الحساب",
+accountNumber:"رقم الحساب",
+countryCode:"رمز البلد",
+bankCode:"رمز البنك",
+branchCode:"رمز الفرع",
+ribKey:"مفتاح RIB",
+iban:"رقم IBAN",
+bic:"رمز BIC",
+downloadRib:"تحميل بياناتي المصرفية PDF"
 }
 
 };
