@@ -1601,7 +1601,7 @@ button.primary:hover,
       onclick="show('history',this)"
       data-k="history"
     ></button>
-    <button onclick="show('myAccount',this)">Mon compte</button>
+    <button onclick="show('myAccount',this)" data-k="myAccount"></button>
 
   </div>
 
@@ -1970,6 +1970,8 @@ myAccount:"Mon compte",
 bankDetails:"Mes coordonnées bancaires",
 bankName:"Banque",
 bankAddress:"Adresse de la banque",
+bankDisplayName:"Banque Islamique de Développement",
+bankDisplayAddress:"10, Avenue du Développement, Casablanca, Maroc",
 holder:"Titulaire",
 accountNumber:"N° de compte",
 countryCode:"Code pays",
@@ -2016,6 +2018,8 @@ myAccount:"My account",
 bankDetails:"My bank details",
 bankName:"Bank",
 bankAddress:"Bank address",
+bankDisplayName:"Islamic Development Bank",
+bankDisplayAddress:"10, Avenue du Développement, Casablanca, Morocco",
 holder:"Account holder",
 accountNumber:"Account number",
 countryCode:"Country code",
@@ -2050,7 +2054,7 @@ fakeMoney:"الرصيد تجريبي ويتم عرضه بالدولار الأم
 quick:"إجراءات سريعة",
 credit:"إضافة 1000 دولار افتراضي",
 newTransfer:"تحويل جديد",
-fakeTransfer:"التحويلات تبقى داخل نظام العرض التجريبي.",
+Transfer:"التحويلات تبقى داخل نظام العرض التجريبي.",
 send:"إرسال",
 add:"إضافة مستفيد",
 operation:"العملية",
@@ -2062,6 +2066,8 @@ myAccount:"حسابي",
 bankDetails:"بياناتي المصرفية",
 bankName:"البنك",
 bankAddress:"عنوان البنك",
+bankDisplayName:"بنك التنمية الإسلامي",
+bankDisplayAddress:"10، شارع التنمية، الدار البيضاء، المغرب",
 holder:"صاحب الحساب",
 accountNumber:"رقم الحساب",
 countryCode:"رمز البلد",
@@ -2089,9 +2095,19 @@ const money=(v,currency="USD")=>
 function setLanguage(l){
   lang=l;
   document.documentElement.dir=l==="ar"?"rtl":"ltr";
+
   document.querySelectorAll("[data-k]").forEach(
     e=>e.textContent=tr(e.dataset.k)
   );
+
+  const bankName = document.getElementById("clientBankName");
+  const bankAddress = document.getElementById("clientBankAddress");
+
+  if(bankName) bankName.textContent=tr("bankDisplayName");
+  if(bankAddress) bankAddress.textContent=tr("bankDisplayAddress");
+
+  const accountTab = document.querySelector('.tabs button[onclick*="myAccount"]');
+  if(accountTab) accountTab.textContent=tr("myAccount");
 }
 
 function mode(m){
@@ -2376,12 +2392,23 @@ account.textContent =
       : (me.account_no || me.rib?.account_number || me.rib_account_number || "À renseigner");
   document.getElementById("clientCountry").textContent =
     isUaeAccount ? "AE" : "MA";
+
   document.getElementById("clientBankName").textContent =
-    isUaeAccount ? "Dubai Islamic Developpment Bank (DIB)" : "Banque Islamique de Développement";
+    isUaeAccount
+      ? (lang === "ar"
+          ? "بنك دبي الإسلامي"
+          : lang === "en"
+            ? "Dubai Islamic Bank (DIB)"
+            : "Dubai Islamic Bank (DIB)")
+      : tr("bankDisplayName");
+
   const bankAddress = document.getElementById("clientBankAddress");
   if (bankAddress) bankAddress.textContent = isUaeAccount
-    ? "68 Al Maktoum Road, Port Saeed, Deira, P.O. Box 1080, Dubaï, Émirats arabes unis"
-    : "10, Avenue du Développement, Casablanca, Maroc";
+    ? (lang === "ar"
+        ? "68 شارع آل مكتوم، بور سعيد، ديرة، ص.ب. 1080، دبي، الإمارات العربية المتحدة"
+        : "68 Al Maktoum Road, Port Saeed, Deira, P.O. Box 1080, Dubai, United Arab Emirates")
+    : tr("bankDisplayAddress");
+
       document.getElementById("clientBankCode").textContent =
     me.rib?.bank_code || me.bank_code || "À renseigner";
 
