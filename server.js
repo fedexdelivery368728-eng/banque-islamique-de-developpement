@@ -545,7 +545,99 @@ async function sendAccountCreationEmail({
 
 }
 
-async function generateExternalTransferPdf(transfer, sourceUser){
+async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
+
+  const translations = {
+    fr: {
+      bankTitle: 'Banque Islamique de Développement',
+      orderTitle: 'ORDRE DE VIREMENT',
+      simulation: 'DOCUMENT DE SIMULATION',
+      orderNumber: 'Numéro de l’ordre : ',
+      date: 'Date : ',
+      issuingBank: 'Banque émettrice',
+      sender: 'Donneur d’ordre',
+      beneficiary: 'Bénéficiaire',
+      beneficiaryBank: 'Banque bénéficiaire',
+      details: 'Détails du virement',
+      bank: 'Banque',
+      countryLocation: 'Pays / implantation',
+      address: 'Adresse',
+      bic: 'BIC / SWIFT',
+      name: 'Nom',
+      rib: 'RIB',
+      iban: 'IBAN',
+      country: 'Pays',
+      accountIban: 'Compte / IBAN',
+      notification: 'Notification',
+      notificationContact: 'Contact de notification',
+      notificationLanguage: 'Langue de notification',
+      amount: 'Montant',
+      reason: 'Motif',
+      condition: 'Condition du virement',
+      status: 'Statut',
+      verification: 'Vérification en ligne'
+    },
+    en: {
+      bankTitle: 'Islamic Development Bank',
+      orderTitle: 'TRANSFER ORDER',
+      simulation: 'SIMULATION DOCUMENT',
+      orderNumber: 'Order number: ',
+      date: 'Date: ',
+      issuingBank: 'Issuing bank',
+      sender: 'Ordering customer',
+      beneficiary: 'Beneficiary',
+      beneficiaryBank: 'Beneficiary bank',
+      details: 'Transfer details',
+      bank: 'Bank',
+      countryLocation: 'Country / location',
+      address: 'Address',
+      bic: 'BIC / SWIFT',
+      name: 'Name',
+      rib: 'RIB',
+      iban: 'IBAN',
+      country: 'Country',
+      accountIban: 'Account / IBAN',
+      notification: 'Notification',
+      notificationContact: 'Notification contact',
+      notificationLanguage: 'Notification language',
+      amount: 'Amount',
+      reason: 'Reason',
+      condition: 'Transfer condition',
+      status: 'Status',
+      verification: 'Online verification'
+    },
+    ar: {
+      bankTitle: 'بنك التنمية الإسلامي',
+      orderTitle: 'أمر تحويل',
+      simulation: 'وثيقة محاكاة',
+      orderNumber: 'رقم الأمر: ',
+      date: 'التاريخ: ',
+      issuingBank: 'البنك المُصدِر',
+      sender: 'صاحب الأمر',
+      beneficiary: 'المستفيد',
+      beneficiaryBank: 'بنك المستفيد',
+      details: 'تفاصيل التحويل',
+      bank: 'البنك',
+      countryLocation: 'البلد / الموقع',
+      address: 'العنوان',
+      bic: 'BIC / SWIFT',
+      name: 'الاسم',
+      rib: 'RIB',
+      iban: 'IBAN',
+      country: 'البلد',
+      accountIban: 'الحساب / IBAN',
+      notification: 'الإشعار',
+      notificationContact: 'جهة اتصال الإشعار',
+      notificationLanguage: 'لغة الإشعار',
+      amount: 'المبلغ',
+      reason: 'السبب',
+      condition: 'شروط التحويل',
+      status: 'الحالة',
+      verification: 'التحقق عبر الإنترنت'
+    }
+  };
+
+  const t = translations[lang] || translations.fr;
 
   const doc=new PDFDocument({
     size:'A4',
@@ -626,14 +718,14 @@ async function generateExternalTransferPdf(transfer, sourceUser){
     .fillColor('#073d34')
     .fontSize(20)
     .font('Helvetica-Bold')
-    .text('Banque Islamique de Développement',{
+    .text(t.bankTitle,{
       align:'center'
     });
 
   doc
     .moveDown(0.5)
     .fontSize(18)
-    .text('ORDRE DE VIREMENT',{
+    .text(t.orderTitle,{
       align:'center'
     });
 
@@ -642,7 +734,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
     .fontSize(10)
     .fillColor('#087f68')
     .font('Helvetica-Bold')
-    .text('DOCUMENT DE SIMULATION',{
+    .text(t.simulation,{
       align:'center'
     });
 
@@ -652,13 +744,13 @@ async function generateExternalTransferPdf(transfer, sourceUser){
     .fillColor('#222')
     .font('Helvetica-Bold')
     .fontSize(10)
-    .text('Numéro de l’ordre : ',{continued:true})
+    .text(t.orderNumber,{continued:true})
     .font('Helvetica')
     .text(orderNumber);
 
   doc
     .font('Helvetica-Bold')
-    .text('Date : ',{continued:true})
+    .text(t.date,{continued:true})
     .font('Helvetica')
     .text(createdAt);
 
@@ -692,7 +784,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
     doc.moveDown(0.15);
   }
 
-    sectionTitle('Banque émettrice');
+    sectionTitle(t.issuingBank);
 
   field(
     'Banque',
@@ -700,70 +792,70 @@ async function generateExternalTransferPdf(transfer, sourceUser){
   );
 
   field(
-    'Pays / implantation',
+    t.countryLocation,
     transfer.bank_origin_country || transfer.sender_bank_country || 'Maroc'
   );
 
   field(
-    'Adresse',
+    t.address,
     transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
   );
 
   field(
-    'BIC / SWIFT',
+    t.bic,
     transfer.bank_bic || 'ISLDMAMC'
   );
 
-  sectionTitle('Donneur d’ordre');
+  sectionTitle(t.sender);
 
   field(
-    'Nom',
+    t.name,
     sourceName
   );
 
   field(
-    'RIB',
+    t.rib,
     transfer.sender_rib || sourceUser?.rib_account_number || '—'
   );
 
   field(
-    'IBAN',
+    t.iban,
     transfer.sender_iban || sourceUser?.iban || '—'
   );
 
   field(
-    'BIC / SWIFT',
+    t.bic,
     transfer.sender_bic || sourceUser?.bic || 'ISLDMAMC'
   );
 
-  sectionTitle('Bénéficiaire');
+  sectionTitle(t.beneficiary);
 
   field(
-    'Nom',
+    t.name,
     transfer.beneficiary_name
   );
 
   field(
-    'Pays',
+    t.country,
     transfer.beneficiary_country || transfer.beneficiary_bank_country || 'Maroc'
   );
 
   field(
-    'RIB',
+    t.rib,
     transfer.beneficiary_rib || '—'
   );
 
   field(
-    'IBAN',
+    t.iban,
     transfer.beneficiary_iban || '—'
   );
 
   field(
-    'BIC / SWIFT',
+    t.bic,
     transfer.beneficiary_bic || 'ISLDMAMC'
   );
 
-  sectionTitle('Banque bénéficiaire');
+  sectionTitle(t.beneficiaryBank);
 
   field(
     'Banque',
@@ -771,37 +863,37 @@ async function generateExternalTransferPdf(transfer, sourceUser){
   );
 
   field(
-    'Adresse',
+    t.address,
     transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
   );
 
   field(
-    'Compte / IBAN',
+    t.accountIban,
     transfer.beneficiary_iban || transfer.beneficiary_rib || '—'
   );
 
   field(
-    'BIC / SWIFT',
+    t.bic,
     transfer.bank_bic || transfer.beneficiary_bic || 'ISLDMAMC'
   );
 
   field(
-    'Notification',
+    t.notification,
     transfer.notification_method === 'sms' ? 'SMS' : 'Email'
   );
 
   field(
-    'Contact de notification',
+    t.notificationContact,
     transfer.notification_method === 'sms'
       ? (transfer.beneficiary_phone || '—')
       : (transfer.beneficiary_email || '—')
   );
 
   field(
-    'Langue de notification',
+    t.notificationLanguage,
     transfer.notification_language || 'fr'
   );
-  sectionTitle('Banque émettrice');
+  sectionTitle(t.issuingBank);
 
   field(
     'Banque',
@@ -809,70 +901,70 @@ async function generateExternalTransferPdf(transfer, sourceUser){
   );
 
   field(
-    'Pays / implantation',
+    t.countryLocation,
     transfer.bank_origin_country || transfer.sender_bank_country || 'Maroc'
   );
 
   field(
-    'Adresse',
+    t.address,
     transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
   );
 
   field(
-    'BIC / SWIFT',
+    t.bic,
     transfer.bank_bic || 'ISLDMAMC'
   );
 
-  sectionTitle('Donneur d’ordre');
+  sectionTitle(t.sender);
 
   field(
-    'Nom',
+    t.name,
     sourceName
   );
 
   field(
-    'RIB',
+    t.rib,
     transfer.sender_rib || sourceUser?.rib_account_number || '—'
   );
 
   field(
-    'IBAN',
+    t.iban,
     transfer.sender_iban || sourceUser?.iban || '—'
   );
 
   field(
-    'BIC / SWIFT',
+    t.bic,
     transfer.sender_bic || sourceUser?.bic || 'ISLDMAMC'
   );
 
-  sectionTitle('Bénéficiaire');
+  sectionTitle(t.beneficiary);
 
   field(
-    'Nom',
+    t.name,
     transfer.beneficiary_name
   );
 
   field(
-    'Pays',
+    t.country,
     transfer.beneficiary_country || transfer.beneficiary_bank_country || 'Maroc'
   );
 
   field(
-    'RIB',
+    t.rib,
     transfer.beneficiary_rib || '—'
   );
 
   field(
-    'IBAN',
+    t.iban,
     transfer.beneficiary_iban || '—'
   );
 
   field(
-    'BIC / SWIFT',
+    t.bic,
     transfer.beneficiary_bic || 'ISLDMAMC'
   );
 
-  sectionTitle('Banque bénéficiaire');
+  sectionTitle(t.beneficiaryBank);
 
   field(
     'Banque',
@@ -880,37 +972,37 @@ async function generateExternalTransferPdf(transfer, sourceUser){
   );
 
   field(
-    'Adresse',
+    t.address,
     transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
   );
 
   field(
-    'Compte / IBAN',
+    t.accountIban,
     transfer.beneficiary_iban || transfer.beneficiary_rib || '—'
   );
 
   field(
-    'BIC / SWIFT',
+    t.bic,
     transfer.bank_bic || transfer.beneficiary_bic || 'ISLDMAMC'
   );
 
   field(
-    'Notification',
+    t.notification,
     transfer.notification_method === 'sms' ? 'SMS' : 'Email'
   );
 
   field(
-    'Contact de notification',
+    t.notificationContact,
     transfer.notification_method === 'sms'
       ? (transfer.beneficiary_phone || '—')
       : (transfer.beneficiary_email || '—')
   );
 
   field(
-    'Langue de notification',
+    t.notificationLanguage,
     transfer.notification_language || 'fr'
   );
-  sectionTitle('Banque émettrice');
+  sectionTitle(t.issuingBank);
 
   field(
     'Banque',
@@ -918,70 +1010,70 @@ async function generateExternalTransferPdf(transfer, sourceUser){
   );
 
   field(
-    'Pays / implantation',
+    t.countryLocation,
     transfer.bank_origin_country || transfer.sender_bank_country || 'Maroc'
   );
 
   field(
-    'Adresse',
+    t.address,
     transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
   );
 
   field(
-    'BIC / SWIFT',
+    t.bic,
     transfer.bank_bic || 'ISLDMAMC'
   );
 
-  sectionTitle('Donneur d’ordre');
+  sectionTitle(t.sender);
 
   field(
-    'Nom',
+    t.name,
     sourceName
   );
 
   field(
-    'RIB',
+    t.rib,
     transfer.sender_rib || sourceUser?.rib_account_number || '—'
   );
 
   field(
-    'IBAN',
+    t.iban,
     transfer.sender_iban || sourceUser?.iban || '—'
   );
 
   field(
-    'BIC / SWIFT',
+    t.bic,
     transfer.sender_bic || sourceUser?.bic || 'ISLDMAMC'
   );
 
-  sectionTitle('Bénéficiaire');
+  sectionTitle(t.beneficiary);
 
   field(
-    'Nom',
+    t.name,
     transfer.beneficiary_name
   );
 
   field(
-    'Pays',
+    t.country,
     transfer.beneficiary_country || transfer.beneficiary_bank_country || 'Maroc'
   );
 
   field(
-    'RIB',
+    t.rib,
     transfer.beneficiary_rib || '—'
   );
 
   field(
-    'IBAN',
+    t.iban,
     transfer.beneficiary_iban || '—'
   );
 
   field(
-    'BIC / SWIFT',
+    t.bic,
     transfer.beneficiary_bic || 'ISLDMAMC'
   );
 
-  sectionTitle('Banque bénéficiaire');
+  sectionTitle(t.beneficiaryBank);
 
   field(
     'Banque',
@@ -989,47 +1081,47 @@ async function generateExternalTransferPdf(transfer, sourceUser){
   );
 
   field(
-    'Adresse',
+    t.address,
     transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
   );
 
   field(
-    'Compte / IBAN',
+    t.accountIban,
     transfer.beneficiary_iban || transfer.beneficiary_rib || '—'
   );
 
   field(
-    'BIC / SWIFT',
+    t.bic,
     transfer.bank_bic || transfer.beneficiary_bic || 'ISLDMAMC'
   );
 
   field(
-    'Notification',
+    t.notification,
     transfer.notification_method === 'sms' ? 'SMS' : 'Email'
   );
 
   field(
-    'Contact de notification',
+    t.notificationContact,
     transfer.notification_method === 'sms'
       ? (transfer.beneficiary_phone || '—')
       : (transfer.beneficiary_email || '—')
   );
 
   field(
-    'Langue de notification',
+    t.notificationLanguage,
     transfer.notification_language || 'fr'
   );
-  sectionTitle('Détails du virement');
+  sectionTitle(t.details);
 
   field(
-    'Montant',
+    t.amount,
     amount+' '+(transfer.currency||'USD')
   );
 
   field('Motif',transfer.reason);
 
   field(
-    'Condition du virement',
+    t.condition,
     transfer.condition_text
   );
 
@@ -1052,7 +1144,7 @@ async function generateExternalTransferPdf(transfer, sourceUser){
     .fontSize(8)
     .fillColor('#555')
     .text(
-      'Vérification en ligne',
+      t.verification,
       qrX,
       qrY+120,
       {
@@ -2241,7 +2333,10 @@ app.get('/api/admin/internal-transfers/:id/pdf',adminAuth,async(req,res)=>{
     const pdf=
       await generateExternalTransferPdf(
         transfer,
-        sourceUser
+        sourceUser,
+        ['fr','en','ar'].includes(req.query.lang)
+          ? req.query.lang
+          : 'fr'
       );
 
     res.setHeader(
@@ -3588,7 +3683,10 @@ app.get('/api/admin/external-transfers/:id/pdf',adminAuth,async (req,res)=>{
     const pdfBuffer=
       await generateExternalTransferPdf(
         transfer,
-        sourceUser
+        sourceUser,
+        ['fr','en','ar'].includes(req.query.lang)
+          ? req.query.lang
+          : 'fr'
       );
 
     const orderNumber=

@@ -1405,8 +1405,31 @@ async function validateInternalTransfer(id){
 
 function openInternalTransferPdf(id){
 
+  const language = prompt(
+    'Langue du PDF / PDF language / لغة PDF :\n1 = Français\n2 = English\n3 = العربية',
+    '1'
+  );
+
+  if(language === null) return;
+
+  const languages = {
+    '1': 'fr',
+    '2': 'en',
+    '3': 'ar'
+  };
+
+  const lang = languages[language.trim()];
+
+  if(!lang){
+    alert('Choix invalide. / Invalid choice. / اختيار غير صالح');
+    return;
+  }
+
   window.open(
-    '/api/admin/internal-transfers/' + id + '/pdf',
+    '/api/admin/internal-transfers/' +
+    id +
+    '/pdf?lang=' +
+    lang,
     '_blank'
   );
 
@@ -1930,6 +1953,38 @@ async function updateExternalTransferStatus(id,status){
 
 }
 
+function openExternalTransferPdf(id){
+
+  const language = prompt(
+    'Langue du PDF / PDF language / لغة PDF :\n1 = Français\n2 = English\n3 = العربية',
+    '1'
+  );
+
+  if(language === null) return;
+
+  const languages = {
+    '1': 'fr',
+    '2': 'en',
+    '3': 'ar'
+  };
+
+  const lang = languages[language.trim()];
+
+  if(!lang){
+    alert('Choix invalide. / Invalid choice. / اختيار غير صالح');
+    return;
+  }
+
+  window.open(
+    '/api/admin/external-transfers/' +
+    id +
+    '/pdf?lang=' +
+    lang,
+    '_blank'
+  );
+
+}
+
 function externalTransferActions(row){
 
   const id=Number(row.id);
@@ -1938,7 +1993,7 @@ function externalTransferActions(row){
   const pdfButton=`
     <button
       type="button"
-      onclick="window.open('/api/admin/external-transfers/${id}/pdf','_blank')"
+      onclick="openExternalTransferPdf(${id})"
     >
       Ordre PDF
     </button>
