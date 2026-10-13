@@ -4386,8 +4386,13 @@ app.post('/api/admin/incoming-transfers/:id/validate',adminAuth,(req,res)=>{
         id
       );
 
-      return newBalance;
-        })();
+      return {
+        balanceCents: newBalance,
+        incoming
+      };
+    })();
+
+    const incoming = result.incoming;
 
     const client=db.prepare(`
   SELECT name,email,notification_language
@@ -4417,7 +4422,7 @@ app.post('/api/admin/incoming-transfers/:id/validate',adminAuth,(req,res)=>{
 
         amountCents:incoming.amount_cents,
 
-        balanceCents:result,
+        balanceCents:result.balanceCents,
 
 language:client.notification_language || 'fr'
 
@@ -4429,7 +4434,7 @@ language:client.notification_language || 'fr'
     res.json({
       ok:true,
       status:'available',
-      balance_cents:result
+      balance_cents:result.balanceCents
     });
 
   }catch(e){
