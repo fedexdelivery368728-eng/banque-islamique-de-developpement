@@ -4,3 +4,12 @@ data/
 *.backup-*
 
 *.sauvegarde-*
+
+# Fichiers locaux et sauvegardes
+.DS_Store
+*.bak
+*.bak-*
+*.save
+*.avant-*
+Untitled-*
+*.sauvegarde
