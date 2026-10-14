@@ -4370,7 +4370,7 @@ app.post('/api/admin/incoming-transfers/:id/validate',adminAuth,(req,res)=>{
       `).run(
         incoming.user_id,
         'credit',
-        'Virement entrant — '+incoming.sender_name,
+        'Virement sortant — '+incoming.sender_name,
         incoming.amount_cents,
         newBalance,
         now()
@@ -4408,12 +4408,12 @@ app.post('/api/admin/incoming-transfers/:id/validate',adminAuth,(req,res)=>{
 
         name:client.name,
 
-        subject:'Virement entrant validé — fonds disponibles',
+        subject:'Virement sortant validé — fonds disponibles',
 
-        title:'Virement entrant validé',
+        title:'Virement sortant validé',
 
         message:
-          'Le virement entrant de ' +
+          'Le virement sortant de ' +
           incoming.sender_name +
           ' d’un montant de ' +
           (incoming.amount_cents / 100).toFixed(2) +

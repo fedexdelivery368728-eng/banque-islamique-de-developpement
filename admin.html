@@ -625,7 +625,7 @@ section.card:has(#externalTransfersTable) tbody tr:hover td {
 </section>
 
 <!-- ========================= -->
-<!-- VIREMENTS ENTRANTS -->
+<!-- VIREMENTS SORTANTS -->
 <!-- ========================= -->
 
 <section class="card">
@@ -634,7 +634,7 @@ section.card:has(#externalTransfersTable) tbody tr:hover td {
 
     <div>
       <h2 style="margin:0">
-        Virements entrants 
+        Virements sortants
       </h2>
 
       <p class="muted" style="margin:6px 0 0">
@@ -680,7 +680,7 @@ section.card:has(#externalTransfersTable) tbody tr:hover td {
             class="muted"
             style="text-align:center"
           >
-            Aucun virement entrant chargé.
+            Aucun virement sortant chargé.
           </td>
         </tr>
 
@@ -1204,7 +1204,7 @@ async function adminLogin(){
 /* DÉMARRAGE */
 /* ========================= */
 // =====================================================
-// VIREMENTS ENTRANTS — 
+// VIREMENTS SORTANTS —
 // =====================================================
 
 async function loadInternalTransfers(){
@@ -1447,7 +1447,7 @@ async function loadIncomingTransfers(){
     tbody.innerHTML = `
       <tr>
         <td colspan="8" class="muted" style="text-align:center">
-          Aucun virement entrant.
+          Aucun virement sortant.
         </td>
       </tr>
     `;
@@ -1600,7 +1600,7 @@ function openIncomingCreate(){
         </button>
 
         <h2>
-          Nouveau virement entrant —
+          Nouveau virement sortant —
         </h2>
 
         <div class="formgrid">
@@ -2715,7 +2715,7 @@ async function createIncomingTransfer(){
 
     await loadIncomingTransfers();
 
-    alert('Virement entrant créé.');
+    alert('Virement sortant créé.');
 
   }catch(err){
 
@@ -2736,7 +2736,7 @@ async function createIncomingTransfer(){
 async function validateIncoming(id){
 
   if(!confirm(
-    'Valider ce virement entrant ?\\n\\n' +
+    'Valider ce virement sortant ?\\n\\n' +
     'Le montant sera alors crédité sur le compte du client.'
   )){
     return;
@@ -2757,7 +2757,7 @@ async function validateIncoming(id){
 
     await loadStats();
 
-    alert('Virement validé et crédité.');
+    alert('Virement sortant validé et crédité.');
 
   }catch(err){
 
@@ -2778,7 +2778,7 @@ async function validateIncoming(id){
 async function cancelIncoming(id){
 
   if(!confirm(
-    'Annuler ce virement entrant  ?'
+    'Annuler ce virement sortant ?'
   )){
     return;
   }
