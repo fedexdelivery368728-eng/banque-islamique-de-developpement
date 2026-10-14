@@ -2742,30 +2742,56 @@ async function validateIncoming(id){
     return;
   }
 
+  let result;
+
   try{
 
-    await api(
+    result = await api(
       `/api/admin/incoming-transfers/${id}/validate`,
       {
         method:'POST'
       }
     );
 
-    await loadIncomingTransfers();
-
-    await loadUsers();
-
-    await loadStats();
-
-    alert('Virement sortant validé et crédité.');
-
   }catch(err){
 
+    console.error('Validation non confirmée par le serveur:',err);
     alert(
-      err.message ||
-      'Impossible de valider le virement.'
+      'La réponse de validation est absente ou ambiguë. Vérifiez le statut du virement avant de réessayer.'
     );
+    return;
 
+  }
+
+  if(result?.ok !== true || result?.status !== 'available'){
+    console.error('Réponse inattendue de validation:',result);
+    alert(
+      'La réponse ne confirme pas la validation. Vérifiez le statut du virement avant de réessayer.'
+    );
+    return;
+  }
+
+  alert('Virement sortant validé et crédité.');
+
+  const refreshErrors=[];
+
+  for(const [name,refresh] of [
+    ['virements',loadIncomingTransfers],
+    ['clients',loadUsers],
+    ['statistiques',loadStats]
+  ]){
+    try{
+      await refresh();
+    }catch(error){
+      refreshErrors.push(name);
+      console.error(`Erreur de rechargement (${name}):`,error);
+    }
+  }
+
+  if(refreshErrors.length){
+    alert(
+      'La validation est confirmée, mais certaines données affichées n’ont pas pu être actualisées. Rechargez /admin sans relancer la validation.'
+    );
   }
 
 }
