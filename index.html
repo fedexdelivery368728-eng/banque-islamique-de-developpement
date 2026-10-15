@@ -2429,6 +2429,10 @@ async function load(){
     : "fr";
     setLanguage(lang);
 
+  const isUaeAccount =
+    String(me.bank_country || "").toUpperCase() === "AE" ||
+    String(me.rib?.iban || me.iban || "").toUpperCase().replace(/\s/g, "").startsWith("AE");
+
   const firstLastName = [me.first_name, me.last_name]
     .map(v => String(v || "").trim())
     .filter(Boolean)
