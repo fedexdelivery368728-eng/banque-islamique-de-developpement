@@ -1207,6 +1207,24 @@ async function adminLogin(){
 // VIREMENTS SORTANTS —
 // =====================================================
 
+function internalTransferAttestationReady(row){
+  const completedAt=row?.completed_at ? new Date(row.completed_at) : null;
+  const amountCents=Number(row?.amount_cents);
+  const senderAccount=[row?.sender_account_no,row?.sender_iban,row?.sender_rib]
+    .some(value=>String(value||'').trim());
+  const beneficiaryAccount=[row?.beneficiary_account_no,row?.beneficiary_iban,row?.beneficiary_rib]
+    .some(value=>String(value||'').trim());
+
+  return row?.status==='completed' &&
+    completedAt && !Number.isNaN(completedAt.getTime()) &&
+    String(row.reference||'').trim() &&
+    Number.isSafeInteger(amountCents) && amountCents>0 &&
+    String(row.currency||'').trim() &&
+    String(row.sender_name||'').trim() &&
+    String(row.beneficiary_full_name||row.beneficiary_name||'').trim() &&
+    senderAccount && beneficiaryAccount;
+}
+
 async function loadInternalTransfers(){
 
   const rows = await api('/api/admin/internal-transfers');
@@ -1341,12 +1359,14 @@ async function loadInternalTransfers(){
         </td>
 
         <td>
-          <button
-            class="secondary"
-            onclick="openInternalTransferPdf(${row.id})"
-          >
-            Ordre / PDF
-          </button>
+          ${internalTransferAttestationReady(row) ? `
+            <button
+              class="secondary"
+              onclick="openInternalTransferPdf(${Number(row.id)})"
+            >
+              Attestation PDF
+            </button>
+          ` : ''}
 
           ${
             row.status === 'pending'
@@ -1436,9 +1456,108 @@ function openInternalTransferPdf(id){
 }
 
 
+const incomingTransferRowsById = new Map();
+
+
+function printIncomingTransferOrder(id){
+
+  const row=incomingTransferRowsById.get(Number(id));
+
+  if(!row || row.status!=='available'){
+    alert('Cet ordre est introuvable ou le virement n’est pas disponible.');
+    return;
+  }
+
+  const printWindow=window.open('','_blank');
+
+  if(!printWindow){
+    alert('Autorisez les fenêtres contextuelles pour imprimer cet ordre.');
+    return;
+  }
+
+  const amountCents=Number(row.amount_cents);
+  const amount=Number.isFinite(amountCents)
+    ? (amountCents/100).toLocaleString('fr-FR',{
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      })
+    : '—';
+  const currency=String(row.currency || 'USD');
+  const dateValue=row.validated_at || row.created_at;
+  const dateObject=dateValue ? new Date(dateValue) : null;
+  const date=dateObject && !Number.isNaN(dateObject.getTime())
+    ? dateObject.toLocaleString('fr-FR')
+    : '—';
+
+  printWindow.document.open();
+  printWindow.document.write(`<!doctype html>
+    <html lang="fr">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>Ordre de virement ${esc(row.id)}</title>
+        <style>
+          body{font:16px Arial,sans-serif;color:#17211e;margin:40px auto;max-width:760px;padding:24px}
+          h1{color:#073d34;border-bottom:2px solid #087f68;padding-bottom:14px}
+          dl{display:grid;grid-template-columns:190px 1fr;gap:12px 18px}
+          dt{font-weight:bold;color:#42534c}dd{margin:0;overflow-wrap:anywhere}
+          .notice{margin:24px 0;padding:12px;background:#f3f7f5;color:#42534c}
+          button{margin-top:20px;padding:10px 16px}
+          @media print{button{display:none}body{margin:0 auto}}
+        </style>
+      </head>
+      <body>
+        <h1>Récapitulatif du virement sortant</h1>
+        <dl>
+          <dt>Identifiant</dt><dd>${esc(row.id)}</dd>
+          <dt>Bénéficiaire</dt><dd>${esc(row.user_name || '—')}</dd>
+          <dt>Expéditeur</dt><dd>${esc(row.sender_name || '—')}</dd>
+          <dt>Montant</dt><dd>${esc(amount)} ${esc(currency)}</dd>
+          <dt>Référence</dt><dd>${esc(row.reference || '—')}</dd>
+          <dt>Date de validation</dt><dd>${esc(date)}</dd>
+        </dl>
+        <p class="notice">Document récapitulatif de démonstration.</p>
+        <button type="button" onclick="window.print()">Imprimer</button>
+      </body>
+    </html>`);
+  printWindow.document.close();
+
+}
+
+function openIncomingJustificationAttestation(id){
+  const row=incomingTransferRowsById.get(Number(id));
+
+  if(!row || row.status!=='pending' || row.can_generate_justification_attestation!==true){
+    alert('Cette opération ne répond pas aux conditions d’attestation de justificatifs.');
+    return;
+  }
+
+  window.location.href='/api/admin/incoming-transfers/'+Number(id)+'/justification-pdf';
+}
+
+function downloadIncomingTransferOrder(id){
+  const row=incomingTransferRowsById.get(Number(id));
+
+  if(!row || row.status!=='available'){
+    alert('Cet ordre est introuvable ou le virement n’est pas disponible.');
+    return;
+  }
+
+  window.location.href='/api/admin/incoming-transfers/'+Number(id)+'/pdf';
+}
+
+
 async function loadIncomingTransfers(){
 
   const rows = await api('/api/admin/incoming-transfers');
+
+  incomingTransferRowsById.clear();
+  for(const row of rows || []){
+    const rowId=Number(row.id);
+    if(Number.isSafeInteger(rowId) && rowId>0){
+      incomingTransferRowsById.set(rowId,row);
+    }
+  }
 
   const tbody = $('incomingTransfersTable');
 
@@ -1526,6 +1645,38 @@ async function loadIncomingTransfers(){
             Annuler
           </button>
 
+          ${row.can_generate_justification_attestation === true ? `
+            <button
+              class="secondary"
+              type="button"
+              onclick="openIncomingJustificationAttestation(${Number(row.id)})"
+            >
+              Attestation de virement bloqué
+            </button>
+          ` : ''}
+
+        </div>
+      `;
+    }
+
+    else if(row.status === 'available' && Number.isSafeInteger(Number(row.id)) && Number(row.id)>0){
+
+      actions = `
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button
+            class="secondary"
+            type="button"
+            onclick="printIncomingTransferOrder(${Number(row.id)})"
+          >
+            Imprimer l’ordre
+          </button>
+          <button
+            class="secondary"
+            type="button"
+            onclick="downloadIncomingTransferOrder(${Number(row.id)})"
+          >
+            Télécharger l’ordre
+          </button>
         </div>
       `;
     }

@@ -545,13 +545,144 @@ async function sendAccountCreationEmail({
 
 }
 
+async function generateInternalTransferAttestationPdf(transfer, lang='fr'){
+
+  const translations={
+    fr:{
+      bankTitle:'Banque Islamique de Développement',
+      title:'ATTESTATION DE VIREMENT',
+      reference:'Référence de transaction',
+      executionDate:'Date d’exécution enregistrée',
+      amount:'Montant exécuté',
+      sender:'Compte débité',
+      beneficiary:'Compte bénéficiaire',
+      holder:'Titulaire',
+      account:'Compte / IBAN / RIB',
+      bank:'Banque',
+      reason:'Motif du virement',
+      noReason:'Non renseigné dans les données du virement',
+      footerTitle:'JUSTIFICATIF DE VIREMENT — À FOURNIR SUR DEMANDE',
+      footerText:'Des pièces justifiant le motif de l’opération peuvent être demandées selon la transaction et les contrôles applicables.',
+      locale:'fr-FR'
+    },
+    en:{
+      bankTitle:'Islamic Development Bank',
+      title:'ATTESTATION DE VIREMENT',
+      reference:'Transaction reference',
+      executionDate:'Execution date recorded',
+      amount:'Executed amount',
+      sender:'Debited account',
+      beneficiary:'Beneficiary account',
+      holder:'Account holder',
+      account:'Account / IBAN / RIB',
+      bank:'Bank',
+      reason:'Transfer purpose',
+      noReason:'Not recorded in the transfer data',
+      footerTitle:'TRANSFER SUPPORTING DOCUMENT — AVAILABLE UPON REQUEST',
+      footerText:'Documents supporting the purpose of the transaction may be requested depending on the transaction and applicable controls.',
+      locale:'en-US'
+    },
+    ar:{
+      bankTitle:'بنك التنمية الإسلامي',
+      title:'ATTESTATION DE VIREMENT',
+      reference:'مرجع المعاملة',
+      executionDate:'تاريخ التنفيذ المسجل',
+      amount:'المبلغ المنفذ',
+      sender:'الحساب المدين',
+      beneficiary:'حساب المستفيد',
+      holder:'صاحب الحساب',
+      account:'الحساب / IBAN / RIB',
+      bank:'البنك',
+      reason:'سبب التحويل',
+      noReason:'غير مسجل في بيانات التحويل',
+      footerTitle:'مستند إثبات التحويل — متاح عند الطلب',
+      footerText:'قد تُطلب مستندات تثبت سبب العملية وفقاً للمعاملة والضوابط المعمول بها.',
+      locale:'ar'
+    }
+  };
+
+  const t=translations[lang]||translations.fr;
+  const fontPath=path.join(__dirname,'fonts','NotoSansArabic[wdth,wght].ttf');
+  const doc=new PDFDocument({size:'A4',margin:45});
+  const chunks=[];
+  doc.on('data',chunk=>chunks.push(chunk));
+
+  const finished=new Promise((resolve,reject)=>{
+    doc.once('end',()=>resolve(Buffer.concat(chunks)));
+    doc.once('error',reject);
+  });
+
+  const logoPath=path.join(__dirname,'IMG_4145.jpeg');
+  if(fs.existsSync(logoPath)){
+    doc.image(logoPath,235,35,{fit:[125,70]});
+    doc.y=115;
+  }
+
+  doc.font(fontPath).fillColor('#073d34').fontSize(18)
+    .text(t.bankTitle,{align:'center'});
+  doc.moveDown(0.4).fontSize(16).text(t.title,{align:'center'});
+  doc.moveDown(1).fillColor('#222').fontSize(10);
+
+  function section(title){
+    doc.moveDown(0.5).fillColor('#073d34').fontSize(12).text(title);
+    doc.moveTo(45,doc.y+3).lineTo(550,doc.y+3).strokeColor('#087f68').stroke();
+    doc.moveDown(0.5).fillColor('#222').fontSize(10);
+  }
+
+  function field(label,value){
+    doc.font(fontPath).fontSize(10).fillColor('#222')
+      .text(`${label} : ${String(value)}`);
+    doc.moveDown(0.25);
+  }
+
+  const executionDate=new Date(transfer.completed_at).toLocaleString(t.locale,{
+    timeZone:'UTC',
+    timeZoneName:'short'
+  });
+  const amount=(Number(transfer.amount_cents)/100).toLocaleString(t.locale,{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+
+  field(t.reference,transfer.reference);
+  field(t.executionDate,executionDate);
+  field(t.amount,`${amount} ${transfer.currency}`);
+
+  section(t.sender);
+  field(t.holder,transfer.sender_name);
+  field(t.account,transfer.sender_account_display);
+  field(t.bank,'Banque Islamique de Développement');
+
+  section(t.beneficiary);
+  field(t.holder,transfer.beneficiary_name);
+  field(t.account,transfer.beneficiary_account_display);
+  field(t.bank,'Banque Islamique de Développement');
+
+  section(t.reason);
+  doc.font(fontPath).fontSize(10).fillColor('#222')
+    .text(String(transfer.reason||t.noReason));
+
+  const footerHeight=76;
+  const footerY=doc.page.height-doc.page.margins.bottom-footerHeight;
+  if(doc.y>footerY-12) doc.addPage();
+  const finalFooterY=doc.page.height-doc.page.margins.bottom-footerHeight;
+  doc.roundedRect(45,finalFooterY,505,footerHeight,5)
+    .lineWidth(1).strokeColor('#087f68').fillColor('#f3f7f5').fillAndStroke();
+  doc.font(fontPath).fillColor('#073d34').fontSize(9)
+    .text(t.footerTitle,56,finalFooterY+9,{width:483,align:'center'});
+  doc.fillColor('#42534c').fontSize(8)
+    .text(t.footerText,58,finalFooterY+29,{width:479,align:'center'});
+
+  doc.end();
+  return finished;
+}
+
 async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
 
   const translations = {
     fr: {
       bankTitle: 'Banque Islamique de Développement',
       orderTitle: 'ORDRE DE VIREMENT',
-      simulation: 'DOCUMENT DE SIMULATION',
       orderNumber: 'Numéro de l’ordre : ',
       date: 'Date : ',
       issuingBank: 'Banque émettrice',
@@ -580,7 +711,6 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     en: {
       bankTitle: 'Islamic Development Bank',
       orderTitle: 'TRANSFER ORDER',
-      simulation: 'SIMULATION DOCUMENT',
       orderNumber: 'Order number: ',
       date: 'Date: ',
       issuingBank: 'Issuing bank',
@@ -609,7 +739,6 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     ar: {
       bankTitle: 'بنك التنمية الإسلامي',
       orderTitle: 'أمر تحويل',
-      simulation: 'وثيقة محاكاة',
       orderNumber: 'رقم الأمر: ',
       date: 'التاريخ: ',
       issuingBank: 'البنك المُصدِر',
@@ -639,10 +768,14 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
 
   const t = translations[lang] || translations.fr;
 
+  const arabicFontPath=path.join(__dirname,'fonts','NotoSansArabic[wdth,wght].ttf');
+
   const doc=new PDFDocument({
     size:'A4',
     margin:45
   });
+
+  doc.font(arabicFontPath);
 
   const chunks=[];
 
@@ -717,7 +850,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   doc
     .fillColor('#073d34')
     .fontSize(20)
-    .font('Helvetica-Bold')
+    .font(arabicFontPath)
     .text(t.bankTitle,{
       align:'center'
     });
@@ -729,29 +862,20 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
       align:'center'
     });
 
-  doc
-    .moveDown(0.3)
-    .fontSize(10)
-    .fillColor('#087f68')
-    .font('Helvetica-Bold')
-    .text(t.simulation,{
-      align:'center'
-    });
-
   doc.moveDown(1);
 
   doc
     .fillColor('#222')
-    .font('Helvetica-Bold')
+    .font(arabicFontPath)
     .fontSize(10)
     .text(t.orderNumber,{continued:true})
-    .font('Helvetica')
+    .font(arabicFontPath)
     .text(orderNumber);
 
   doc
-    .font('Helvetica-Bold')
+    .font(arabicFontPath)
     .text(t.date,{continued:true})
-    .font('Helvetica')
+    .font(arabicFontPath)
     .text(createdAt);
 
   doc.moveDown(0.8);
@@ -759,7 +883,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   function sectionTitle(title){
     doc
       .fillColor('#073d34')
-      .font('Helvetica-Bold')
+      .font(arabicFontPath)
       .fontSize(12)
       .text(title);
 
@@ -775,234 +899,16 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   function field(label,value){
     doc
       .fillColor('#222')
-      .font('Helvetica-Bold')
+      .font(arabicFontPath)
       .fontSize(10)
       .text(label+': ',{continued:true})
-      .font('Helvetica')
+      .font(arabicFontPath)
       .text(String(value||'—'));
 
     doc.moveDown(0.15);
   }
 
     sectionTitle(t.issuingBank);
-
-  field(
-    'Banque',
-    transfer.bank_name || 'Banque Islamique de Développement'
-  );
-
-  field(
-    t.countryLocation,
-    transfer.bank_origin_country || transfer.sender_bank_country || 'Maroc'
-  );
-
-  field(
-    t.address,
-    transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
-  );
-
-  field(
-    t.bic,
-    transfer.bank_bic || 'ISLDMAMC'
-  );
-
-  sectionTitle(t.sender);
-
-  field(
-    t.name,
-    sourceName
-  );
-
-  field(
-    t.rib,
-    transfer.sender_rib || sourceUser?.rib_account_number || '—'
-  );
-
-  field(
-    t.iban,
-    transfer.sender_iban || sourceUser?.iban || '—'
-  );
-
-  field(
-    t.bic,
-    transfer.sender_bic || sourceUser?.bic || 'ISLDMAMC'
-  );
-
-  sectionTitle(t.beneficiary);
-
-  field(
-    t.name,
-    transfer.beneficiary_name
-  );
-
-  field(
-    t.country,
-    transfer.beneficiary_country || transfer.beneficiary_bank_country || 'Maroc'
-  );
-
-  field(
-    t.rib,
-    transfer.beneficiary_rib || '—'
-  );
-
-  field(
-    t.iban,
-    transfer.beneficiary_iban || '—'
-  );
-
-  field(
-    t.bic,
-    transfer.beneficiary_bic || 'ISLDMAMC'
-  );
-
-  sectionTitle(t.beneficiaryBank);
-
-  field(
-    'Banque',
-    transfer.bank_name || 'Banque Islamique de Développement'
-  );
-
-  field(
-    t.address,
-    transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
-  );
-
-  field(
-    t.accountIban,
-    transfer.beneficiary_iban || transfer.beneficiary_rib || '—'
-  );
-
-  field(
-    t.bic,
-    transfer.bank_bic || transfer.beneficiary_bic || 'ISLDMAMC'
-  );
-
-  field(
-    t.notification,
-    transfer.notification_method === 'sms' ? 'SMS' : 'Email'
-  );
-
-  field(
-    t.notificationContact,
-    transfer.notification_method === 'sms'
-      ? (transfer.beneficiary_phone || '—')
-      : (transfer.beneficiary_email || '—')
-  );
-
-  field(
-    t.notificationLanguage,
-    transfer.notification_language || 'fr'
-  );
-  sectionTitle(t.issuingBank);
-
-  field(
-    'Banque',
-    transfer.bank_name || 'Banque Islamique de Développement'
-  );
-
-  field(
-    t.countryLocation,
-    transfer.bank_origin_country || transfer.sender_bank_country || 'Maroc'
-  );
-
-  field(
-    t.address,
-    transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
-  );
-
-  field(
-    t.bic,
-    transfer.bank_bic || 'ISLDMAMC'
-  );
-
-  sectionTitle(t.sender);
-
-  field(
-    t.name,
-    sourceName
-  );
-
-  field(
-    t.rib,
-    transfer.sender_rib || sourceUser?.rib_account_number || '—'
-  );
-
-  field(
-    t.iban,
-    transfer.sender_iban || sourceUser?.iban || '—'
-  );
-
-  field(
-    t.bic,
-    transfer.sender_bic || sourceUser?.bic || 'ISLDMAMC'
-  );
-
-  sectionTitle(t.beneficiary);
-
-  field(
-    t.name,
-    transfer.beneficiary_name
-  );
-
-  field(
-    t.country,
-    transfer.beneficiary_country || transfer.beneficiary_bank_country || 'Maroc'
-  );
-
-  field(
-    t.rib,
-    transfer.beneficiary_rib || '—'
-  );
-
-  field(
-    t.iban,
-    transfer.beneficiary_iban || '—'
-  );
-
-  field(
-    t.bic,
-    transfer.beneficiary_bic || 'ISLDMAMC'
-  );
-
-  sectionTitle(t.beneficiaryBank);
-
-  field(
-    'Banque',
-    transfer.bank_name || 'Banque Islamique de Développement'
-  );
-
-  field(
-    t.address,
-    transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
-  );
-
-  field(
-    t.accountIban,
-    transfer.beneficiary_iban || transfer.beneficiary_rib || '—'
-  );
-
-  field(
-    t.bic,
-    transfer.bank_bic || transfer.beneficiary_bic || 'ISLDMAMC'
-  );
-
-  field(
-    t.notification,
-    transfer.notification_method === 'sms' ? 'SMS' : 'Email'
-  );
-
-  field(
-    t.notificationContact,
-    transfer.notification_method === 'sms'
-      ? (transfer.beneficiary_phone || '—')
-      : (transfer.beneficiary_email || '—')
-  );
-
-  field(
-    t.notificationLanguage,
-    transfer.notification_language || 'fr'
-  );
-  sectionTitle(t.issuingBank);
 
   field(
     'Banque',
@@ -1161,20 +1067,6 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
       qrY+133,
       {
         width:115,
-        align:'center'
-      }
-    );
-
-  doc
-    .fillColor('#073d34')
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .text(
-      'DOCUMENT DE SIMULATION',
-      45,
-      760,
-      {
-        width:505,
         align:'center'
       }
     );
@@ -2202,6 +2094,7 @@ app.get('/api/admin/internal-transfers',adminAuth,(req,res)=>{
         su.name AS sender_name,
         su.email AS sender_email,
         su.phone AS sender_phone,
+        su.account_no AS sender_account_no,
         su.rib_account_number AS sender_rib,
         su.iban AS sender_iban,
         su.bic AS sender_bic,
@@ -2209,6 +2102,7 @@ app.get('/api/admin/internal-transfers',adminAuth,(req,res)=>{
         bu.name AS beneficiary_full_name,
         bu.email AS beneficiary_email,
         bu.phone AS beneficiary_phone,
+        bu.account_no AS beneficiary_account_no,
         bu.rib_account_number AS beneficiary_rib,
         bu.iban AS beneficiary_iban,
         bu.bic AS beneficiary_bic,
@@ -2240,6 +2134,47 @@ app.get('/api/admin/internal-transfers',adminAuth,(req,res)=>{
   }
 });
 
+function prepareInternalTransferAttestation(transfer){
+  if(transfer.status!=='completed'){
+    return {error:'INTERNAL_TRANSFER_NOT_COMPLETED'};
+  }
+
+  const completedAt=transfer.completed_at ? new Date(transfer.completed_at) : null;
+  const amountCents=Number(transfer.amount_cents);
+  const currency=String(transfer.currency||'').trim();
+  const firstAccountValue=(...values)=>values
+    .map(value=>String(value||'').trim())
+    .find(Boolean)||'';
+  const prepared={
+    ...transfer,
+    sender_name:String(transfer.sender_name||'').trim(),
+    reference:String(transfer.reference||'').trim(),
+    beneficiary_name:String(
+      transfer.beneficiary_full_name||transfer.beneficiary_name||''
+    ).trim(),
+    sender_account_display:firstAccountValue(
+      transfer.sender_account_no,transfer.sender_iban,transfer.sender_rib
+    ),
+    beneficiary_account_display:firstAccountValue(
+      transfer.beneficiary_account_no,transfer.beneficiary_iban,transfer.beneficiary_rib
+    )
+  };
+
+  if(!completedAt || Number.isNaN(completedAt.getTime()) ||
+     !String(transfer.reference||'').trim() ||
+     !Number.isSafeInteger(amountCents) || amountCents<=0 ||
+     !currency || !prepared.sender_name || !prepared.beneficiary_name ||
+     !prepared.sender_account_display || !prepared.beneficiary_account_display){
+    return {error:'INTERNAL_TRANSFER_ATTESTATION_DATA_INCOMPLETE'};
+  }
+
+  prepared.completed_at=completedAt.toISOString();
+  prepared.amount_cents=amountCents;
+  prepared.currency=currency;
+  prepared.reason=String(transfer.reason||'').trim();
+  return {transfer:prepared};
+}
+
 app.get('/api/admin/internal-transfers/:id/pdf',adminAuth,async(req,res)=>{
 
   try{
@@ -2256,26 +2191,13 @@ app.get('/api/admin/internal-transfers/:id/pdf',adminAuth,async(req,res)=>{
       SELECT
         it.*,
         su.name AS sender_name,
-        su.email AS sender_email,
-        su.phone AS sender_phone,
+        su.account_no AS sender_account_no,
         su.iban AS sender_iban,
         su.rib_account_number AS sender_rib,
-        su.bic AS sender_bic,
-        su.bank_country AS sender_bank_country,
-
         bu.name AS beneficiary_full_name,
-        bu.email AS beneficiary_email,
-        bu.phone AS beneficiary_phone,
+        bu.account_no AS beneficiary_account_no,
         bu.iban AS beneficiary_iban,
-        bu.rib_account_number AS beneficiary_rib,
-        bu.bic AS beneficiary_bic,
-        bu.bank_country AS beneficiary_bank_country,
-        bu.notification_method,
-        bu.notification_language,
-
-        'Banque Islamique de Développement' AS bank_name,
-        '10, Avenue du Développement, Casablanca, Maroc' AS bank_address,
-        'ISLDMAMC' AS bank_bic
+        bu.rib_account_number AS beneficiary_rib
       FROM internal_transfers it
       LEFT JOIN users su
         ON su.id=it.sender_user_id
@@ -2290,54 +2212,19 @@ app.get('/api/admin/internal-transfers/:id/pdf',adminAuth,async(req,res)=>{
       });
     }
 
-    const sourceUser=db.prepare(`
-      SELECT *
-      FROM users
-      WHERE id=?
-    `).get(transfer.sender_user_id);
-
-    if(!sourceUser){
-      return res.status(404).json({
-        error:'SENDER_NOT_FOUND'
+    const attestation=prepareInternalTransferAttestation(transfer);
+    if(attestation.error){
+      return res.status(409).json({
+        error:attestation.error
       });
     }
 
-    transfer.order_number =
-      'OV-I-' +
-      String(transfer.id).padStart(8,'0');
+    const attestationTransfer=attestation.transfer;
 
-    transfer.beneficiary_name =
-      transfer.beneficiary_full_name ||
-      transfer.beneficiary_name ||
-      '—';
-
-    transfer.iban =
-      transfer.beneficiary_iban ||
-      transfer.beneficiary_rib ||
-      '—';
-
-    transfer.account_no =
-      transfer.beneficiary_iban ||
-      transfer.beneficiary_rib ||
-      '—';
-
-    transfer.bic =
-      'ISLDMAMC';
-
-    transfer.bank_name =
-      'Banque Islamique de Développement';
-
-    transfer.beneficiary_country =
-      'Maroc';
-
-    const pdf=
-      await generateExternalTransferPdf(
-        transfer,
-        sourceUser,
-        ['fr','en','ar'].includes(req.query.lang)
-          ? req.query.lang
-          : 'fr'
-      );
+    const pdf=await generateInternalTransferAttestationPdf(
+      attestationTransfer,
+      ['fr','en','ar'].includes(req.query.lang) ? req.query.lang : 'fr'
+    );
 
     res.setHeader(
       'Content-Type',
@@ -2346,8 +2233,8 @@ app.get('/api/admin/internal-transfers/:id/pdf',adminAuth,async(req,res)=>{
 
     res.setHeader(
       'Content-Disposition',
-      'inline; filename="ordre-virement-interne-' +
-      transfer.id +
+      'inline; filename="attestation-virement-interne-' +
+      attestationTransfer.id +
       '.pdf"'
     );
 
@@ -2783,6 +2670,17 @@ app.get('/api/me',auth,(req,res)=>{
     }
   });
 
+});
+app.get('/api/me/photo',auth,(req,res)=>{
+  const user=db.prepare(
+    'SELECT photo_data FROM users WHERE id=?'
+  ).get(req.session.uid);
+
+  if(!user){
+    return res.status(404).json({error:'USER_NOT_FOUND'});
+  }
+
+  res.json({photo_data:user.photo_data || null});
 });
 app.get('/api/admin/me',adminAuth,(req,res)=>{
   res.json({
@@ -4308,12 +4206,321 @@ app.get('/api/admin/incoming-transfers',adminAuth,(req,res)=>{
     ORDER BY it.id DESC
   `).all();
 
-  res.json(rows.map(row=>({
-    ...row,
-    account_no:'VB-'+String(row.user_id).padStart(8,'0')
-  })));
+  res.json(rows.map(row=>{
+    const attestation=prepareIncomingJustificationAttestation({
+      ...row,
+      beneficiary_user_id:row.user_id,
+      beneficiary_name:row.user_name
+    });
+
+    return {
+      ...row,
+      account_no:'VB-'+String(row.user_id).padStart(8,'0'),
+      can_generate_justification_attestation:!attestation.error
+    };
+  }));
 });
 
+function isExplicitJustificationRequest(value){
+  const text=String(value||'').trim();
+  if(!text) return false;
+
+  const normalized=text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase();
+  const mentionsDocuments=/\b(?:justificatifs?|pieces?(?:\s+justificatives?)?|documents?|preuves?|supporting\s+documents?|documentation|evidence)\b/u.test(normalized) ||
+    /(?:مستندات?|وثائق|إثباتات?)/u.test(text);
+  const requestsDocuments=/\b(?:fournir|fournissez|transmettre|transmettez|joindre|joignez|presenter|presentez|soumettre|soumettez|requis(?:e|es|s)?|obligatoires?|provide|submit|attach|send|supply|must|required|please)\b/u.test(normalized) ||
+    /(?:يرجى|يجب|تقديم|إرفاق|ارفق|مطلوب)/u.test(text);
+  const negatesRequest=/\b(?:aucun(?:e)?|sans|pas\s+de|non\s+requis|non\s+obligatoire|not\s+required|no\s+need|not\s+needed|not\s+necessary|do\s+not|does\s+not\s+require)\b/u.test(normalized) ||
+    /(?:لا\s+حاجة|غير\s+مطلوب|لا\s+يلزم|بدون)/u.test(text);
+
+  return mentionsDocuments && requestsDocuments && !negatesRequest;
+}
+
+function prepareIncomingJustificationAttestation(transfer){
+  if(transfer?.status!=='pending'){
+    return {error:'INCOMING_TRANSFER_NOT_PENDING'};
+  }
+
+  if(!isExplicitJustificationRequest(transfer.condition_text)){
+    return {error:'INCOMING_TRANSFER_NOT_AWAITING_JUSTIFICATION'};
+  }
+
+  const createdAt=transfer.created_at ? new Date(transfer.created_at) : null;
+  const amountCents=Number(transfer.amount_cents);
+  const beneficiaryId=Number(transfer.beneficiary_user_id);
+  const beneficiaryName=String(transfer.beneficiary_name||'').trim();
+
+  if(!createdAt || Number.isNaN(createdAt.getTime()) ||
+     !Number.isSafeInteger(amountCents) || amountCents<=0 ||
+     !Number.isSafeInteger(beneficiaryId) || beneficiaryId<=0 ||
+     !beneficiaryName){
+    return {error:'INCOMING_TRANSFER_ATTESTATION_DATA_INCOMPLETE'};
+  }
+
+  return {
+    transfer:{
+      id:Number(transfer.id),
+      status:transfer.status,
+      sender_name:String(transfer.sender_name||'').trim(),
+      beneficiary_name:beneficiaryName,
+      beneficiary_account_no:String(transfer.beneficiary_account_no||'').trim(),
+      reference:String(transfer.reference||'').trim(),
+      amount_cents:amountCents,
+      created_at:createdAt.toISOString(),
+      condition_text:String(transfer.condition_text)
+    }
+  };
+}
+
+async function generateIncomingJustificationAttestationPdf(transfer){
+  const doc=new PDFDocument({size:'A4',margin:45});
+  const chunks=[];
+  doc.on('data',chunk=>chunks.push(chunk));
+
+  const finished=new Promise((resolve,reject)=>{
+    doc.once('end',()=>resolve(Buffer.concat(chunks)));
+    doc.once('error',reject);
+  });
+
+  const fontPath=path.join(__dirname,'fonts','NotoSansArabic[wdth,wght].ttf');
+  const logoPath=path.join(__dirname,'IMG_4145.jpeg');
+  if(fs.existsSync(logoPath)){
+    doc.image(logoPath,235,35,{fit:[125,70]});
+    doc.y=115;
+  }
+
+  doc.font(fontPath).fillColor('#073d34').fontSize(18)
+    .text('ATTESTATION DE VIREMENT BLOQUÉ',{align:'center'});
+  doc.moveDown(0.8);
+  const statusTop=doc.y;
+  doc.roundedRect(45,statusTop,505,34,5)
+    .fillAndStroke('#fff3d6','#a66a00');
+  doc.fillColor('#7a4e00').fontSize(14)
+    .text('EN ATTENTE DE JUSTIFICATION',55,statusTop+9,{width:485,align:'center'});
+  doc.y=statusTop+48;
+  doc.fillColor('#222').fontSize(10);
+
+  function field(label,value){
+    doc.font(fontPath).fontSize(10).fillColor('#222')
+      .text(`${label} : ${String(value)}`,{width:505});
+    doc.moveDown(0.35);
+  }
+
+  const createdAt=new Date(transfer.created_at).toLocaleString('fr-FR',{
+    timeZone:'UTC',
+    timeZoneName:'short'
+  });
+  const amount=(transfer.amount_cents/100).toLocaleString('fr-FR',{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  }).replace(/[\u00A0\u202F]/g,' ');
+
+  field('Date de création enregistrée',createdAt);
+  if(transfer.reference){
+    field('Référence enregistrée',transfer.reference);
+  }
+  field('Montant',`${amount} USD`);
+  field('Devise','USD, conformément au parcours ; la devise n’est pas enregistrée sur cette ligne de virement.');
+  field('Titulaire du compte bénéficiaire',transfer.beneficiary_name);
+  if(transfer.beneficiary_account_no){
+    field('Compte bénéficiaire enregistré',transfer.beneficiary_account_no);
+  }
+  if(transfer.sender_name){
+    field('Expéditeur enregistré',transfer.sender_name);
+  }
+  field('Motif de l’opération','Non renseigné dans les données du virement.');
+
+  doc.moveDown(0.5);
+  const boxX=45;
+  const boxWidth=505;
+  const textX=57;
+  const textWidth=481;
+  const condition=transfer.condition_text;
+  const conditionHeight=doc.heightOfString(condition,{width:textWidth,fontSize:10,lineGap:3});
+  const boxHeight=conditionHeight+48;
+  const bottomLimit=doc.page.height-doc.page.margins.bottom;
+  if(doc.y+boxHeight>bottomLimit && boxHeight<doc.page.height-doc.page.margins.top-doc.page.margins.bottom){
+    doc.addPage();
+  }
+  const boxTop=doc.y;
+  doc.roundedRect(boxX,boxTop,boxWidth,boxHeight,5)
+    .fillAndStroke('#f3f7f5','#087f68');
+  doc.font(fontPath).fillColor('#073d34').fontSize(12)
+    .text('JUSTIFICATIFS À FOURNIR',textX,boxTop+10,{width:textWidth});
+  doc.font(fontPath).fillColor('#222').fontSize(10)
+    .text(condition,textX,boxTop+31,{width:textWidth,lineGap:3});
+  doc.y=boxTop+boxHeight+14;
+
+  doc.roundedRect(45,doc.y,505,58,5)
+    .fillAndStroke('#fff7f7','#a32727');
+  doc.font(fontPath).fillColor('#8a2020').fontSize(10)
+    .text('Ce virement n’est pas confirmé comme exécuté. Sa suite dépend de l’examen des justificatifs.',57,doc.y+12,{width:481,align:'center'});
+
+  doc.end();
+  return finished;
+}
+
+app.get('/api/admin/incoming-transfers/:id/pdf',adminAuth,async(req,res)=>{
+  res.once('error',error=>{
+    console.error('Erreur de réponse HTTP pour le PDF du virement sortant:',error);
+  });
+
+  try{
+    const id=Number(req.params.id);
+
+    if(!Number.isInteger(id) || id<=0){
+      return res.status(400).json({error:'INVALID_TRANSFER_ID'});
+    }
+
+    const transfer=db.prepare(`
+      SELECT
+        it.id,
+        it.sender_name,
+        it.reference,
+        it.amount_cents,
+        it.status,
+        it.created_at,
+        it.validated_at,
+        u.name AS beneficiary_name
+      FROM incoming_transfers it
+      JOIN users u ON u.id=it.user_id
+      WHERE it.id=?
+    `).get(id);
+
+    if(!transfer){
+      return res.status(404).json({error:'INCOMING_TRANSFER_NOT_FOUND'});
+    }
+
+    if(transfer.status!=='available'){
+      return res.status(409).json({error:'INCOMING_TRANSFER_NOT_AVAILABLE'});
+    }
+
+    const amountCents=Number(transfer.amount_cents);
+    const amount=Number.isFinite(amountCents)
+      ? (amountCents/100).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})
+      : '—';
+    const dateValue=transfer.validated_at || transfer.created_at;
+    const dateObject=dateValue ? new Date(dateValue) : null;
+    const date=dateObject && !Number.isNaN(dateObject.getTime())
+      ? dateObject.toLocaleString('fr-FR')
+      : '—';
+    const filename=`ordre-virement-${transfer.id}.pdf`;
+    const pdfBuffer=await new Promise((resolve,reject)=>{
+      const pdf=new PDFDocument({size:'A4',margin:50});
+      const chunks=[];
+      let settled=false;
+      const fail=error=>{
+        if(settled) return;
+        settled=true;
+        reject(error);
+      };
+
+      pdf.on('data',chunk=>chunks.push(chunk));
+      pdf.once('error',fail);
+      pdf.once('end',()=>{
+        if(settled) return;
+        settled=true;
+        resolve(Buffer.concat(chunks));
+      });
+
+      try{
+        pdf.font(path.join(__dirname,'fonts','NotoSansArabic[wdth,wght].ttf'));
+        pdf.fontSize(20).fillColor('#073d34').text('Ordre de virement sortant',{underline:true});
+        pdf.moveDown(1.5);
+        pdf.fontSize(12).fillColor('#17211e');
+        const fields=[
+          ['Identifiant',String(transfer.id)],
+          ['Bénéficiaire',transfer.beneficiary_name || '—'],
+          ['Expéditeur',transfer.sender_name || '—'],
+          ['Montant',`${amount} USD`],
+          ['Référence',transfer.reference || '—'],
+          [transfer.validated_at ? 'Date de validation' : 'Date de création',date]
+        ];
+        for(const [label,value] of fields){
+          pdf.fontSize(12).text(`${label} : ${String(value)}`);
+          pdf.moveDown(0.7);
+        }
+        pdf.end();
+      }catch(error){
+        fail(error);
+        pdf.destroy();
+      }
+    });
+
+    if(res.destroyed) return;
+    res.setHeader('Content-Type','application/pdf');
+    res.setHeader('Content-Disposition',`attachment; filename="${filename}"`);
+    return res.send(pdfBuffer);
+  }catch(error){
+    console.error('Erreur de génération du PDF du virement sortant:',error);
+    if(res.headersSent || res.destroyed){
+      if(!res.destroyed) res.destroy();
+      return;
+    }
+    return res.status(500).json({error:'INCOMING_TRANSFER_PDF_FAILED'});
+  }
+});
+
+app.get('/api/admin/incoming-transfers/:id/justification-pdf',adminAuth,async(req,res)=>{
+  try{
+    const id=Number(req.params.id);
+    if(!Number.isSafeInteger(id) || id<=0){
+      return res.status(400).json({error:'INVALID_TRANSFER_ID'});
+    }
+
+    const row=db.prepare(`
+      SELECT
+        it.id,
+        it.user_id,
+        it.sender_name,
+        it.reference,
+        it.amount_cents,
+        it.condition_text,
+        it.status,
+        it.created_at,
+        u.id AS beneficiary_user_id,
+        u.name AS beneficiary_name,
+        u.account_no AS beneficiary_account_no
+      FROM incoming_transfers it
+      LEFT JOIN users u ON u.id=it.user_id
+      WHERE it.id=?
+    `).get(id);
+
+    if(!row){
+      return res.status(404).json({error:'INCOMING_TRANSFER_NOT_FOUND'});
+    }
+
+    const prepared=prepareIncomingJustificationAttestation(row);
+    if(prepared.error){
+      const status=prepared.error==='INCOMING_TRANSFER_NOT_PENDING' ||
+        prepared.error==='INCOMING_TRANSFER_NOT_AWAITING_JUSTIFICATION'
+        ? 409
+        : 422;
+      return res.status(status).json({error:prepared.error});
+    }
+
+    const transfer=prepared.transfer;
+    const pdf=await generateIncomingJustificationAttestationPdf(transfer);
+    if(res.destroyed) return;
+
+    res.setHeader('Content-Type','application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="attestation-virement-bloque-${transfer.id}.pdf"`
+    );
+    return res.send(pdf);
+  }catch(error){
+    console.error('Erreur de génération de l’attestation de justificatifs:',error);
+    if(res.headersSent || res.destroyed){
+      if(!res.destroyed) res.destroy();
+      return;
+    }
+    return res.status(500).json({error:'INCOMING_JUSTIFICATION_PDF_FAILED'});
+  }
+});
 
 app.post('/api/admin/incoming-transfers/:id/validate',adminAuth,(req,res)=>{
   const id=Number(req.params.id);
