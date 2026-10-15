@@ -1071,6 +1071,16 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
       }
     );
 
+  const stampPath=path.join(__dirname,'cachets_final.png');
+
+  if(fs.existsSync(stampPath)){
+    doc.image(stampPath,55,qrY+5,{
+      fit:[170,115],
+      align:'center',
+      valign:'center'
+    });
+  }
+
   doc.end();
 
   return finished;
@@ -4364,14 +4374,10 @@ async function generateIncomingJustificationAttestationPdf(transfer){
 }
 
 app.get('/api/admin/incoming-transfers/:id/pdf',adminAuth,async(req,res)=>{
-  res.once('error',error=>{
-    console.error('Erreur de réponse HTTP pour le PDF du virement sortant:',error);
-  });
-
   try{
     const id=Number(req.params.id);
 
-    if(!Number.isInteger(id) || id<=0){
+    if(!Number.isSafeInteger(id) || id<=0){
       return res.status(400).json({error:'INVALID_TRANSFER_ID'});
     }
 
@@ -4394,24 +4400,43 @@ app.get('/api/admin/incoming-transfers/:id/pdf',adminAuth,async(req,res)=>{
       return res.status(404).json({error:'INCOMING_TRANSFER_NOT_FOUND'});
     }
 
-    if(transfer.status!=='available'){
+    if(!['pending','available'].includes(transfer.status)){
       return res.status(409).json({error:'INCOMING_TRANSFER_NOT_AVAILABLE'});
+    }
+
+    const isValidated=transfer.status==='available';
+    const stampPath=path.join(__dirname,'cachets_final.png');
+
+    if(!fs.existsSync(stampPath)){
+      return res.status(500).json({error:'ATTESTATION_STAMP_MISSING'});
     }
 
     const amountCents=Number(transfer.amount_cents);
     const amount=Number.isFinite(amountCents)
-      ? (amountCents/100).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})
+      ? (amountCents/100).toLocaleString('fr-FR',{
+          minimumFractionDigits:2,
+          maximumFractionDigits:2
+        })
       : '—';
-    const dateValue=transfer.validated_at || transfer.created_at;
+
+    const dateValue=isValidated
+      ? (transfer.validated_at || transfer.created_at)
+      : transfer.created_at;
+
     const dateObject=dateValue ? new Date(dateValue) : null;
     const date=dateObject && !Number.isNaN(dateObject.getTime())
       ? dateObject.toLocaleString('fr-FR')
       : '—';
-    const filename=`ordre-virement-${transfer.id}.pdf`;
+
+    const filename=isValidated
+      ? `attestation-virement-${transfer.id}.pdf`
+      : `virement-en-attente-${transfer.id}.pdf`;
+
     const pdfBuffer=await new Promise((resolve,reject)=>{
       const pdf=new PDFDocument({size:'A4',margin:50});
       const chunks=[];
       let settled=false;
+
       const fail=error=>{
         if(settled) return;
         settled=true;
@@ -4428,21 +4453,53 @@ app.get('/api/admin/incoming-transfers/:id/pdf',adminAuth,async(req,res)=>{
 
       try{
         pdf.font(path.join(__dirname,'fonts','NotoSansArabic[wdth,wght].ttf'));
-        pdf.fontSize(20).fillColor('#073d34').text('Ordre de virement sortant',{underline:true});
+
+        pdf.fontSize(isValidated ? 20 : 18)
+          .fillColor('#073d34')
+          .text(
+            isValidated
+              ? 'ATTESTATION DE VIREMENT'
+              : 'VIREMENT EN ATTENTE DE VALIDATION',
+            {underline:true}
+          );
+
         pdf.moveDown(1.5);
         pdf.fontSize(12).fillColor('#17211e');
+
         const fields=[
           ['Identifiant',String(transfer.id)],
           ['Bénéficiaire',transfer.beneficiary_name || '—'],
           ['Expéditeur',transfer.sender_name || '—'],
           ['Montant',`${amount} USD`],
           ['Référence',transfer.reference || '—'],
-          [transfer.validated_at ? 'Date de validation' : 'Date de création',date]
+          [
+            isValidated ? 'Date de validation' : 'Date de création',
+            date
+          ],
+          [
+            'Statut',
+            isValidated
+              ? 'Virement validé'
+              : 'En attente de validation'
+          ]
         ];
+
         for(const [label,value] of fields){
           pdf.fontSize(12).text(`${label} : ${String(value)}`);
           pdf.moveDown(0.7);
         }
+
+        const stampHeight=115;
+        if(pdf.y+15+stampHeight>pdf.page.height-pdf.page.margins.bottom){
+          pdf.addPage();
+        }
+
+        pdf.image(stampPath,55,pdf.y+15,{
+          fit:[170,115],
+          align:'center',
+          valign:'center'
+        });
+
         pdf.end();
       }catch(error){
         fail(error);
@@ -4451,19 +4508,25 @@ app.get('/api/admin/incoming-transfers/:id/pdf',adminAuth,async(req,res)=>{
     });
 
     if(res.destroyed) return;
+
     res.setHeader('Content-Type','application/pdf');
-    res.setHeader('Content-Disposition',`attachment; filename="${filename}"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${filename}"`
+    );
+
     return res.send(pdfBuffer);
   }catch(error){
-    console.error('Erreur de génération du PDF du virement sortant:',error);
+    console.error('Erreur de génération du PDF du virement entrant:',error);
+
     if(res.headersSent || res.destroyed){
       if(!res.destroyed) res.destroy();
       return;
     }
+
     return res.status(500).json({error:'INCOMING_TRANSFER_PDF_FAILED'});
   }
 });
-
 app.get('/api/admin/incoming-transfers/:id/justification-pdf',adminAuth,async(req,res)=>{
   try{
     const id=Number(req.params.id);

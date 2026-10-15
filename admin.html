@@ -1538,8 +1538,8 @@ function openIncomingJustificationAttestation(id){
 function downloadIncomingTransferOrder(id){
   const row=incomingTransferRowsById.get(Number(id));
 
-  if(!row || row.status!=='available'){
-    alert('Cet ordre est introuvable ou le virement n’est pas disponible.');
+  if(!row || !Number.isSafeInteger(Number(id)) || Number(id)<=0){
+    alert('Ce virement est introuvable.');
     return;
   }
 
@@ -1643,6 +1643,14 @@ async function loadIncomingTransfers(){
             onclick="cancelIncoming(${row.id})"
           >
             Annuler
+          </button>
+
+          <button
+            class="secondary"
+            type="button"
+            onclick="downloadIncomingTransferOrder(${Number(row.id)})"
+          >
+            Télécharger l’attestation
           </button>
 
           ${row.can_generate_justification_attestation === true ? `
