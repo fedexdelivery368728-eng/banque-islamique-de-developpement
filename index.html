@@ -732,6 +732,41 @@ button.primary:hover,
   }
 }
 
+#app .client-profile-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+#app .client-profile-photo,
+#app .client-profile-fallback {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  border: 2px solid #dce8e1;
+  border-radius: 50%;
+}
+#app .client-profile-photo {
+  display: block;
+  object-fit: cover;
+}
+#app .client-profile-photo[hidden],
+#app .client-profile-fallback[hidden] {
+  display: none !important;
+}
+#app .client-profile-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e7f0ed;
+  color: #087f68;
+  font-weight: 750;
+  letter-spacing: .04em;
+}
+#app .client-profile-summary > div:last-child {
+  min-width: 0;
+}
+
 
 /* DESIGN FORMULAIRES VIREMENTS — VERSION PREMIUM */
 #transfer {
@@ -1255,11 +1290,7 @@ button.primary:hover,
 
       <span data-k="noAccount"></span>
 
-      <span
-        class="switch"
-        onclick="mode('register')"
-        data-k="register"
-      ></span>
+      <span data-k="register"></span>
 
     </p>
 
@@ -1533,9 +1564,13 @@ button.primary:hover,
   </div>
   <div class="top">
 
-    <div>
-      <h1 id="hello"></h1>
-      <p id="email" class="muted"></p>
+    <div class="client-profile-summary">
+      <img id="clientProfilePhoto" class="client-profile-photo" alt="Photo de profil" hidden>
+      <span id="clientProfileFallback" class="client-profile-fallback" aria-hidden="true"></span>
+      <div>
+        <h1 id="hello"></h1>
+        <p id="email" class="muted"></p>
+      </div>
     </div>
 
     <button
@@ -2350,24 +2385,67 @@ async function openApp(){
 
   }
 }
+async function loadClientProfilePhoto(){
+  try{
+    const photoResult=await api("/api/me/photo");
+    if(typeof photoResult.photo_data==="string" &&
+       /^data:image\/(?:jpeg|png|webp);base64,/i.test(photoResult.photo_data)){
+      const profilePhoto=document.getElementById("clientProfilePhoto");
+      const profileFallback=document.getElementById("clientProfileFallback");
+      profilePhoto.src=photoResult.photo_data;
+      profilePhoto.hidden=false;
+      profileFallback.hidden=true;
+    }
+  }catch(error){
+    console.warn("Impossible de charger la photo de profil.");
+  }
+}
 async function load(){
 
   me=await api("/api/me");
 
+  const profilePhoto=document.getElementById("clientProfilePhoto");
+  const profileFallback=document.getElementById("clientProfileFallback");
+  const initials=String(me.name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0,2)
+    .map(part=>part.charAt(0).toLocaleUpperCase())
+    .join("") || "?";
+  profileFallback.textContent=initials;
+  profileFallback.hidden=false;
+  profilePhoto.hidden=true;
+  profilePhoto.removeAttribute("src");
+  profilePhoto.onerror=()=>{
+    profilePhoto.hidden=true;
+    profilePhoto.removeAttribute("src");
+    profileFallback.hidden=false;
+  };
+  loadClientProfilePhoto();
+
   lang = ["fr","en","ar"].includes(me.notification_language)
     ? me.notification_language
     : "fr";
-  setLanguage(lang);
-  hello.textContent=
-    (
-      lang==="ar"
-      ?"مرحباً، "
-      :lang==="en"
-      ?"Hello, "
-      :"Bonjour, "
-    )+me.name;
+    setLanguage(lang);
 
-  email.textContent=me.email;
+  const firstLastName = [me.first_name, me.last_name]
+    .map(v => String(v || "").trim())
+    .filter(Boolean)
+    .join(" ");
+
+  const fallbackName = String(me.name || "").trim();
+
+  const clientFullName =
+    firstLastName ||
+    (fallbackName.includes("@") ? "" : fallbackName);
+
+  hello.textContent =
+    lang === "ar" ? "مرحباً،" :
+    lang === "en" ? "Hello," :
+    "Bonjour,";
+
+  email.textContent = clientFullName;
 
   const accountCurrency =
   me.account_currency || "USD";
@@ -2378,10 +2456,7 @@ balance.textContent =
 account.textContent =
   me.account_no || me.rib?.account_number || "—";
   document.getElementById("clientHolder").textContent =
-    me.name || [me.first_name, me.last_name].filter(Boolean).join(" ") || "—";
-    const isUaeAccount =
-    String(me.bank_country || (me.iban || "").slice(0, 2))
-      .toUpperCase() === "AE";
+    clientFullName || "—";
 
   const formatAccount = value =>
     String(value || "").replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim();
