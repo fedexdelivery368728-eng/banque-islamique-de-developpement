@@ -3171,9 +3171,26 @@ app.patch('/api/admin/users/:id',adminAuth,(req,res)=>{
     return res.status(400).json({ error: 'INVALID_PHOTO' });
   }
 
-  const name=String(
-    body.name!==undefined ? body.name : user.name
+  const firstName = String(
+    body.first_name !== undefined
+      ? body.first_name
+      : user.first_name || ''
   ).trim();
+
+  const lastName = String(
+    body.last_name !== undefined
+      ? body.last_name
+      : user.last_name || ''
+  ).trim();
+
+  const submittedName = String(
+    body.name !== undefined ? body.name : ''
+  ).trim();
+
+  const name =
+    `${firstName} ${lastName}`.trim() ||
+    submittedName ||
+    String(user.name || '').trim();
 
   const email=String(
     body.email!==undefined ? body.email : user.email
@@ -3229,8 +3246,8 @@ app.patch('/api/admin/users/:id',adminAuth,(req,res)=>{
       email,
       active,
 
-      body.first_name ?? user.first_name ?? '',
-      body.last_name ?? user.last_name ?? '',
+      firstName,
+      lastName,
       body.birth_date ?? user.birth_date ?? '',
       body.birth_place ?? user.birth_place ?? '',
       body.nationality ?? user.nationality ?? '',
