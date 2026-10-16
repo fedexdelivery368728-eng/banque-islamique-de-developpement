@@ -4935,7 +4935,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
         <body>
           <div class="card">
             <h1>Ordre introuvable</h1>
-            <div class="simulation">DOCUMENT DE SIMULATION</div>
+            <div class="simulation">Vérification de l’ordre de virement — document de démonstration</div>
             <p>Le numéro d'ordre fourni n'est pas valide.</p>
           </div>
         </body>
@@ -4994,7 +4994,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
         <body>
           <div class="card">
             <h1>Ordre introuvable</h1>
-            <div class="simulation">DOCUMENT DE SIMULATION</div>
+            <div class="simulation">Vérification de l’ordre de virement — document de démonstration</div>
             <p>Aucun ordre ne correspond à ce numéro.</p>
           </div>
         </body>
@@ -5171,7 +5171,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
             <div>ORDRE DE VIREMENT</div>
 
             <div class="simulation">
-              DOCUMENT DE SIMULATION
+              Vérification de l’ordre de virement — document de démonstration
             </div>
           </div>
 
@@ -5317,7 +5317,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
           </div>
 
           <div class="notice">
-            DOCUMENT DE SIMULATION
+            Vérification de l’ordre de virement — document de démonstration
           </div>
 
         </div>
