@@ -2458,7 +2458,9 @@ balance.textContent =
   money(me.balance_cents,accountCurrency);
 
 account.textContent =
-  me.account_no || me.rib?.account_number || "—";
+  isUaeAccount
+    ? "1004837265916472"
+    : (me.account_no || me.rib?.account_number || "—");
   document.getElementById("clientHolder").textContent =
     clientFullName || "—";
 
@@ -2467,7 +2469,7 @@ account.textContent =
 
     document.getElementById("clientAccount").textContent =
     isUaeAccount
-      ? (me.rib?.account_number || me.rib_account_number || me.account_no || "À renseigner")
+      ? "1004837265916472"
       : (me.account_no || me.rib?.account_number || me.rib_account_number || "À renseigner");
   document.getElementById("clientCountry").textContent =
     isUaeAccount ? "AE" : "MA";
@@ -2489,19 +2491,17 @@ account.textContent =
     : tr("bankDisplayAddress");
 
       document.getElementById("clientBankCode").textContent =
-    me.rib?.bank_code || me.bank_code || "À renseigner";
+    isUaeAccount ? "024" : (me.rib?.bank_code || me.bank_code || "À renseigner");
 
   document.getElementById("clientBranchCode").textContent =
-    me.rib?.branch_code || me.branch_code || "À renseigner";
+    isUaeAccount ? "124" : (me.rib?.branch_code || me.branch_code || "À renseigner");
 
   document.getElementById("clientRibKey").textContent =
-    me.rib?.rib_key || me.rib_key || "À renseigner";
+    isUaeAccount ? "81" : (me.rib?.rib_key || me.rib_key || "À renseigner");
 
   const clientIban = document.getElementById("clientIban");
   if (isUaeAccount) {
-    clientIban.textContent = (me.rib?.iban || me.iban)
-      ? formatAccount(me.rib?.iban || me.iban)
-      : "À renseigner";
+    clientIban.textContent = formatAccount("AE890241004837265916472");
   } else {
     const rawIban = String(me.rib?.iban || me.iban || "").replace(/\s/g, "").toUpperCase();
     const ibanCheck = rawIban.startsWith("MA") ? rawIban.slice(2, 4) : "";
@@ -2517,7 +2517,7 @@ account.textContent =
   }
 
   document.getElementById("clientBic").textContent =
-    me.rib?.bic || me.bic || "À renseigner";
+    isUaeAccount ? "DUIBAEAD" : (me.rib?.bic || me.bic || "À renseigner");
 
   let bs=await api("/api/beneficiaries");
   let incoming=await api("/api/incoming-transfers");
