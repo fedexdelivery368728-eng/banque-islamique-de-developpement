@@ -791,7 +791,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     'OV-'+String(transfer.id).padStart(8,'0');
 
   const verificationUrl=
-    'https://bid-developpement.com/verification/'+
+    'https://bid-developpement.com/attestation-verification?ref='+
     encodeURIComponent(orderNumber);
 
   const qrDataUrl=
@@ -5338,6 +5338,12 @@ app.get('/verification/:orderNumber',(req,res)=>{
     );
 
   }
+});
+
+app.get('/attestation-verification',(req,res)=>{
+  const ref=String(req.query.ref||'').trim().toUpperCase();
+  if(!/^OV-[0-9]{8}$/.test(ref)) return res.status(400).send('Référence invalide.');
+  return res.redirect(302,'/verification/'+encodeURIComponent(ref));
 });
 
 app.get('/admin',(req,res)=>{
