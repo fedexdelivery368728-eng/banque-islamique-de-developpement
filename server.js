@@ -3183,14 +3183,13 @@ app.patch('/api/admin/users/:id',adminAuth,(req,res)=>{
       : user.last_name || ''
   ).trim();
 
-  const submittedName = String(
-    body.name !== undefined ? body.name : ''
-  ).trim();
+  if (!firstName || !lastName) {
+    return res.status(400).json({
+      error: 'INVALID_NAME_FIELDS'
+    });
+  }
 
-  const name =
-    `${firstName} ${lastName}`.trim() ||
-    submittedName ||
-    String(user.name || '').trim();
+  const name = `${firstName} ${lastName}`.trim();
 
   const email=String(
     body.email!==undefined ? body.email : user.email
