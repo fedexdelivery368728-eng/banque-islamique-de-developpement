@@ -682,8 +682,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const translations = {
     fr: {
       bankTitle: 'Banque Islamique de Développement',
-      orderTitle: 'RÉCAPITULATIF INTERNE DE VIREMENT',
-      disclaimer: 'DOCUMENT INTERNE — NON OFFICIEL',
+      orderTitle: 'RÉCAPITULATIF DE VIREMENT',
       validation: 'Zone de validation interne',
       orderNumber: 'Numéro de l’ordre : ',
       date: 'Date : ',
@@ -712,8 +711,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     },
     en: {
       bankTitle: 'Islamic Development Bank',
-      orderTitle: 'INTERNAL TRANSFER SUMMARY',
-      disclaimer: 'INTERNAL DOCUMENT — NOT OFFICIAL',
+      orderTitle: 'TRANSFER SUMMARY',
       validation: 'Internal validation area',
       orderNumber: 'Order number: ',
       date: 'Date: ',
@@ -742,8 +740,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     },
     ar: {
       bankTitle: 'بنك التنمية الإسلامي',
-      orderTitle: 'ملخص تحويل داخلي',
-      disclaimer: 'وثيقة داخلية — غير رسمية',
+      orderTitle: 'ملخص تحويل',
       validation: 'مساحة التحقق الداخلي',
       orderNumber: 'رقم الأمر: ',
       date: 'التاريخ: ',
