@@ -767,15 +767,12 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     [t.notificationLanguage,transfer.notification_language||'fr']
   ],rightX,ry,colW);
   const footerY=682;
-  doc.roundedRect(34,footerY,300,78,5).lineWidth(1).strokeColor(templateAccent).stroke();
-  doc.font(fontPath).fontSize(8).fillColor('#53665f').text(t.validation,44,footerY+8,{width:280,align:'center'});
+  doc.font(fontPath).fontSize(8).fillColor('#53665f').text(t.validation,44,footerY+4,{width:280,align:'center'});
   const demoStampPath=path.join(__dirname,isDubaiAccount?'cachet-Dubai.png':'cachets-Maroc.png');
   if(fs.existsSync(demoStampPath)){
-    doc.image(demoStampPath,118,footerY+20,{fit:[132,36],align:'center',valign:'center'});
-    doc.save().font(fontPath).fontSize(10).fillColor('#b42318').text('SPÉCIMEN — NON OFFICIEL',91,footerY+36,{width:185,align:'center',rotate:-8}).restore();
+    doc.image(demoStampPath,82,footerY+16,{fit:[205,48],align:'center',valign:'center'});
+    doc.save().font(fontPath).fontSize(9).fillColor('#b42318').text('SPÉCIMEN — NON OFFICIEL',44,footerY+64,{width:280,align:'center'}).restore();
   }
-  doc.moveTo(48,footerY+55).lineTo(320,footerY+55).lineWidth(0.5).strokeColor('#a9b7b1').stroke();
-  doc.font(fontPath).fontSize(7).fillColor('#68756f').text('Espace réservé — validation par une personne habilitée',44,footerY+60,{width:280,align:'center'});
   doc.image(qrBuffer,445,footerY+1,{width:68,height:68});
   doc.font(fontPath).fontSize(7).fillColor('#555').text(t.verification,405,footerY+70,{width:150,align:'center'});
   doc.font(fontPath).fontSize(6.5).text(orderNumber,405,footerY+81,{width:150,align:'center'});
