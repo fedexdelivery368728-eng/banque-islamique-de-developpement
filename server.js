@@ -682,7 +682,9 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const translations = {
     fr: {
       bankTitle: 'Banque Islamique de Développement',
-      orderTitle: 'ATTESTATION DE VIREMENT',
+      orderTitle: 'RÉCAPITULATIF INTERNE DE VIREMENT',
+      disclaimer: 'DOCUMENT INTERNE — NON OFFICIEL',
+      validation: 'Zone de validation interne',
       orderNumber: 'Numéro de l’ordre : ',
       date: 'Date : ',
       issuingBank: 'Banque émettrice',
@@ -710,7 +712,9 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     },
     en: {
       bankTitle: 'Islamic Development Bank',
-      orderTitle: 'TRANSFER ATTESTATION',
+      orderTitle: 'INTERNAL TRANSFER SUMMARY',
+      disclaimer: 'INTERNAL DOCUMENT — NOT OFFICIAL',
+      validation: 'Internal validation area',
       orderNumber: 'Order number: ',
       date: 'Date: ',
       issuingBank: 'Issuing bank',
@@ -738,7 +742,9 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     },
     ar: {
       bankTitle: 'بنك التنمية الإسلامي',
-      orderTitle: 'شهادة تحويل',
+      orderTitle: 'ملخص تحويل داخلي',
+      disclaimer: 'وثيقة داخلية — غير رسمية',
+      validation: 'مساحة التحقق الداخلي',
       orderNumber: 'رقم الأمر: ',
       date: 'التاريخ: ',
       issuingBank: 'البنك المُصدِر',
@@ -767,6 +773,25 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   };
 
   const t = translations[lang] || translations.fr;
+
+  const originCountry = String(
+    transfer.bank_origin_country || transfer.sender_bank_country || ''
+  ).trim().toLowerCase();
+  const isDubaiAccount = /^(ae|uae)$/.test(originCountry) ||
+    /dubai|dubaï|emirates|émirats|united arab emirates|الإمارات/.test(originCountry);
+  const issuerDefaults = isDubaiAccount
+    ? {
+        bank: 'Dubai Islamic Bank (DIB)',
+        address: 'Al Maktoum Road, Port Saeed, Deira, PO Box 1080, Dubai, Émirats arabes unis',
+        bic: 'DUIBAEAD',
+        country: 'Émirats arabes unis'
+      }
+    : {
+        bank: 'Banque Islamique de Développement',
+        address: '10, Avenue du Développement, Casablanca, Maroc',
+        bic: 'ISLDMAMC',
+        country: 'Maroc'
+      };
 
   const arabicFontPath=path.join(__dirname,'fonts','NotoSansArabic[wdth,wght].ttf');
 
@@ -912,22 +937,22 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
 
   field(
     'Banque',
-    transfer.bank_name || 'Banque Islamique de Développement'
+    transfer.bank_name || issuerDefaults.bank
   );
 
   field(
     t.countryLocation,
-    transfer.bank_origin_country || transfer.sender_bank_country || 'Maroc'
+    transfer.bank_origin_country || transfer.sender_bank_country || issuerDefaults.country
   );
 
   field(
     t.address,
-    transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
+    transfer.bank_address || issuerDefaults.address
   );
 
   field(
     t.bic,
-    transfer.bank_bic || 'ISLDMAMC'
+    transfer.bank_bic || issuerDefaults.bic
   );
 
   sectionTitle(t.sender);
@@ -998,7 +1023,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
 
   field(
     t.bic,
-    transfer.bank_bic || transfer.beneficiary_bic || 'ISLDMAMC'
+    transfer.bank_bic || transfer.beneficiary_bic || issuerDefaults.bic
   );
 
   field(
@@ -1071,15 +1096,19 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
       }
     );
 
-  const stampPath=path.join(__dirname,'cachets_final.png');
+  doc
+    .roundedRect(55,qrY+8,235,88,6)
+    .lineWidth(1)
+    .strokeColor('#8a9b95')
+    .stroke();
 
-  if(fs.existsSync(stampPath)){
-    doc.image(stampPath,55,qrY+5,{
-      fit:[170,115],
-      align:'center',
-      valign:'center'
+  doc
+    .fontSize(10)
+    .fillColor('#53665f')
+    .text(t.validation,65,qrY+42,{
+      width:215,
+      align:'center'
     });
-  }
 
   doc.end();
 
