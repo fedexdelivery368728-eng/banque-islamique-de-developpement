@@ -730,9 +730,18 @@ section.card:has(#externalTransfersTable) tbody tr:hover td {
     </div>
   </div>
 
+  <div class="lc-grid" style="margin-top:16px">
+    <div><label for="lcApprovedBy">Responsable autorisant l’émission</label><input id="lcApprovedBy" maxlength="200" placeholder="Nom du responsable habilité"></div>
+    <div><label for="lcApprovalRef">Référence d’autorisation</label><input id="lcApprovalRef" maxlength="100" placeholder="Référence réelle et vérifiable"></div>
+
+<div class="lc-wide"><label for="lcHeadForeign">Chef du service des opérations étrangères</label><input id="lcHeadForeign" maxlength="200" placeholder="Nom du signataire habilité"></div>
+
+  </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
     <button type="button" class="primary" id="lcPreviewButton">Actualiser l'aperçu</button>
     <button type="button" id="lcPrintButton">Imprimer / Enregistrer en PDF</button>
+    <button type="button" id="lcRequestPdfButton">PDF — Formulaire de demande</button>
+    <button type="button" id="lcOfficialPdfButton">PDF — Lettre destinée au bénéficiaire</button>
   </div>
   <p class="muted" id="lcStatus" role="status" style="margin-top:10px">
     Complétez les champs puis actualisez l'aperçu.
@@ -5127,6 +5136,112 @@ check();
     render();
     window.print();
   });
+  function printCreditDocument(official){
+    render();
+
+    const lang = language.value;
+    const ar = lang === "ar";
+    const en = lang === "en";
+
+    if (official && (
+      !$("lcApprovedBy").value.trim() ||
+      !$("lcApprovalRef").value.trim() ||
+      !$("lcHeadForeign").value.trim()
+    )){
+      $("lcStatus").textContent = ar
+        ? "يرجى تعبئة حقول التفويض الثلاثة."
+        : en
+          ? "Complete all three authorization fields first."
+          : "Renseignez les trois champs d’autorisation avant de continuer.";
+      return;
+    }
+
+    const doc = $("lcDocument");
+    const heading = doc.querySelector("h2");
+    const status = doc.querySelector(".lc-status");
+    const disclaimer = doc.querySelector("p");
+
+    heading.textContent = official
+      ? (ar ? "خطاب اعتماد مستندي رسمي موجّه إلى المستفيد"
+        : en ? "Official Documentary Credit Letter for the Beneficiary"
+        : "Lettre de crédit officielle destinée au bénéficiaire")
+      : (ar ? "استمارة طلب اعتماد مستندي"
+        : en ? "Documentary Credit Application Form"
+        : "Formulaire de demande de crédit documentaire");
+
+    status.textContent = official
+      ? (ar ? "رهناً بالتحقق والإصدار الفعلي من البنك"
+        : en ? "Subject to bank validation and actual issuance"
+        : "Sous réserve de validation et d’émission par la banque")
+      : (ar ? "استمارة طلب — لا تمثل اعتماداً بنكياً صادراً"
+        : en ? "Application form — not an issued bank credit"
+        : "Formulaire de demande — ne constitue pas un crédit émis");
+
+    if (disclaimer) {
+      disclaimer.textContent = official
+        ? (ar
+          ? "لا يشكل هذا المستند التزاماً بنكياً قبل اعتماده وإصداره فعلياً من البنك."
+          : en
+            ? "This document does not constitute a bank undertaking unless validated and formally issued by the bank."
+            : "Ce document ne constitue pas un engagement bancaire avant sa validation et son émission officielle par la banque.")
+        : (ar
+          ? "تخضع هذه الطلبات لمراجعة البنك وموافقته."
+          : en
+            ? "This application is subject to review and approval by the bank."
+            : "Cette demande reste soumise à l’examen et à l’approbation de la banque.");
+    }
+
+    if (official) {
+      const extra = document.createElement("div");
+      extra.style.cssText = "margin-top:24px;break-inside:avoid";
+      const approvedLabel = ar ? "المسؤول عن الإذن بالإصدار"
+        : en ? "Issuance authorization by"
+        : "Responsable autorisant l’émission";
+      const refLabel = ar ? "مرجع التفويض"
+        : en ? "Authorization reference"
+        : "Référence d’autorisation";
+      extra.innerHTML =
+        '<div class="lc-doc-row"><span class="lc-doc-label">' +
+        esc(approvedLabel) + ': </span>' +
+        esc($("lcApprovedBy").value.trim()) + '</div>' +
+        '<div class="lc-doc-row"><span class="lc-doc-label">' +
+        esc(refLabel) + ': </span>' +
+        esc($("lcApprovalRef").value.trim()) + '</div>';
+      doc.appendChild(extra);
+
+      const signatures = document.createElement("div");
+      signatures.style.cssText =
+        "display:flex;flex-wrap:wrap;gap:30px;margin-top:55px;break-inside:avoid";
+      signatures.innerHTML =
+        '<div style="flex:1;min-width:220px;min-height:105px;border-top:1px solid #52645e;padding-top:8px">' +
+        esc(ar ? "رئيس قسم العمليات الخارجية" :
+          en ? "Head of Foreign Operations" :
+          "Chef du service des opérations étrangères") +
+        '<br><br>' + esc($("lcHeadForeign").value.trim()) + '</div>' +
+        '<div style="flex:1;min-width:220px;min-height:105px;border-top:1px solid #52645e;padding-top:8px">' +
+        esc(ar ? "التوقيع المعتمد وختم البنك" :
+          en ? "Authorized signature and bank stamp" :
+          "Signature autorisée et cachet bancaire") +
+        '<br><br>' +
+        esc(ar ? "يُستكمل من قبل البنك" :
+          en ? "To be completed by the bank" :
+          "À compléter par la banque") +
+        '</div>';
+      doc.appendChild(signatures);
+    }
+
+    window.print();
+    render();
+  }
+
+  $("lcRequestPdfButton").addEventListener("click", () =>
+    printCreditDocument(false)
+  );
+
+  $("lcOfficialPdfButton").addEventListener("click", () =>
+    printCreditDocument(true)
+  );
+
   const today=new Date();
   $("lcIssueDate").value=
     today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0")+"-"+String(today.getDate()).padStart(2,"0");
