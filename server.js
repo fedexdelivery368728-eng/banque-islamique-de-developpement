@@ -720,8 +720,8 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   doc.moveTo(30,96).lineTo(565,96).lineWidth(1.5).strokeColor(templateAccent).stroke();
   doc.fontSize(18).fillColor('#073d34').text(t.orderTitle,30,105,{width:535,align:'center'});
   doc.fontSize(18).text(t.orderTitle,30.45,105,{width:535,align:'center'});
-  doc.fontSize(isDubaiAccount||lang==='ar'?11:8.5).fillColor('#222').text(t.date+': '+createdAt,34,124,{width:245,lineBreak:false});
-  if(isDubaiAccount||lang==='ar') doc.fontSize(11).text(t.date+': '+createdAt,34.3,124,{width:245,lineBreak:false});
+  doc.fontSize(isDubaiAccount||lang==='ar'?11:8.5).fillColor('#222').text(t.date+': '+createdAt,310,128,{width:250,align:'right',lineBreak:false});
+  if(isDubaiAccount||lang==='ar') doc.fontSize(11).text(t.date+': '+createdAt,310.3,128,{width:250,align:'right',lineBreak:false});
   const leftX=34,rightX=310,colW=250;
   function section(title,x,y,w){
     const arabicLarge=isDubaiAccount||lang==='ar';
