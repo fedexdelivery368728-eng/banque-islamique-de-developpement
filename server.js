@@ -720,24 +720,34 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   doc.moveTo(30,96).lineTo(565,96).lineWidth(1.5).strokeColor(templateAccent).stroke();
   doc.fontSize(18).fillColor('#073d34').text(t.orderTitle,30,105,{width:535,align:'center'});
   doc.fontSize(18).text(t.orderTitle,30.45,105,{width:535,align:'center'});
-  doc.fontSize(8.5).fillColor('#222').text(t.date+': '+createdAt,34,124,{width:245,lineBreak:false});
+  doc.fontSize(isDubaiAccount||lang==='ar'?11:8.5).fillColor('#222').text(t.date+': '+createdAt,34,124,{width:245,lineBreak:false});
+  if(isDubaiAccount||lang==='ar') doc.fontSize(11).text(t.date+': '+createdAt,34.3,124,{width:245,lineBreak:false});
   const leftX=34,rightX=310,colW=250;
   function section(title,x,y,w){
-    doc.roundedRect(x,y,w,17,3).fill(templateFill);
-    doc.font(fontPath).fontSize(9).fillColor('#073d34').text(title,x+6,y+4,{width:w-12,lineBreak:false});
-    return y+22;
+    const arabicLarge=isDubaiAccount||lang==='ar';
+    const fs=arabicLarge?13:10;
+    const sh=arabicLarge?23:19;
+    doc.roundedRect(x,y,w,sh,3).fill(templateFill);
+    doc.font(fontPath).fontSize(fs).fillColor('#073d34').text(title,x+6,y+3,{width:w-12,lineBreak:false});
+    doc.fontSize(fs).text(title,x+6.35,y+3,{width:w-12,lineBreak:false});
+    return y+sh+3;
   }
   function field(label,value,x,y,w){
     const text=String(value===undefined||value===null||value===''?'—':value);
     const labelText=label+': ';
-    doc.font(fontPath).fontSize(7.8);
-    const labelW=Math.min(doc.widthOfString(labelText)+3,w*0.37);
+    const arabicLarge=isDubaiAccount||lang==='ar';
+    const labelFs=arabicLarge?10:8.5;
+    const valueFs=arabicLarge?10:8.5;
+    doc.font(fontPath).fontSize(labelFs);
+    const labelW=Math.min(doc.widthOfString(labelText)+5,w*0.43);
     const valueW=w-labelW;
-    const valueH=doc.heightOfString(text,{width:valueW,fontSize:7.8,lineGap:0});
-    const h=Math.max(11,valueH+2);
-    doc.fillColor('#4b5a55').text(labelText,x,y,{width:labelW,height:h,fontSize:7.4,lineGap:0});
-    doc.fillColor('#202725').text(text,x+labelW,y,{width:valueW,height:h,fontSize:7.8,lineGap:0});
-    return y+h+1;
+    const valueH=doc.heightOfString(text,{width:valueW,fontSize:valueFs,lineGap:0});
+    const h=Math.max(arabicLarge?15:12,valueH+3);
+    doc.fillColor('#4b5a55').text(labelText,x,y,{width:labelW,height:h,fontSize:labelFs,lineGap:0});
+    doc.fillColor('#4b5a55').text(labelText,x+0.3,y,{width:labelW,height:h,fontSize:labelFs,lineGap:0});
+    doc.fillColor('#202725').text(text,x+labelW,y,{width:valueW,height:h,fontSize:valueFs,lineGap:0});
+    doc.fillColor('#202725').text(text,x+labelW+0.3,y,{width:valueW,height:h,fontSize:valueFs,lineGap:0});
+    return y+h+2;
   }
   function block(title,fields,x,y,w){
     y=section(title,x,y,w);
@@ -765,11 +775,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     [t.accountIban,transfer.beneficiary_iban||transfer.beneficiary_rib||'—'],
     [t.bic,transfer.bank_bic||transfer.beneficiary_bic||issuerBic]
   ],rightX,ry,colW);
-  ry=block(t.notification,[
-    [t.notification,notification],
-    [t.notificationContact,transfer.notification_method==='sms'?(transfer.beneficiary_phone||'—'):(transfer.beneficiary_email||'—')],
-    [t.notificationLanguage,transfer.notification_language||'fr']
-  ],rightX,ry,colW);
+  // Rubrique Notification supprimée de l’attestation PDF.
   const footerY=630;
   const demoStampPath=path.join(__dirname,isDubaiAccount?'cachet-Dubai.png':'cachets-Maroc.png');
   if(fs.existsSync(demoStampPath)){
