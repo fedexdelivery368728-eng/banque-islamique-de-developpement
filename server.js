@@ -686,6 +686,8 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const t=translations[lang]||translations.fr;
   const originCountry=String(transfer.bank_origin_country||transfer.sender_bank_country||'').trim().toLowerCase();
   const isDubaiAccount=/^(ae|uae)$/.test(originCountry)||/dubai|dubaï|emirates|émirats|united arab emirates|الإمارات/.test(originCountry);
+  const templateAccent=isDubaiAccount?'#b28a45':'#087f68';
+  const templateFill=isDubaiAccount?'#f5efe3':'#e8f2ee';
   const issuerDefaults=isDubaiAccount
     ? {bank:'Dubai Islamic Bank (DIB)',address:'Al Maktoum Road, Port Saeed, Deira, PO Box 1080, Dubai, Émirats arabes unis',bic:'DUIBAEAD',country:'Émirats arabes unis'}
     : {bank:'Banque Islamique de Développement',address:'10, Avenue du Développement, Casablanca, Maroc',bic:'ISLDMAMC',country:'Maroc'};
@@ -711,13 +713,13 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   doc.fontSize(15).text(t.bankTitle,108,30,{width:450,align:'center',lineBreak:false});
   doc.fontSize(8).fillColor('#3d514b').text(issuerAddress,108,52,{width:450,align:'center'});
   doc.fontSize(8).text(t.bic+': '+issuerBic+'   |   '+issuerDefaults.country,108,67,{width:450,align:'center'});
-  doc.moveTo(30,91).lineTo(565,91).lineWidth(1.5).strokeColor('#087f68').stroke();
+  doc.moveTo(30,91).lineTo(565,91).lineWidth(1.5).strokeColor(templateAccent).stroke();
   doc.fontSize(13).fillColor('#073d34').text(t.orderTitle,30,101,{width:535,align:'center'});
   doc.fontSize(8.5).fillColor('#222').text(t.orderNumber+': '+orderNumber,34,124,{width:260,lineBreak:false});
   doc.text(t.date+': '+createdAt,315,124,{width:245,lineBreak:false});
   const leftX=34,rightX=310,colW=250;
   function section(title,x,y,w){
-    doc.roundedRect(x,y,w,17,3).fill('#e8f2ee');
+    doc.roundedRect(x,y,w,17,3).fill(templateFill);
     doc.font(fontPath).fontSize(9).fillColor('#073d34').text(title,x+6,y+4,{width:w-12,lineBreak:false});
     return y+22;
   }
@@ -765,7 +767,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     [t.notificationLanguage,transfer.notification_language||'fr']
   ],rightX,ry,colW);
   const footerY=682;
-  doc.roundedRect(34,footerY,300,78,5).lineWidth(1).strokeColor('#8a9b95').stroke();
+  doc.roundedRect(34,footerY,300,78,5).lineWidth(1).strokeColor(templateAccent).stroke();
   doc.font(fontPath).fontSize(8).fillColor('#53665f').text(t.validation,44,footerY+8,{width:280,align:'center'});
   doc.moveTo(48,footerY+55).lineTo(320,footerY+55).lineWidth(0.5).strokeColor('#a9b7b1').stroke();
   doc.font(fontPath).fontSize(7).fillColor('#68756f').text('Espace réservé — validation par une personne habilitée',44,footerY+60,{width:280,align:'center'});
