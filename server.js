@@ -678,440 +678,104 @@ async function generateInternalTransferAttestationPdf(transfer, lang='fr'){
 }
 
 async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
-
   const translations = {
-    fr: {
-      bankTitle: 'Banque Islamique de Développement',
-      orderTitle: 'RÉCAPITULATIF DE VIREMENT',
-      validation: 'Zone de validation interne',
-      orderNumber: 'Numéro de l’ordre : ',
-      date: 'Date : ',
-      issuingBank: 'Banque émettrice',
-      sender: 'Donneur d’ordre',
-      beneficiary: 'Bénéficiaire',
-      beneficiaryBank: 'Banque bénéficiaire',
-      details: 'Détails du virement',
-      bank: 'Banque',
-      countryLocation: 'Pays / implantation',
-      address: 'Adresse',
-      bic: 'BIC / SWIFT',
-      name: 'Nom',
-      rib: 'RIB',
-      iban: 'IBAN',
-      country: 'Pays',
-      accountIban: 'Compte / IBAN',
-      notification: 'Notification',
-      notificationContact: 'Contact de notification',
-      notificationLanguage: 'Langue de notification',
-      amount: 'Montant',
-      reason: 'Motif',
-      condition: 'Condition du virement',
-      status: 'Statut',
-      verification: 'Vérification en ligne'
-    },
-    en: {
-      bankTitle: 'Islamic Development Bank',
-      orderTitle: 'TRANSFER SUMMARY',
-      validation: 'Internal validation area',
-      orderNumber: 'Order number: ',
-      date: 'Date: ',
-      issuingBank: 'Issuing bank',
-      sender: 'Ordering customer',
-      beneficiary: 'Beneficiary',
-      beneficiaryBank: 'Beneficiary bank',
-      details: 'Transfer details',
-      bank: 'Bank',
-      countryLocation: 'Country / location',
-      address: 'Address',
-      bic: 'BIC / SWIFT',
-      name: 'Name',
-      rib: 'RIB',
-      iban: 'IBAN',
-      country: 'Country',
-      accountIban: 'Account / IBAN',
-      notification: 'Notification',
-      notificationContact: 'Notification contact',
-      notificationLanguage: 'Notification language',
-      amount: 'Amount',
-      reason: 'Reason',
-      condition: 'Transfer condition',
-      status: 'Status',
-      verification: 'Online verification'
-    },
-    ar: {
-      bankTitle: 'بنك التنمية الإسلامي',
-      orderTitle: 'ملخص تحويل',
-      validation: 'مساحة التحقق الداخلي',
-      orderNumber: 'رقم الأمر: ',
-      date: 'التاريخ: ',
-      issuingBank: 'البنك المُصدِر',
-      sender: 'صاحب الأمر',
-      beneficiary: 'المستفيد',
-      beneficiaryBank: 'بنك المستفيد',
-      details: 'تفاصيل التحويل',
-      bank: 'البنك',
-      countryLocation: 'البلد / الموقع',
-      address: 'العنوان',
-      bic: 'BIC / SWIFT',
-      name: 'الاسم',
-      rib: 'RIB',
-      iban: 'IBAN',
-      country: 'البلد',
-      accountIban: 'الحساب / IBAN',
-      notification: 'الإشعار',
-      notificationContact: 'جهة اتصال الإشعار',
-      notificationLanguage: 'لغة الإشعار',
-      amount: 'المبلغ',
-      reason: 'السبب',
-      condition: 'شروط التحويل',
-      status: 'الحالة',
-      verification: 'التحقق عبر الإنترنت'
-    }
+    fr:{bankTitle:'Banque Islamique de Développement',orderTitle:'RÉCAPITULATIF DE VIREMENT',validation:'Zone réservée au cachet et à la validation autorisés',orderNumber:'Numéro de l’ordre',date:'Date',issuingBank:'Banque émettrice',sender:'Donneur d’ordre',beneficiary:'Bénéficiaire',beneficiaryBank:'Banque bénéficiaire',details:'Détails du virement',bank:'Banque',countryLocation:'Pays / implantation',address:'Adresse',bic:'BIC / SWIFT',name:'Nom',rib:'RIB',iban:'IBAN',country:'Pays',accountIban:'Compte / IBAN',notification:'Notification',notificationContact:'Contact',notificationLanguage:'Langue',amount:'Montant',reason:'Motif',condition:'Condition du virement',status:'Statut',verification:'Vérification en ligne'},
+    en:{bankTitle:'Islamic Development Bank',orderTitle:'TRANSFER SUMMARY',validation:'Space reserved for authorized stamp and validation',orderNumber:'Order number',date:'Date',issuingBank:'Issuing bank',sender:'Ordering customer',beneficiary:'Beneficiary',beneficiaryBank:'Beneficiary bank',details:'Transfer details',bank:'Bank',countryLocation:'Country / location',address:'Address',bic:'BIC / SWIFT',name:'Name',rib:'RIB',iban:'IBAN',country:'Country',accountIban:'Account / IBAN',notification:'Notification',notificationContact:'Contact',notificationLanguage:'Language',amount:'Amount',reason:'Reason',condition:'Transfer condition',status:'Status',verification:'Online verification'},
+    ar:{bankTitle:'بنك التنمية الإسلامي',orderTitle:'ملخص تحويل',validation:'مساحة مخصصة للختم والتحقق المعتمد',orderNumber:'رقم الأمر',date:'التاريخ',issuingBank:'البنك المُصدِر',sender:'صاحب الأمر',beneficiary:'المستفيد',beneficiaryBank:'بنك المستفيد',details:'تفاصيل التحويل',bank:'البنك',countryLocation:'البلد / الموقع',address:'العنوان',bic:'BIC / SWIFT',name:'الاسم',rib:'RIB',iban:'IBAN',country:'البلد',accountIban:'الحساب / IBAN',notification:'الإشعار',notificationContact:'جهة الاتصال',notificationLanguage:'اللغة',amount:'المبلغ',reason:'السبب',condition:'شروط التحويل',status:'الحالة',verification:'التحقق عبر الإنترنت'}
   };
-
-  const t = translations[lang] || translations.fr;
-
-  const originCountry = String(
-    transfer.bank_origin_country || transfer.sender_bank_country || ''
-  ).trim().toLowerCase();
-  const isDubaiAccount = /^(ae|uae)$/.test(originCountry) ||
-    /dubai|dubaï|emirates|émirats|united arab emirates|الإمارات/.test(originCountry);
-  const issuerDefaults = isDubaiAccount
-    ? {
-        bank: 'Dubai Islamic Bank (DIB)',
-        address: 'Al Maktoum Road, Port Saeed, Deira, PO Box 1080, Dubai, Émirats arabes unis',
-        bic: 'DUIBAEAD',
-        country: 'Émirats arabes unis'
-      }
-    : {
-        bank: 'Banque Islamique de Développement',
-        address: '10, Avenue du Développement, Casablanca, Maroc',
-        bic: 'ISLDMAMC',
-        country: 'Maroc'
-      };
-
-  const arabicFontPath=path.join(__dirname,'fonts','NotoSansArabic[wdth,wght].ttf');
-
-  const doc=new PDFDocument({
-    size:'A4',
-    margin:45
-  });
-
-  doc.font(arabicFontPath);
-
+  const t=translations[lang]||translations.fr;
+  const originCountry=String(transfer.bank_origin_country||transfer.sender_bank_country||'').trim().toLowerCase();
+  const isDubaiAccount=/^(ae|uae)$/.test(originCountry)||/dubai|dubaï|emirates|émirats|united arab emirates|الإمارات/.test(originCountry);
+  const issuerDefaults=isDubaiAccount
+    ? {bank:'Dubai Islamic Bank (DIB)',address:'Al Maktoum Road, Port Saeed, Deira, PO Box 1080, Dubai, Émirats arabes unis',bic:'DUIBAEAD',country:'Émirats arabes unis'}
+    : {bank:'Banque Islamique de Développement',address:'10, Avenue du Développement, Casablanca, Maroc',bic:'ISLDMAMC',country:'Maroc'};
+  const fontPath=path.join(__dirname,'fonts','NotoSansArabic[wdth,wght].ttf');
+  const doc=new PDFDocument({size:'A4',margin:28,autoFirstPage:true});
   const chunks=[];
-
   doc.on('data',chunk=>chunks.push(chunk));
-
-  const finished=new Promise((resolve,reject)=>{
-    doc.on('end',()=>resolve(Buffer.concat(chunks)));
-    doc.on('error',reject);
-  });
-
-  const orderNumber=
-    transfer.order_number ||
-    'OV-'+String(transfer.id).padStart(8,'0');
-
-  const verificationUrl=
-    'https://bid-developpement.com/attestation-verification?ref='+
-    encodeURIComponent(orderNumber);
-
-  const qrDataUrl=
-    await QRCode.toDataURL(verificationUrl,{
-      width:180,
-      margin:1,
-      errorCorrectionLevel:'M'
-    });
-
-  const qrBuffer=
-    Buffer.from(
-      qrDataUrl.replace(/^data:image\/png;base64,/,''),
-      'base64'
-    );
-
-  const amount=
-    (Number(transfer.amount_cents||0)/100)
-      .toLocaleString('fr-FR',{
-        minimumFractionDigits:2,
-        maximumFractionDigits:2
-      });
-
-  const createdAt=
-    transfer.created_at
-      ? new Date(transfer.created_at).toLocaleString('fr-FR')
-      : '—';
-
-  const sourceName=
-    sourceUser?.name ||
-    sourceUser?.email ||
-    '—';
-
-  const status=
-    transfer.status || '—';
-
-  const notification=
-    transfer.notification_method === 'sms'
-      ? 'SMS'
-      : 'Email';
-
+  const finished=new Promise((resolve,reject)=>{doc.on('end',()=>resolve(Buffer.concat(chunks)));doc.on('error',reject);});
+  const orderNumber=transfer.order_number||'OV-'+String(transfer.id).padStart(8,'0');
+  const verificationUrl='https://bid-developpement.com/attestation-verification?ref='+encodeURIComponent(orderNumber);
+  const qrDataUrl=await QRCode.toDataURL(verificationUrl,{width:180,margin:1,errorCorrectionLevel:'M'});
+  const qrBuffer=Buffer.from(qrDataUrl.replace(/^data:image\/png;base64,/,''),'base64');
+  const amount=(Number(transfer.amount_cents||0)/100).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+(transfer.currency||'USD');
+  const createdAt=transfer.created_at?new Date(transfer.created_at).toLocaleString('fr-FR'):'—';
+  const sourceName=sourceUser?.name||sourceUser?.email||'—';
+  const issuerBank=transfer.bank_name||issuerDefaults.bank;
+  const issuerAddress=transfer.bank_address||issuerDefaults.address;
+  const issuerBic=transfer.bank_bic||issuerDefaults.bic;
+  const notification=transfer.notification_method==='sms'?'SMS':'Email';
+  doc.font(fontPath).fillColor('#073d34');
   const logoPath=path.join(__dirname,'IMG_4145.jpeg');
-
-  if(fs.existsSync(logoPath)){
-    doc.image(
-      logoPath,
-      235,
-      40,
-      {
-        fit:[125,70]
-      }
-    );
-
-    doc.y=125;
+  if(fs.existsSync(logoPath)) doc.image(logoPath,35,26,{fit:[62,52]});
+  doc.fontSize(15).text(t.bankTitle,108,30,{width:450,align:'center',lineBreak:false});
+  doc.fontSize(8).fillColor('#3d514b').text(issuerAddress,108,52,{width:450,align:'center'});
+  doc.fontSize(8).text(t.bic+': '+issuerBic+'   |   '+issuerDefaults.country,108,67,{width:450,align:'center'});
+  doc.moveTo(30,91).lineTo(565,91).lineWidth(1.5).strokeColor('#087f68').stroke();
+  doc.fontSize(13).fillColor('#073d34').text(t.orderTitle,30,101,{width:535,align:'center'});
+  doc.fontSize(8.5).fillColor('#222').text(t.orderNumber+': '+orderNumber,34,124,{width:260,lineBreak:false});
+  doc.text(t.date+': '+createdAt,315,124,{width:245,lineBreak:false});
+  const leftX=34,rightX=310,colW=250;
+  function section(title,x,y,w){
+    doc.roundedRect(x,y,w,17,3).fill('#e8f2ee');
+    doc.font(fontPath).fontSize(9).fillColor('#073d34').text(title,x+6,y+4,{width:w-12,lineBreak:false});
+    return y+22;
   }
-
-  doc
-    .fillColor('#073d34')
-    .fontSize(20)
-    .font(arabicFontPath)
-    .text(t.bankTitle,{
-      align:'center'
-    });
-
-  doc
-    .moveDown(0.5)
-    .fontSize(18)
-    .text(t.orderTitle,{
-      align:'center'
-    });
-
-  doc.moveDown(1);
-
-  doc
-    .fillColor('#222')
-    .font(arabicFontPath)
-    .fontSize(10)
-    .text(t.orderNumber,{continued:true})
-    .font(arabicFontPath)
-    .text(orderNumber);
-
-  doc
-    .font(arabicFontPath)
-    .text(t.date,{continued:true})
-    .font(arabicFontPath)
-    .text(createdAt);
-
-  doc.moveDown(0.8);
-
-  function sectionTitle(title){
-    doc
-      .fillColor('#073d34')
-      .font(arabicFontPath)
-      .fontSize(12)
-      .text(title);
-
-    doc
-      .moveTo(45,doc.y+3)
-      .lineTo(550,doc.y+3)
-      .strokeColor('#087f68')
-      .stroke();
-
-    doc.moveDown(0.5);
+  function field(label,value,x,y,w){
+    const text=String(value===undefined||value===null||value===''?'—':value);
+    const labelText=label+': ';
+    doc.font(fontPath).fontSize(7.8);
+    const labelW=Math.min(doc.widthOfString(labelText)+3,w*0.37);
+    const valueW=w-labelW;
+    const valueH=doc.heightOfString(text,{width:valueW,fontSize:7.8,lineGap:0});
+    const h=Math.max(11,valueH+2);
+    doc.fillColor('#4b5a55').text(labelText,x,y,{width:labelW,height:h,fontSize:7.4,lineGap:0});
+    doc.fillColor('#202725').text(text,x+labelW,y,{width:valueW,height:h,fontSize:7.8,lineGap:0});
+    return y+h+1;
   }
-
-  function field(label,value){
-    doc
-      .fillColor('#222')
-      .font(arabicFontPath)
-      .fontSize(10)
-      .text(label+': ',{continued:true})
-      .font(arabicFontPath)
-      .text(String(value||'—'));
-
-    doc.moveDown(0.15);
+  function block(title,fields,x,y,w){
+    y=section(title,x,y,w);
+    for(const f of fields) y=field(f[0],f[1],x,y,w);
+    return y+5;
   }
-
-    sectionTitle(t.issuingBank);
-
-  field(
-    'Banque',
-    transfer.bank_name || issuerDefaults.bank
-  );
-
-  field(
-    t.countryLocation,
-    transfer.bank_origin_country || transfer.sender_bank_country || issuerDefaults.country
-  );
-
-  field(
-    t.address,
-    transfer.bank_address || issuerDefaults.address
-  );
-
-  field(
-    t.bic,
-    transfer.bank_bic || issuerDefaults.bic
-  );
-
-  sectionTitle(t.sender);
-
-  field(
-    t.name,
-    sourceName
-  );
-
-  field(
-    t.rib,
-    transfer.sender_rib || sourceUser?.rib_account_number || '—'
-  );
-
-  field(
-    t.iban,
-    transfer.sender_iban || sourceUser?.iban || '—'
-  );
-
-  field(
-    t.bic,
-    transfer.sender_bic || sourceUser?.bic || 'ISLDMAMC'
-  );
-
-  sectionTitle(t.beneficiary);
-
-  field(
-    t.name,
-    transfer.beneficiary_name
-  );
-
-  field(
-    t.country,
-    transfer.beneficiary_country || transfer.beneficiary_bank_country || 'Maroc'
-  );
-
-  field(
-    t.rib,
-    transfer.beneficiary_rib || '—'
-  );
-
-  field(
-    t.iban,
-    transfer.beneficiary_iban || '—'
-  );
-
-  field(
-    t.bic,
-    transfer.beneficiary_bic || 'ISLDMAMC'
-  );
-
-  sectionTitle(t.beneficiaryBank);
-
-  field(
-    'Banque',
-    transfer.bank_name || 'Banque Islamique de Développement'
-  );
-
-  field(
-    t.address,
-    transfer.bank_address || '10, Avenue du Développement, Casablanca, Maroc'
-  );
-
-  field(
-    t.accountIban,
-    transfer.beneficiary_iban || transfer.beneficiary_rib || '—'
-  );
-
-  field(
-    t.bic,
-    transfer.bank_bic || transfer.beneficiary_bic || issuerDefaults.bic
-  );
-
-  field(
-    t.notification,
-    transfer.notification_method === 'sms' ? 'SMS' : 'Email'
-  );
-
-  field(
-    t.notificationContact,
-    transfer.notification_method === 'sms'
-      ? (transfer.beneficiary_phone || '—')
-      : (transfer.beneficiary_email || '—')
-  );
-
-  field(
-    t.notificationLanguage,
-    transfer.notification_language || 'fr'
-  );
-  sectionTitle(t.details);
-
-  field(
-    t.amount,
-    amount+' '+(transfer.currency||'USD')
-  );
-
-  field('Motif',transfer.reason);
-
-  field(
-    t.condition,
-    transfer.condition_text
-  );
-
-  field('Statut',status);
-
-  field('Notification',notification);
-
-  doc.moveDown(1);
-
-  const qrX=410;
-  const qrY=doc.y;
-
-  doc
-    .image(qrBuffer,qrX,qrY,{
-      width:115,
-      height:115
-    });
-
-  doc
-    .fontSize(8)
-    .fillColor('#555')
-    .text(
-      t.verification,
-      qrX,
-      qrY+120,
-      {
-        width:115,
-        align:'center'
-      }
-    );
-
-  doc
-    .fontSize(7)
-    .text(
-      orderNumber,
-      qrX,
-      qrY+133,
-      {
-        width:115,
-        align:'center'
-      }
-    );
-
-  doc
-    .roundedRect(55,qrY+8,235,88,6)
-    .lineWidth(1)
-    .strokeColor('#8a9b95')
-    .stroke();
-
-  doc
-    .fontSize(10)
-    .fillColor('#53665f')
-    .text(t.validation,65,qrY+42,{
-      width:215,
-      align:'center'
-    });
-
+  let ly=150, ry=150;
+  ly=block(t.issuingBank,[
+    [t.bank,issuerBank],[t.countryLocation,transfer.bank_origin_country||transfer.sender_bank_country||issuerDefaults.country],
+    [t.address,issuerAddress],[t.bic,issuerBic]
+  ],leftX,ly,colW);
+  ly=block(t.sender,[
+    [t.name,sourceName],[t.rib,transfer.sender_rib||sourceUser?.rib_account_number||'—'],
+    [t.iban,transfer.sender_iban||sourceUser?.iban||'—'],[t.bic,transfer.sender_bic||sourceUser?.bic||issuerBic]
+  ],leftX,ly,colW);
+  ly=block(t.details,[
+    [t.amount,amount], [t.reason,transfer.reason], [t.condition,transfer.condition_text], [t.status,transfer.status||'—']
+  ],leftX,ly,colW);
+  ry=block(t.beneficiary,[
+    [t.name,transfer.beneficiary_name],[t.country,transfer.beneficiary_country||transfer.beneficiary_bank_country||'Maroc'],
+    [t.rib,transfer.beneficiary_rib||'—'],[t.iban,transfer.beneficiary_iban||'—'],[t.bic,transfer.beneficiary_bic||issuerBic]
+  ],rightX,ry,colW);
+  ry=block(t.beneficiaryBank,[
+    [t.bank,transfer.bank_name||issuerBank],[t.address,transfer.bank_address||issuerAddress],
+    [t.accountIban,transfer.beneficiary_iban||transfer.beneficiary_rib||'—'],
+    [t.bic,transfer.bank_bic||transfer.beneficiary_bic||issuerBic]
+  ],rightX,ry,colW);
+  ry=block(t.notification,[
+    [t.notification,notification],
+    [t.notificationContact,transfer.notification_method==='sms'?(transfer.beneficiary_phone||'—'):(transfer.beneficiary_email||'—')],
+    [t.notificationLanguage,transfer.notification_language||'fr']
+  ],rightX,ry,colW);
+  const footerY=682;
+  doc.roundedRect(34,footerY,300,78,5).lineWidth(1).strokeColor('#8a9b95').stroke();
+  doc.font(fontPath).fontSize(8).fillColor('#53665f').text(t.validation,44,footerY+8,{width:280,align:'center'});
+  doc.moveTo(48,footerY+55).lineTo(320,footerY+55).lineWidth(0.5).strokeColor('#a9b7b1').stroke();
+  doc.font(fontPath).fontSize(7).fillColor('#68756f').text('Espace réservé — validation par une personne habilitée',44,footerY+60,{width:280,align:'center'});
+  doc.image(qrBuffer,445,footerY+1,{width:68,height:68});
+  doc.font(fontPath).fontSize(7).fillColor('#555').text(t.verification,405,footerY+70,{width:150,align:'center'});
+  doc.font(fontPath).fontSize(6.5).text(orderNumber,405,footerY+81,{width:150,align:'center'});
+  doc.font(fontPath).fontSize(7).fillColor('#5c6964').text('Document de suivi — le QR code ouvre la page de vérification.',34,770,{width:365,align:'left'});
   doc.end();
-
   return finished;
 }
-
 async function sendTransactionEmail({
   to,
   name,
