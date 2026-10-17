@@ -305,7 +305,27 @@ section.card:has(#internalTransfersTable) tbody tr:hover td,
 section.card:has(#externalTransfersTable) tbody tr:hover td {
   background: #f3f7f5;
 }
-\n</style>
+\n
+/* MODULE-LETTRE-CREDIT-INTERNE */
+.lc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.lc-grid label{display:block;font-size:14px;font-weight:bold;margin-bottom:6px}
+.lc-grid input,.lc-grid select,.lc-grid textarea{width:100%;min-width:0}
+.lc-wide{grid-column:1/-1}
+.lc-document{background:white;color:#17332d;border:1px solid #d5dfdb;padding:32px;margin-top:20px;max-width:850px}
+.lc-document h2{text-align:center;color:#073d34}
+.lc-document .lc-status{text-align:center;font-weight:bold;border:1px solid #a33f3f;color:#a33f3f;padding:8px;margin:14px 0}
+.lc-document .lc-doc-row{padding:8px 0;border-bottom:1px solid #e2e9e5;overflow-wrap:anywhere}
+.lc-document .lc-doc-label{font-weight:bold}
+.lc-document [dir="rtl"]{text-align:right}
+@media(max-width:650px){.lc-grid{grid-template-columns:1fr}.lc-wide{grid-column:auto}.lc-document{padding:16px}}
+@media print{
+  body *{visibility:hidden!important}
+  #lcDocument,#lcDocument *{visibility:visible!important}
+  #lcDocument{display:block!important;position:absolute;left:0;top:0;width:100%;max-width:none;margin:0;padding:12mm;border:0}
+  @page{size:A4;margin:10mm}
+}
+
+</style>
 </head>
 
 <body>
@@ -622,6 +642,107 @@ section.card:has(#externalTransfersTable) tbody tr:hover td {
 
   </div>
 
+</section>
+
+
+<!-- MODULE-LETTRE-CREDIT-INTERNE -->
+<section class="card" id="lcModule">
+  <div class="top" style="margin-bottom:15px">
+    <div>
+      <h2 style="margin:0">Lettre de crédit irrévocable</h2>
+      <p class="muted" style="margin:6px 0 0">
+        Préparation d'un document interne pour examen et validation par la banque émettrice.
+      </p>
+    </div>
+  </div>
+
+  <div class="lc-grid">
+    <div>
+      <label for="lcCountry">Pays concerné</label>
+      <select id="lcCountry">
+        <option value="ma">Maroc</option>
+        <option value="ae">Émirats arabes unis — Dubaï</option>
+      </select>
+    </div>
+    <div>
+      <label for="lcLanguage">Langue du document</label>
+      <select id="lcLanguage">
+        <option value="fr">Français</option>
+        <option value="ar">العربية</option>
+      </select>
+    </div>
+    <div>
+      <label for="lcReference">Référence interne</label>
+      <input id="lcReference" maxlength="100" placeholder="Référence de travail">
+    </div>
+    <div>
+      <label for="lcIssueDate">Date du document</label>
+      <input id="lcIssueDate" type="date">
+    </div>
+    <div>
+      <label for="lcApplicant">Donneur d'ordre</label>
+      <input id="lcApplicant" maxlength="200" placeholder="Nom légal complet">
+    </div>
+    <div>
+      <label for="lcBeneficiary">Bénéficiaire</label>
+      <input id="lcBeneficiary" maxlength="200" placeholder="Nom légal complet">
+    </div>
+    <div>
+      <label for="lcApplicantBank">Banque du donneur d'ordre</label>
+      <input id="lcApplicantBank" maxlength="200" placeholder="Nom de la banque">
+    </div>
+    <div>
+      <label for="lcBeneficiaryBank">Banque du bénéficiaire</label>
+      <input id="lcBeneficiaryBank" maxlength="200" placeholder="Nom de la banque">
+    </div>
+    <div>
+      <label for="lcAmount">Montant</label>
+      <input id="lcAmount" inputmode="decimal" maxlength="40" placeholder="Montant et format">
+    </div>
+    <div>
+      <label for="lcCurrency">Devise</label>
+      <select id="lcCurrency">
+        <option value="USD">USD — Dollar américain</option>
+        <option value="EUR">EUR — Euro</option>
+        <option value="MAD">MAD — Dirham marocain</option>
+        <option value="AED">AED — Dirham des Émirats</option>
+      </select>
+    </div>
+    <div>
+      <label for="lcExpiry">Date d'expiration</label>
+      <input id="lcExpiry" type="date">
+    </div>
+    <div>
+      <label for="lcPlace">Lieu d'expiration</label>
+      <input id="lcPlace" maxlength="200" placeholder="Ville ou lieu convenu">
+    </div>
+    <div class="lc-wide">
+      <label for="lcGoods">Marchandises ou services concernés</label>
+      <textarea id="lcGoods" rows="3" maxlength="3000" style="width:100%" placeholder="Description des marchandises ou services"></textarea>
+    </div>
+    <div class="lc-wide">
+      <label for="lcDocuments">Documents requis</label>
+      <textarea id="lcDocuments" rows="3" maxlength="3000" style="width:100%" placeholder="Facture, document de transport, certificat, etc."></textarea>
+    </div>
+    <div class="lc-wide">
+      <label for="lcTerms">Conditions complémentaires</label>
+      <textarea id="lcTerms" rows="3" maxlength="3000" style="width:100%" placeholder="Conditions à examiner et valider"></textarea>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+    <button type="button" class="primary" id="lcPreviewButton">Actualiser l'aperçu</button>
+    <button type="button" id="lcPrintButton">Imprimer / Enregistrer en PDF</button>
+  </div>
+  <p class="muted" id="lcStatus" role="status" style="margin-top:10px">
+    Complétez les champs puis actualisez l'aperçu.
+  </p>
+
+  <div class="lc-document" id="lcDocument" lang="fr" dir="ltr">
+    <h2>Lettre de crédit documentaire irrévocable</h2>
+    <div class="lc-status">BROUILLON INTERNE — NON ÉMIS</div>
+    <p>Complétez les champs et sélectionnez « Actualiser l'aperçu ».</p>
+  </div>
 </section>
 
 <!-- ========================= -->
@@ -4914,6 +5035,103 @@ async function sendAdminExternalEmail(){
 /* ========================= */
 
 check();
+
+
+/* MODULE-LETTRE-CREDIT-INTERNE */
+(function(){
+  const $ = id => document.getElementById(id);
+  const country = $("lcCountry");
+  const language = $("lcLanguage");
+  const fields = [
+    ["lcReference","reference"],["lcIssueDate","date"],
+    ["lcApplicant","applicant"],["lcBeneficiary","beneficiary"],
+    ["lcApplicantBank","applicantBank"],["lcBeneficiaryBank","beneficiaryBank"],
+    ["lcAmount","amount"],["lcCurrency","currency"],
+    ["lcExpiry","expiry"],["lcPlace","place"],
+    ["lcGoods","goods"],["lcDocuments","documents"],["lcTerms","terms"]
+  ];
+  const labels = {
+    fr:{title:"Lettre de crédit documentaire irrévocable",status:"BROUILLON INTERNE — NON ÉMIS",
+      reference:"Référence interne",date:"Date du document",applicant:"Donneur d'ordre",
+      beneficiary:"Bénéficiaire",applicantBank:"Banque du donneur d'ordre",
+      beneficiaryBank:"Banque du bénéficiaire",amount:"Montant",currency:"Devise",
+      expiry:"Date d'expiration",place:"Lieu d'expiration",goods:"Marchandises ou services",
+      documents:"Documents requis",terms:"Conditions complémentaires",country:"Pays"},
+    en:{title:"Irrevocable Documentary Credit",status:"INTERNAL DRAFT — NOT ISSUED",
+      reference:"Internal reference",date:"Document date",applicant:"Applicant",
+      beneficiary:"Beneficiary",applicantBank:"Applicant's bank",
+      beneficiaryBank:"Beneficiary's bank",amount:"Amount",currency:"Currency",
+      expiry:"Expiry date",place:"Place of expiry",goods:"Goods or services",
+      documents:"Required documents",terms:"Additional conditions",country:"Country"},
+    ar:{title:"اعتماد مستندي غير قابل للإلغاء",status:"مسودة داخلية — غير صادر",
+      reference:"المرجع الداخلي",date:"تاريخ المستند",applicant:"طالب فتح الاعتماد",
+      beneficiary:"المستفيد",applicantBank:"بنك طالب الاعتماد",
+      beneficiaryBank:"بنك المستفيد",amount:"المبلغ",currency:"العملة",
+      expiry:"تاريخ الانتهاء",place:"مكان الانتهاء",goods:"البضائع أو الخدمات",
+      documents:"المستندات المطلوبة",terms:"الشروط الإضافية",country:"البلد"}
+  };
+
+  function esc(value){
+    return String(value ?? "").replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+  }
+  function syncLanguages(){
+    const previous = language.value;
+    const options = country.value === "ma"
+      ? [["fr","Français"],["ar","العربية"]]
+      : [["en","English"],["ar","العربية"]];
+    language.replaceChildren();
+    options.forEach(([v,t])=>{
+      const o=document.createElement("option");o.value=v;o.textContent=t;language.appendChild(o);
+    });
+    language.value=options.some(x=>x[0]===previous)?previous:options[0][0];
+    render();
+  }
+  function render(){
+    const lang=language.value;
+    const t=labels[lang] || labels.fr;
+    const ar=lang==="ar";
+    const countryName=country.value==="ma"
+      ? (ar?"المغرب":lang==="en"?"Morocco":"Maroc")
+      : (ar?"الإمارات العربية المتحدة — دبي":lang==="en"?"United Arab Emirates — Dubai":"Émirats arabes unis — Dubaï");
+    const values={};
+    fields.forEach(([id,key])=>values[key]=$(id).value.trim());
+    const rows=fields.map(([id,key])=>{
+      let value=values[key] || "—";
+      if(key==="currency" && value!=="—"){
+        const currencySelect=$(id);
+        value=currencySelect.options[currencySelect.selectedIndex].text;
+      }
+      return '<div class="lc-doc-row"><span class="lc-doc-label">'+esc(t[key])+': </span>'+esc(value).replace(/\n/g,"<br>")+'</div>';
+    }).join("");
+    $("lcDocument").lang=lang;
+    $("lcDocument").dir=ar?"rtl":"ltr";
+    $("lcDocument").innerHTML=
+      '<h2>'+esc(t.title)+'</h2>'+
+      '<div class="lc-status">'+esc(t.status)+'</div>'+
+      '<div class="lc-doc-row"><span class="lc-doc-label">'+esc(t.country)+': </span>'+esc(countryName)+'</div>'+
+      rows+
+      '<p style="margin-top:24px;font-size:12px;color:#6b7c76">'+
+      (ar?"هذا المستند مسودة داخلية ولا يمثل اعتماداً بنكياً صادراً أو التزاماً من البنك.":
+       lang==="en"?"This internal draft is not an issued bank credit or a bank undertaking.":
+       "Ce document interne est un brouillon et ne constitue ni un crédit bancaire émis ni un engagement de la banque.")+
+      '</p>';
+    $("lcStatus").textContent=ar?"تم تحديث المعاينة.":lang==="en"?"Preview updated.":"Aperçu actualisé.";
+  }
+  country.addEventListener("change",syncLanguages);
+  language.addEventListener("change",render);
+  fields.forEach(([id])=>$(id).addEventListener("input",render));
+  $("lcCurrency").addEventListener("change",render);
+  $("lcPreviewButton").addEventListener("click",render);
+  $("lcPrintButton").addEventListener("click",()=>{
+    render();
+    window.print();
+  });
+  const today=new Date();
+  $("lcIssueDate").value=
+    today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0")+"-"+String(today.getDate()).padStart(2,"0");
+  syncLanguages();
+})();
 
 </script>
 
