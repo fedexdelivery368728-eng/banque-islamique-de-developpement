@@ -682,7 +682,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const translations = {
     fr: {
       bankTitle: 'Banque Islamique de Développement',
-      orderTitle: 'ORDRE DE VIREMENT',
+      orderTitle: 'ATTESTATION DE VIREMENT',
       orderNumber: 'Numéro de l’ordre : ',
       date: 'Date : ',
       issuingBank: 'Banque émettrice',
@@ -710,7 +710,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     },
     en: {
       bankTitle: 'Islamic Development Bank',
-      orderTitle: 'TRANSFER ORDER',
+      orderTitle: 'TRANSFER ATTESTATION',
       orderNumber: 'Order number: ',
       date: 'Date: ',
       issuingBank: 'Issuing bank',
@@ -738,7 +738,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     },
     ar: {
       bankTitle: 'بنك التنمية الإسلامي',
-      orderTitle: 'أمر تحويل',
+      orderTitle: 'شهادة تحويل',
       orderNumber: 'رقم الأمر: ',
       date: 'التاريخ: ',
       issuingBank: 'البنك المُصدِر',
@@ -4966,7 +4966,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
         <body>
           <div class="card">
             <h1>Ordre introuvable</h1>
-            <div class="simulation">Vérification de l’ordre de virement — document de démonstration</div>
+            <div class="simulation">Vérification de l’attestation de virement</div>
             <p>Le numéro d'ordre fourni n'est pas valide.</p>
           </div>
         </body>
@@ -5025,7 +5025,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
         <body>
           <div class="card">
             <h1>Ordre introuvable</h1>
-            <div class="simulation">Vérification de l’ordre de virement — document de démonstration</div>
+            <div class="simulation">Vérification de l’attestation de virement</div>
             <p>Aucun ordre ne correspond à ce numéro.</p>
           </div>
         </body>
@@ -5202,7 +5202,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
             <div>ORDRE DE VIREMENT</div>
 
             <div class="simulation">
-              Vérification de l’ordre de virement — document de démonstration
+              Vérification de l’attestation de virement
             </div>
           </div>
 
@@ -5348,7 +5348,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
           </div>
 
           <div class="notice">
-            Vérification de l’ordre de virement — document de démonstration
+            Vérification de l’attestation de virement
           </div>
 
         </div>
