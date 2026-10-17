@@ -710,13 +710,15 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   doc.font(fontPath).fillColor('#073d34');
   const logoPath=path.join(__dirname,'IMG_4145.jpeg');
   if(fs.existsSync(logoPath)) doc.image(logoPath,35,26,{fit:[62,52]});
-  doc.fontSize(15).text(t.bankTitle,108,30,{width:450,align:'center',lineBreak:false});
-  doc.fontSize(8).fillColor('#3d514b').text(issuerAddress,108,52,{width:450,align:'center'});
-  doc.fontSize(8).text(t.bic+': '+issuerBic+'   |   '+issuerDefaults.country,108,67,{width:450,align:'center'});
+  const headerBankTitle=isDubaiAccount?'بنك دبي الإسلامي (DIB)':t.bankTitle;
+  const headerAddress=isDubaiAccount?'شارع المكتوم، بور سعيد، ديرة، ص.ب 1080، دبي، الإمارات العربية المتحدة':issuerAddress;
+  const headerCountry=isDubaiAccount?'الإمارات العربية المتحدة':issuerDefaults.country;
+  doc.fontSize(15).text(headerBankTitle,108,30,{width:450,align:'center',lineBreak:false});
+  doc.fontSize(8).fillColor('#3d514b').text(headerAddress,108,52,{width:450,align:'center'});
+  if(!isDubaiAccount) doc.fontSize(8).text(t.bic+': '+issuerBic+'   |   '+headerCountry,108,67,{width:450,align:'center'});
   doc.moveTo(30,91).lineTo(565,91).lineWidth(1.5).strokeColor(templateAccent).stroke();
   doc.fontSize(13).fillColor('#073d34').text(t.orderTitle,30,101,{width:535,align:'center'});
-  doc.fontSize(8.5).fillColor('#222').text(t.orderNumber+': '+orderNumber,34,124,{width:260,lineBreak:false});
-  doc.text(t.date+': '+createdAt,315,124,{width:245,lineBreak:false});
+  doc.fontSize(8.5).fillColor('#222').text(t.date+': '+createdAt,34,124,{width:245,lineBreak:false});
   const leftX=34,rightX=310,colW=250;
   function section(title,x,y,w){
     doc.roundedRect(x,y,w,17,3).fill(templateFill);
@@ -766,11 +768,10 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     [t.notificationContact,transfer.notification_method==='sms'?(transfer.beneficiary_phone||'—'):(transfer.beneficiary_email||'—')],
     [t.notificationLanguage,transfer.notification_language||'fr']
   ],rightX,ry,colW);
-  const footerY=670;
+  const footerY=650;
   const demoStampPath=path.join(__dirname,isDubaiAccount?'cachet-Dubai.png':'cachets-Maroc.png');
   if(fs.existsSync(demoStampPath)){
-    doc.image(demoStampPath,54,footerY+4,{fit:[245,60],align:'center',valign:'center'});
-    doc.font(fontPath).fontSize(8).fillColor('#53665f').text(t.validation,34,footerY+66,{width:285,align:'center'});
+    doc.image(demoStampPath,30,footerY+2,{fit:[295,76],align:'center',valign:'center'});
     doc.save().font(fontPath).fontSize(9).fillColor('#b42318').text('SPÉCIMEN — NON OFFICIEL',34,footerY+82,{width:285,align:'center'}).restore();
   }
   doc.image(qrBuffer,445,footerY+1,{width:68,height:68});
