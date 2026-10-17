@@ -679,9 +679,9 @@ async function generateInternalTransferAttestationPdf(transfer, lang='fr'){
 
 async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const translations = {
-    fr:{bankTitle:'Banque Islamique de Développement',orderTitle:'RÉCAPITULATIF DE VIREMENT',validation:'Zone réservée au cachet et à la validation autorisés',orderNumber:'Numéro de l’ordre',date:'Date',issuingBank:'Banque émettrice',sender:'Donneur d’ordre',beneficiary:'Bénéficiaire',beneficiaryBank:'Banque bénéficiaire',details:'Détails du virement',bank:'Banque',countryLocation:'Pays / implantation',address:'Adresse',bic:'BIC / SWIFT',name:'Nom',rib:'RIB',iban:'IBAN',country:'Pays',accountIban:'Compte / IBAN',notification:'Notification',notificationContact:'Contact',notificationLanguage:'Langue',amount:'Montant',reason:'Motif',condition:'Condition du virement',status:'Statut',verification:'Vérification en ligne'},
-    en:{bankTitle:'Islamic Development Bank',orderTitle:'TRANSFER SUMMARY',validation:'Space reserved for authorized stamp and validation',orderNumber:'Order number',date:'Date',issuingBank:'Issuing bank',sender:'Ordering customer',beneficiary:'Beneficiary',beneficiaryBank:'Beneficiary bank',details:'Transfer details',bank:'Bank',countryLocation:'Country / location',address:'Address',bic:'BIC / SWIFT',name:'Name',rib:'RIB',iban:'IBAN',country:'Country',accountIban:'Account / IBAN',notification:'Notification',notificationContact:'Contact',notificationLanguage:'Language',amount:'Amount',reason:'Reason',condition:'Transfer condition',status:'Status',verification:'Online verification'},
-    ar:{bankTitle:'بنك التنمية الإسلامي',orderTitle:'ملخص تحويل',validation:'مساحة مخصصة للختم والتحقق المعتمد',orderNumber:'رقم الأمر',date:'التاريخ',issuingBank:'البنك المُصدِر',sender:'صاحب الأمر',beneficiary:'المستفيد',beneficiaryBank:'بنك المستفيد',details:'تفاصيل التحويل',bank:'البنك',countryLocation:'البلد / الموقع',address:'العنوان',bic:'BIC / SWIFT',name:'الاسم',rib:'RIB',iban:'IBAN',country:'البلد',accountIban:'الحساب / IBAN',notification:'الإشعار',notificationContact:'جهة الاتصال',notificationLanguage:'اللغة',amount:'المبلغ',reason:'السبب',condition:'شروط التحويل',status:'الحالة',verification:'التحقق عبر الإنترنت'}
+    fr:{bankTitle:'Banque Islamique de Développement',orderTitle:'ATTESTATION DE VIREMENT',validation:'Zone réservée au cachet et à la validation autorisés',orderNumber:'Numéro de l’ordre',date:'Date',issuingBank:'Banque émettrice',sender:'Donneur d’ordre',beneficiary:'Bénéficiaire',beneficiaryBank:'Banque bénéficiaire',details:'Détails du virement',bank:'Banque',countryLocation:'Pays / implantation',address:'Adresse',bic:'BIC / SWIFT',name:'Nom',rib:'RIB',iban:'IBAN',country:'Pays',accountIban:'Compte / IBAN',notification:'Notification',notificationContact:'Contact',notificationLanguage:'Langue',amount:'Montant',reason:'Motif',condition:'Condition du virement',status:'Statut',verification:'Vérification en ligne'},
+    en:{bankTitle:'Islamic Development Bank',orderTitle:'TRANSFER CERTIFICATE',validation:'Space reserved for authorized stamp and validation',orderNumber:'Order number',date:'Date',issuingBank:'Issuing bank',sender:'Ordering customer',beneficiary:'Beneficiary',beneficiaryBank:'Beneficiary bank',details:'Transfer details',bank:'Bank',countryLocation:'Country / location',address:'Address',bic:'BIC / SWIFT',name:'Name',rib:'RIB',iban:'IBAN',country:'Country',accountIban:'Account / IBAN',notification:'Notification',notificationContact:'Contact',notificationLanguage:'Language',amount:'Amount',reason:'Reason',condition:'Transfer condition',status:'Status',verification:'Online verification'},
+    ar:{bankTitle:'بنك التنمية الإسلامي',orderTitle:'شهادة تحويل',validation:'مساحة مخصصة للختم والتحقق المعتمد',orderNumber:'رقم الأمر',date:'التاريخ',issuingBank:'البنك المُصدِر',sender:'صاحب الأمر',beneficiary:'المستفيد',beneficiaryBank:'بنك المستفيد',details:'تفاصيل التحويل',bank:'البنك',countryLocation:'البلد / الموقع',address:'العنوان',bic:'BIC / SWIFT',name:'الاسم',rib:'RIB',iban:'IBAN',country:'البلد',accountIban:'الحساب / IBAN',notification:'الإشعار',notificationContact:'جهة الاتصال',notificationLanguage:'اللغة',amount:'المبلغ',reason:'السبب',condition:'شروط التحويل',status:'الحالة',verification:'التحقق عبر الإنترنت'}
   };
   const t=translations[lang]||translations.fr;
   const originCountry=String(transfer.bank_origin_country||transfer.sender_bank_country||'').trim().toLowerCase();
@@ -766,16 +766,16 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     [t.notificationContact,transfer.notification_method==='sms'?(transfer.beneficiary_phone||'—'):(transfer.beneficiary_email||'—')],
     [t.notificationLanguage,transfer.notification_language||'fr']
   ],rightX,ry,colW);
-  const footerY=682;
-  doc.font(fontPath).fontSize(8).fillColor('#53665f').text(t.validation,44,footerY+4,{width:280,align:'center'});
+  const footerY=670;
   const demoStampPath=path.join(__dirname,isDubaiAccount?'cachet-Dubai.png':'cachets-Maroc.png');
   if(fs.existsSync(demoStampPath)){
-    doc.image(demoStampPath,82,footerY+16,{fit:[205,48],align:'center',valign:'center'});
-    doc.save().font(fontPath).fontSize(9).fillColor('#b42318').text('SPÉCIMEN — NON OFFICIEL',44,footerY+64,{width:280,align:'center'}).restore();
+    doc.image(demoStampPath,54,footerY+4,{fit:[245,60],align:'center',valign:'center'});
+    doc.font(fontPath).fontSize(8).fillColor('#53665f').text(t.validation,34,footerY+66,{width:285,align:'center'});
+    doc.save().font(fontPath).fontSize(9).fillColor('#b42318').text('SPÉCIMEN — NON OFFICIEL',34,footerY+82,{width:285,align:'center'}).restore();
   }
   doc.image(qrBuffer,445,footerY+1,{width:68,height:68});
   doc.font(fontPath).fontSize(7).fillColor('#555').text(t.verification,405,footerY+70,{width:150,align:'center'});
-  doc.font(fontPath).fontSize(7).fillColor('#5c6964').text('Document de suivi — le QR code ouvre la page de vérification.',34,770,{width:365,align:'left'});
+  doc.font(fontPath).fontSize(7).fillColor('#5c6964').text('Document de suivi — le QR code ouvre la page de vérification.',34,790,{width:365,align:'left'});
   doc.end();
   return finished;
 }
