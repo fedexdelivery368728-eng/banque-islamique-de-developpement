@@ -775,7 +775,6 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   }
   doc.image(qrBuffer,445,footerY+1,{width:68,height:68});
   doc.font(fontPath).fontSize(7).fillColor('#555').text(t.verification,405,footerY+70,{width:150,align:'center'});
-  doc.font(fontPath).fontSize(6.5).text(orderNumber,405,footerY+81,{width:150,align:'center'});
   doc.font(fontPath).fontSize(7).fillColor('#5c6964').text('Document de suivi — le QR code ouvre la page de vérification.',34,770,{width:365,align:'left'});
   doc.end();
   return finished;
