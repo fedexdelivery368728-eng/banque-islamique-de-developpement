@@ -1691,6 +1691,37 @@ if(u.active===0)
 });
 app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
 
+app.post('/api/client/change-password',auth,(req,res)=>{
+  const currentPassword=String(req.body.currentPassword||'');
+  const newPassword=String(req.body.newPassword||'');
+  const confirmPassword=String(req.body.confirmPassword||'');
+
+  if(!currentPassword || !newPassword || !confirmPassword)
+    return res.status(400).json({error:'PASSWORD_FIELDS_REQUIRED'});
+
+  if(newPassword.length < 10 || newPassword.length > 256)
+    return res.status(400).json({error:'PASSWORD_TOO_SHORT'});
+
+  if(newPassword !== confirmPassword)
+    return res.status(400).json({error:'PASSWORD_MISMATCH'});
+
+  if(newPassword === currentPassword)
+    return res.status(400).json({error:'PASSWORD_UNCHANGED'});
+
+  const user=db.prepare('SELECT password_hash FROM users WHERE id=?').get(req.session.uid);
+  if(!user)
+    return res.status(404).json({error:'USER_NOT_FOUND'});
+
+  if(user.password_hash !== hash(currentPassword))
+    return res.status(401).json({error:'WRONG_CURRENT_PASSWORD'});
+
+  db.prepare('UPDATE users SET password_hash=? WHERE id=?')
+    .run(hash(newPassword),req.session.uid);
+
+  return res.json({ok:true});
+});
+
+
 
 app.get('/api/transactions',auth,(req,res)=>res.json(db.prepare('SELECT * FROM transactions WHERE user_id=? ORDER BY id DESC').all(req.session.uid)));
 app.get('/api/beneficiaries',auth,(req,res)=>res.json(db.prepare('SELECT * FROM beneficiaries WHERE user_id=? ORDER BY id DESC').all(req.session.uid)));
