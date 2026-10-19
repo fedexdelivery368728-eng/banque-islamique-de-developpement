@@ -1510,6 +1510,12 @@ async function loadInternalTransfers(){
               `
               : ''
           }
+          <button
+            class="danger"
+            onclick="deleteInternalTransfer(${Number(row.id)})"
+          >
+            Supprimer
+          </button>
         </td>
 
       </tr>
@@ -1518,6 +1524,17 @@ async function loadInternalTransfers(){
   }).join('');
 }
 
+
+async function deleteInternalTransfer(id){
+  if(!confirm('Supprimer ce virement interne de la liste ?\n\nLe mouvement de solde déjà effectué ne sera pas annulé. L’enregistrement sera archivé.')) return;
+  try{
+    await api('/api/admin/internal-transfers/'+Number(id),{method:'DELETE'});
+    alert('Virement interne supprimé de la liste et archivé.');
+    await loadInternalTransfers();
+  }catch(error){
+    alert(error.message||'Impossible de supprimer ce virement interne.');
+  }
+}
 
 async function validateInternalTransfer(id){
 
