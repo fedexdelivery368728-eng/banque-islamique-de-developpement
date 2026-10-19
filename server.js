@@ -671,11 +671,14 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     doc.image(logoPath,48,20,{fit:[66,58]});
     doc.image(logoPath,476,20,{fit:[66,58]});
   }
-  // Les deux logos portent exactement le même nom de banque, sans mélange de langues.
-  const bankLabel=isDubai?'Dubai Islamic Bank (DIB)':'Banque Islamique de\\nDéveloppement';
-  // Même nom, même retour à la ligne, même taille et centrage sous les deux logos.
-  doc.fontSize(8).fillColor('#073d34').text(bankLabel,8,83,{width:145,align:'center'});
-  doc.fontSize(8).fillColor('#073d34').text(bankLabel,437,83,{width:145,align:'center'});
+  // Nom de la banque en deux langues, avec un véritable retour à la ligne.
+  const bankLabelFr=isDubai?'Dubai Islamic Bank (DIB)':'Banque Islamique de Développement';
+  const bankLabelAr=isDubai?'بنك دبي الإسلامي':'البنك الإسلامي للتنمية';
+  // Les deux en-têtes affichent les mêmes deux lignes bilingues.
+  doc.font(fontPath).fontSize(7.5).fillColor('#073d34').text(bankLabelFr,8,81,{width:145,align:'center',lineBreak:false});
+  doc.font(fontPath).fontSize(8).fillColor('#073d34').text(bankLabelAr,8,94,{width:145,align:'center',lineBreak:false});
+  doc.font(fontPath).fontSize(7.5).fillColor('#073d34').text(bankLabelFr,437,81,{width:145,align:'center',lineBreak:false});
+  doc.font(fontPath).fontSize(8).fillColor('#073d34').text(bankLabelAr,437,94,{width:145,align:'center',lineBreak:false});
   doc.moveTo(30,108).lineWidth(1.6).strokeColor(accent).stroke();
   doc.fontSize(21).fillColor('#073d34').text(t.title,35,126,{width:525,align:'center',lineBreak:false});
   doc.font(fontPath).fontSize(12).fillColor('#202725').text(t.transfer+' '+orderNumber,35,157,{width:525,align:'center',lineBreak:false});
