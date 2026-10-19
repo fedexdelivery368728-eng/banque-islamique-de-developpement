@@ -952,12 +952,9 @@ function generateRibData(userId, country = 'MA'){
   const id = Number(userId);
 
   /*
-    COORDONNÉES BANCAIRES
-
-    MA = Maroc
-    AE = Émirats arabes unis
-
-    Ces coordonnées sont reel.
+    Coordonnées synthétiques de démonstration.
+    MA = Maroc ; AE = Émirats arabes unis.
+    Elles ne prouvent pas l'existence d'un compte bancaire réel.
   */
 
   if(country === 'AE'){
@@ -973,11 +970,16 @@ function generateRibData(userId, country = 'MA'){
 
     const bankCode = '999';
 
+    const accountHash =
+      crypto
+        .createHash('sha256')
+        .update(`BID-AE-${id}`)
+        .digest('hex');
+
     const accountCore =
-  String(
-    1000000000000000n +
-    ((BigInt(id) * 7919n) % 9000000000000000n)
-  );
+      (BigInt('0x' + accountHash.slice(0, 16)) % 10000000000000000n)
+        .toString()
+        .padStart(16, '0');
 
     const bban =
       bankCode +
@@ -993,7 +995,7 @@ function generateRibData(userId, country = 'MA'){
 
       country:'AE',
 
-      bank_code:033,
+      bank_code:bankCode,
 
       branch_code:'000',
 
