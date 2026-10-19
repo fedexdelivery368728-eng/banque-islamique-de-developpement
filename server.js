@@ -641,6 +641,13 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   };
   const t=translations[lang]||translations.fr;
   const originCountry=String(sourceUser?.bank_country||transfer.bank_origin_country||transfer.sender_bank_country||'').trim().toLowerCase();
+  const countryName=value=>{
+    const v=String(value||'').trim(), k=v.toLowerCase();
+    if(['ma','mar','maroc','morocco'].includes(k)) return 'Maroc';
+    if(['ae','uae','united arab emirates','émirats arabes unis','emirates'].includes(k)) return 'Émirats arabes unis';
+    if(['cm','cameroun','cameroon'].includes(k)) return 'Cameroun';
+    return v||'—';
+  };
   const isDubai=/^(ae|uae)$/.test(originCountry)||/dubai|dubaï|emirates|émirats|united arab emirates|الإمارات/.test(originCountry);
   const accent=isDubai?'#b28a45':'#087f68', pale=isDubai?'#f5efe3':'#e8f2ee';
   const issuerDefaults=isDubai?{bank:'Dubai Islamic Bank (DIB)',address:'Al Maktoum Road, Port Saeed, Deira, PO Box 1080, Dubai, UAE',bic:'DUIBAEAD',country:'Émirats arabes unis'}:{bank:'Banque Islamique de Développement',address:'10, Avenue du Développement, Casablanca, Maroc',bic:'ISLDMAMC',country:'Maroc'};
@@ -656,7 +663,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const date=transfer.created_at?new Date(transfer.created_at).toLocaleString('fr-FR'):'—';
   const issuerBank=transfer.sender_bank_name||issuerDefaults.bank, issuerAddress=transfer.sender_bank_address||issuerDefaults.address;
   const issuerBic=transfer.sender_bank_bic||sourceUser?.bic||issuerDefaults.bic, sourceName=sourceUser?.name||sourceUser?.email||'—';
-  const headerTitle=isDubai?'بنك دبي الإسلامي (DIB)':t.bank;
+  const headerTitle=isDubai?'Dubai Islamic Bank (DIB)':t.bank;
   const headerAddress=isDubai?'شارع المكتوم، بور سعيد، ديرة، ص.ب 1080، دبي، الإمارات العربية المتحدة':issuerAddress;
   const rtl=isDubai||lang==='ar';
   doc.font(fontPath).fillColor('#073d34');
@@ -664,26 +671,31 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     doc.image(logoPath,48,20,{fit:[66,58]});
     doc.image(logoPath,476,20,{fit:[66,58]});
   }
-  // Aucun nom ni adresse au centre : chaque logo porte son nom juste en dessous.
-  doc.fontSize(7.5).fillColor('#073d34').text(isDubai?'Dubai Islamic Bank (DIB)':'Banque Islamique de Développement',24,80,{width:115,align:'center'});
-  doc.fontSize(7.5).fillColor('#073d34').text(isDubai?'بنك دبي الإسلامي':'Banque Islamique de Développement',437,80,{width:145,align:'center'});
-  doc.moveTo(30,103).lineWidth(1.6).strokeColor(accent).stroke();
-  doc.fontSize(18).fillColor('#073d34').text(t.title,35,112,{width:525,align:'center',lineBreak:false});
-  doc.font(fontPath).fontSize(9).fillColor('#202725').text('Virement n° e567878t7728878  |  Réf. 00567',35,140,{width:525,align:'center',lineBreak:false});
-  // La mention de maquette reste au pied du document.
-  doc.fontSize(9).fillColor('#222').text(t.date+': '+date,300,151,{width:260,align:'right'});
-  doc.moveTo(35,171).lineWidth(0.6).strokeColor('#cbd5d1').stroke();
+  // Les deux logos portent exactement le même nom de banque, sans mélange de langues.
+  const bankLabel=isDubai?'Dubai Islamic Bank (DIB)':'Banque Islamique de Développement';
+  doc.fontSize(8).fillColor('#073d34').text(bankLabel,24,83,{width:115,align:'center'});
+  doc.fontSize(8).fillColor('#073d34').text(bankLabel,437,83,{width:145,align:'center'});
+  doc.moveTo(30,108).lineWidth(1.6).strokeColor(accent).stroke();
+  doc.fontSize(18).fillColor('#073d34').text(t.title,35,126,{width:525,align:'center',lineBreak:false});
+  doc.font(fontPath).fontSize(10).fillColor('#202725').text('Virement n° e567878t7728878',35,157,{width:525,align:'center',lineBreak:false});
+  doc.font(fontPath).fontSize(10).fillColor('#202725').text('Réf. 00567',35,177,{width:525,align:'center',lineBreak:false});
+  doc.font(fontPath).fontSize(9).fillColor('#222').text(t.date+': '+date,285,204,{width:275,align:'right'});
+  doc.moveTo(35,228).lineWidth(0.6).strokeColor('#cbd5d1').stroke();
   const left=35,right=310,w=250;
   function field(label,value,x,y){const labelText=label+':',val=String(value===undefined||value===null||value===''?'—':value),fsx=rtl?9.5:8.2;doc.font(fontPath).fontSize(fsx);const labelW=Math.min(doc.widthOfString(labelText)+7,92),valueW=w-labelW-7,lines=doc.heightOfString(val,{width:valueW,fontSize:fsx,lineGap:0}),h=Math.max(14,lines+2);doc.font('Helvetica-Bold').fontSize(fsx).fillColor('#4c5b55').text(labelText,x,y,{width:labelW,height:h,fontSize:fsx,lineGap:0});doc.font('Helvetica-Bold').fontSize(fsx).fillColor('#202725').text(val,x+labelW+7,y,{width:valueW,height:h,fontSize:fsx,lineGap:0});return y+h+3;}
-  function block(title,fields,x,y){doc.font(fontPath).fontSize(11).fillColor('#073d34').text(title,x,y,{width:w,lineBreak:false});y+=19;for(const pair of fields)y=field(pair[0],pair[1],x,y);return y+10;}
-  let ly=178,ry=178;
-  ly=block('Émetteur',[[t.name,sourceName],[t.iban,transfer.sender_iban||sourceUser?.iban||'—'],[t.bank,issuerBank],[t.country,transfer.bank_origin_country||transfer.sender_bank_country||issuerDefaults.country]],left,ly);
-  ry=block('Bénéficiaire',[[t.name,transfer.beneficiary_name],[t.iban,transfer.iban||transfer.account_no||'—'],[t.bank,transfer.bank_name||'—'],[t.country,transfer.beneficiary_country||'—']],right,ry);
-  const statusY=Math.max(ly,ry)+5;
-  doc.roundedRect(35,statusY,525,62,9).fillColor(pale).fill();
-  doc.font(fontPath).fontSize(9).fillColor('#075b45').text('Statut du virement',55,statusY+11,{width:470,align:'center'});
-  doc.fontSize(14).fillColor('#075b45').text('En attente de justificatif',55,statusY+29,{width:470,align:'center'});
-  const bottomY=statusY+80;
+  function block(title,fields,x,y){
+    doc.font(lang==='ar'?fontPath:'Helvetica-Bold').fontSize(12).fillColor('#073d34').text(title,x,y,{width:w,lineBreak:false});
+    y+=24;
+    for(const pair of fields)y=field(pair[0],pair[1],x,y);
+    return y+18;
+  }
+  let ly=240,ry=240;
+  ly=block('ÉMETTEUR',[[t.name,sourceName],[t.iban,transfer.sender_iban||sourceUser?.iban||'—'],[t.bank,issuerBank],[t.country,countryName(transfer.bank_origin_country||transfer.sender_bank_country||sourceUser?.bank_country||issuerDefaults.country)]],left,ly);
+  ry=block('BÉNÉFICIAIRE',[[t.name,transfer.beneficiary_name],[t.iban,transfer.iban||transfer.account_no||'—'],[t.bank,transfer.bank_name||'—'],[t.country,countryName(transfer.beneficiary_country)]],right,ry);
+  const statusY=Math.max(ly,ry)+18;
+  doc.font(lang==='ar'?fontPath:'Helvetica-Bold').fontSize(12).fillColor('#073d34').text('Statut du virement',45,statusY,{width:480});
+  doc.font(fontPath).fontSize(12).fillColor('#075b45').text('En attente de justificatif',45,statusY+24,{width:480});
+  const bottomY=statusY+66;
   doc.moveTo(35,bottomY).lineWidth(0.7).strokeColor('#9fc6c0').stroke();
   doc.font(fontPath).fontSize(10).fillColor('#073d34').text(t.reason+' :',45,bottomY+20,{width:245});
   doc.fontSize(8.5).fillColor('#27332e').text(String(transfer.reason||'—'),45,bottomY+37,{width:245});
