@@ -731,16 +731,16 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   doc.fontSize(7.5).fillColor('#073d34').text(isDubai?'Dubai Islamic Bank (DIB)':'Banque Islamique de Développement',24,80,{width:115,align:'center'});
   doc.fontSize(7.5).fillColor('#073d34').text(isDubai?'بنك دبي الإسلامي':'Banque Islamique de Développement',437,80,{width:145,align:'center'});
   doc.moveTo(30,103).lineWidth(1.6).strokeColor(accent).stroke();
-  doc.fontSize(18).fillColor('#073d34').text(t.title,35,115,{width:525,align:'center'});
-  // La mention de maquette est déplacée au pied du document.
+  doc.fontSize(14.5).fillColor('#073d34').text(t.title,35,115,{width:300,align:'left',lineBreak:false});
+  doc.fontSize(8.5).fillColor('#202725').text('Virement n° e567878t7728878  |  Réf. 00567',335,120,{width:225,align:'right',lineBreak:false});
+  // La mention de maquette reste au pied du document.
   doc.fontSize(9).fillColor('#222').text(t.date+': '+date,300,151,{width:260,align:'right'});
   doc.moveTo(35,171).lineWidth(0.6).strokeColor('#cbd5d1').stroke();
   const left=35,right=310,w=250;
-  function heading(title,x,y){doc.roundedRect(x,y,w,21,3).fill(pale);doc.font(fontPath).fontSize(rtl?12:10).fillColor('#073d34').text(title,x+7,y+4,{width:w-14,lineBreak:false});return y+27;}
   function field(label,value,x,y){const labelText=label+':',val=String(value===undefined||value===null||value===''?'—':value),fsx=rtl?9.5:8.2;doc.font(fontPath).fontSize(fsx);const labelW=Math.min(doc.widthOfString(labelText)+7,92),valueW=w-labelW-7,lines=doc.heightOfString(val,{width:valueW,fontSize:fsx,lineGap:0}),h=Math.max(14,lines+2);doc.fillColor('#4c5b55').text(labelText,x,y,{width:labelW,height:h,fontSize:fsx,lineGap:0});doc.fillColor('#202725').text(val,x+labelW+7,y,{width:valueW,height:h,fontSize:fsx,lineGap:0});return y+h+3;}
-  function block(title,fields,x,y){y=heading(title,x,y);for(const pair of fields)y=field(pair[0],pair[1],x,y);return y+8;}
-  let ly=168,ry=168;
-  ly=block('Émetteur (Compte source)',[[t.name,sourceName],[t.iban,transfer.sender_iban||sourceUser?.iban||'—'],[t.bank,issuerBank],[t.country,transfer.bank_origin_country||transfer.sender_bank_country||issuerDefaults.country]],left,ly);
+  function block(title,fields,x,y){doc.font(fontPath).fontSize(11).fillColor('#073d34').text(title,x,y,{width:w,lineBreak:false});y+=19;for(const pair of fields)y=field(pair[0],pair[1],x,y);return y+10;}
+  let ly=178,ry=178;
+  ly=block('Émetteur',[[t.name,sourceName],[t.iban,transfer.sender_iban||sourceUser?.iban||'—'],[t.bank,issuerBank],[t.country,transfer.bank_origin_country||transfer.sender_bank_country||issuerDefaults.country]],left,ly);
   ry=block('Bénéficiaire',[[t.name,transfer.beneficiary_name],[t.iban,transfer.iban||transfer.account_no||'—'],[t.bank,transfer.bank_name||'—'],[t.country,transfer.beneficiary_country||'—']],right,ry);
   const statusY=Math.max(ly,ry)+5;
   doc.roundedRect(35,statusY,525,62,9).fillColor(pale).fill();
