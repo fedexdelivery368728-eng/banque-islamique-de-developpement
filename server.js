@@ -719,20 +719,20 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const notification=transfer.notification_method==='sms'?'SMS':'Email';
   doc.font(fontPath).fillColor('#073d34');
   const logoPath=path.join(__dirname,'IMG_4145.jpeg');
-  if(fs.existsSync(logoPath)) doc.image(logoPath,35,26,{fit:[62,52]});
+  if(fs.existsSync(logoPath)) {
+    doc.image(logoPath,30,25,{fit:[48,42]});
+    doc.image(logoPath,517,25,{fit:[48,42]});
+  }
   const headerBankTitle=isDubaiAccount?'بنك دبي الإسلامي (DIB)':t.bankTitle;
   const headerAddress=isDubaiAccount?'شارع المكتوم، بور سعيد، ديرة، ص.ب 1080، دبي، الإمارات العربية المتحدة':issuerAddress;
   const headerCountry=isDubaiAccount?'الإمارات العربية المتحدة':issuerDefaults.country;
-  doc.fontSize(19).fillColor('#073d34').text(headerBankTitle,108,26,{width:450,align:'center',lineBreak:false});
-  doc.fontSize(19).text(headerBankTitle,108.45,26,{width:450,align:'center',lineBreak:false});
-  doc.fontSize(isDubaiAccount?11:9).fillColor('#3d514b').text(headerAddress,108,53,{width:450,align:'center'});
-  if(!isDubaiAccount) doc.fontSize(8).text(t.bic+': '+issuerBic+'   |   '+headerCountry,108,70,{width:450,align:'center'});
-  doc.moveTo(30,96).lineTo(565,96).lineWidth(1.5).strokeColor(templateAccent).stroke();
-  doc.fontSize(18).fillColor('#073d34').text(t.orderTitle,30,105,{width:535,align:'center'});
-  doc.fontSize(18).text(t.orderTitle,30.45,105,{width:535,align:'center'});
-  doc.font(fontPath).fontSize(8).fillColor('#b42318').text('MAQUETTE — NON OFFICIEL',30,124,{width:535,align:'center'});
-  doc.fontSize(isDubaiAccount||lang==='ar'?11:8.5).fillColor('#222').text(t.date+': '+createdAt,310,140,{width:250,align:'right',lineBreak:false});
-  if(isDubaiAccount||lang==='ar') doc.fontSize(11).text(t.date+': '+createdAt,310.3,140,{width:250,align:'right',lineBreak:false});
+  doc.fontSize(isDubaiAccount?15:13).fillColor('#073d34').text(headerBankTitle,82,27,{width:430,align:'center',lineBreak:false});
+  doc.fontSize(isDubaiAccount?9:8).fillColor('#3d514b').text(headerAddress,82,49,{width:430,align:'center'});
+  if(!isDubaiAccount) doc.fontSize(7).text(t.bic+': '+issuerBic+'   |   '+headerCountry,82,66,{width:430,align:'center'});
+  doc.moveTo(30,91).lineTo(565,91).lineWidth(1.5).strokeColor(templateAccent).stroke();
+  doc.fontSize(17).fillColor('#073d34').text(t.orderTitle,30,100,{width:535,align:'center'});
+  doc.font(fontPath).fontSize(8).fillColor('#b42318').text('MAQUETTE — NON OFFICIEL',30,121,{width:535,align:'center'});
+  doc.fontSize(isDubaiAccount||lang==='ar'?10:8.5).fillColor('#222').text(t.date+': '+createdAt,310,136,{width:250,align:'right',lineBreak:false});
   const leftX=34,rightX=310,colW=250;
   function section(title,x,y,w){
     const arabicLarge=isDubaiAccount||lang==='ar';
@@ -740,7 +740,6 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     const sh=arabicLarge?23:19;
     doc.roundedRect(x,y,w,sh,3).fill(templateFill);
     doc.font(fontPath).fontSize(fs).fillColor('#073d34').text(title,x+6,y+3,{width:w-12,lineBreak:false});
-    doc.fontSize(fs).text(title,x+6.35,y+3,{width:w-12,lineBreak:false});
     return y+sh+3;
   }
   function field(label,value,x,y,w){
@@ -755,9 +754,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     const valueH=doc.heightOfString(text,{width:valueW,fontSize:valueFs,lineGap:0});
     const h=Math.max(arabicLarge?15:12,valueH+3);
     doc.fillColor('#4b5a55').text(labelText,x,y,{width:labelW,height:h,fontSize:labelFs,lineGap:0});
-    doc.fillColor('#4b5a55').text(labelText,x+0.3,y,{width:labelW,height:h,fontSize:labelFs,lineGap:0});
     doc.fillColor('#202725').text(text,x+labelW,y,{width:valueW,height:h,fontSize:valueFs,lineGap:0});
-    doc.fillColor('#202725').text(text,x+labelW+0.3,y,{width:valueW,height:h,fontSize:valueFs,lineGap:0});
     return y+h+2;
   }
   function block(title,fields,x,y,w){
@@ -775,7 +772,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     [t.iban,transfer.sender_iban||sourceUser?.iban||'—']
   ],leftX,ly,colW);
   ly=block(t.details,[
-    [t.amount,amount], [t.reason,transfer.reason], [t.condition,transfer.condition_text], [t.status,transfer.status||'—']
+    [t.amount,amount], [t.reason,transfer.reason||'—'], [t.condition,transfer.condition_text||'—'], [t.status,'En attente de justificatif']
   ],leftX,ly,colW);
   ry=block(t.beneficiary,[
     [t.name,transfer.beneficiary_name],[t.country,transfer.beneficiary_country||'—'],
@@ -790,11 +787,11 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const demoStampPath=path.join(__dirname,isDubaiAccount?'cachet-Dubai.png':'cachets-Maroc.png');
   if(fs.existsSync(demoStampPath)){
     doc.image(demoStampPath,12,footerY+1,{fit:[330,100],align:'center',valign:'center'});
-    doc.save().font(fontPath).fontSize(9).fillColor('#b42318').text('MAQUETTE — NON OFFICIEL',24,footerY+103,{width:300,align:'center'}).restore();
+ 
   }
   doc.image(qrBuffer,445,footerY+1,{width:68,height:68});
   doc.font(fontPath).fontSize(7).fillColor('#555').text(t.verification,405,footerY+70,{width:150,align:'center'});
-  doc.font(fontPath).fontSize(7).fillColor('#5c6964').text('Document de suivi — le QR code ouvre la page de vérification.',34,790,{width:365,align:'left'});
+  doc.font(fontPath).fontSize(7).fillColor('#5c6964').text('Document de démonstration — le QR code ouvre la page de vérification.',34,790,{width:365,align:'left'});
   doc.end();
   return finished;
 }
