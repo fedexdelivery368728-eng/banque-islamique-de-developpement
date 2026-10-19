@@ -3380,6 +3380,10 @@ app.get('/api/admin/external-transfers/:id/pdf',adminAuth,async (req,res)=>{
     const orderNumber=
       'OV-'+String(transfer.id).padStart(8,'0');
 
+    res.setHeader('Cache-Control','no-store, no-cache, must-revalidate, private, max-age=0');
+    res.setHeader('Pragma','no-cache');
+    res.setHeader('Expires','0');
+
     res.setHeader(
       'Content-Type',
       'application/pdf'
