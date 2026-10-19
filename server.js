@@ -3525,7 +3525,6 @@ app.delete('/api/admin/external-transfers/:id',adminAuth,(req,res)=>{
     const removeTransfer=db.transaction(()=>{
       const transfer=db.prepare('SELECT * FROM external_transfers WHERE id=?').get(id);
       if(!transfer) throw new Error('EXTERNAL_TRANSFER_NOT_FOUND');
-      if(String(transfer.status||'')==='completed') throw new Error('COMPLETED_TRANSFER_LOCKED');
       db.prepare(`
         INSERT INTO admin_deleted_records(record_type,record_id,record_json,deleted_by,deleted_at)
         VALUES(?,?,?,?,?)
