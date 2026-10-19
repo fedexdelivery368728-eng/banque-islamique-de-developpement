@@ -51,6 +51,17 @@ CREATE TABLE IF NOT EXISTS incoming_transfers(
  FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
+
+
+CREATE TABLE IF NOT EXISTS admin_deleted_records(
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ record_type TEXT NOT NULL,
+ record_id INTEGER NOT NULL,
+ record_json TEXT NOT NULL,
+ deleted_by TEXT NOT NULL DEFAULT 'admin',
+ deleted_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS external_transfers(
  id INTEGER PRIMARY KEY AUTOINCREMENT,
  source_type TEXT NOT NULL,
@@ -3506,6 +3517,30 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
   }
 });
 
+
+app.delete('/api/admin/external-transfers/:id',adminAuth,(req,res)=>{
+  const id=Number(req.params.id);
+  if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'INVALID_TRANSFER_ID'});
+  try{
+    const removeTransfer=db.transaction(()=>{
+      const transfer=db.prepare('SELECT * FROM external_transfers WHERE id=?').get(id);
+      if(!transfer) throw new Error('EXTERNAL_TRANSFER_NOT_FOUND');
+      if(String(transfer.status||'')==='completed') throw new Error('COMPLETED_TRANSFER_LOCKED');
+      db.prepare(`
+        INSERT INTO admin_deleted_records(record_type,record_id,record_json,deleted_by,deleted_at)
+        VALUES(?,?,?,?,?)
+      `).run('external_transfer',id,JSON.stringify(transfer),'admin',now());
+      db.prepare('DELETE FROM external_transfers WHERE id=?').run(id);
+    });
+    removeTransfer();
+    return res.json({ok:true});
+  }catch(e){
+    if(e.message==='EXTERNAL_TRANSFER_NOT_FOUND') return res.status(404).json({error:e.message});
+    if(e.message==='COMPLETED_TRANSFER_LOCKED') return res.status(409).json({error:e.message});
+    console.error('ADMIN_EXTERNAL_TRANSFER_DELETE_FAILED',e);
+    return res.status(500).json({error:'ADMIN_EXTERNAL_TRANSFER_DELETE_FAILED'});
+  }
+});
 
 app.patch('/api/admin/external-transfers/:id/status',adminAuth,(req,res)=>{
   try{
