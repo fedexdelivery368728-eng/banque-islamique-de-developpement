@@ -208,9 +208,9 @@ const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 const now=()=>new Date().toISOString();
 
 function validateExternalBankDetails({accountNo,iban,bic}){
-  const cleanIban=String(iban||'').replace(/\\s+/g,'').toUpperCase();
+  const cleanIban=String(iban||'').replace(/\s+/g,'').toUpperCase();
   const cleanAccount=String(accountNo||'').trim();
-  const cleanBic=String(bic||'').replace(/\\s+/g,'').toUpperCase();
+  const cleanBic=String(bic||'').replace(/\s+/g,'').toUpperCase();
 
   if(!/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/.test(cleanBic)){
     return {ok:false,error:'INVALID_BIC_FORMAT'};
