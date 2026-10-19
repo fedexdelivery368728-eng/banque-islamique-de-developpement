@@ -1526,10 +1526,10 @@ async function loadInternalTransfers(){
 
 
 async function deleteInternalTransfer(id){
-  if(!confirm('Supprimer ce virement interne de la liste ?\n\nLe mouvement de solde déjà effectué ne sera pas annulé. L’enregistrement sera archivé.')) return;
+  if(!confirm('Supprimer définitivement ce virement interne ?\n\nCette suppression est irréversible. Le mouvement de solde déjà effectué ne sera pas annulé.')) return;
   try{
     await api('/api/admin/internal-transfers/'+Number(id),{method:'DELETE'});
-    alert('Virement interne supprimé de la liste et archivé.');
+    alert('Virement interne supprimé définitivement.');
     await loadInternalTransfers();
   }catch(error){
     alert(error.message||'Impossible de supprimer ce virement interne.');
