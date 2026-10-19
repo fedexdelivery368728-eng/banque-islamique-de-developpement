@@ -1677,6 +1677,17 @@ function downloadIncomingTransferOrder(id){
 }
 
 
+async function deleteIncomingTransfer(id){
+  const row=incomingTransferRowsById.get(Number(id));
+  if(!row){ alert('Virement introuvable. Actualise la liste.'); return; }
+  if(!confirm('Supprimer définitivement ce virement de la liste active ? Une copie sera conservée dans le journal administratif.')) return;
+  try{
+    await api('/api/admin/incoming-transfers/'+Number(id),{method:'DELETE'});
+    alert('Virement supprimé de la liste.');
+    await loadIncomingTransfers();
+  }catch(e){ alert('Impossible de supprimer ce virement.'); }
+}
+
 async function loadIncomingTransfers(){
 
   const rows = await api('/api/admin/incoming-transfers');
@@ -1754,7 +1765,9 @@ async function loadIncomingTransfers(){
       ? new Date(row.created_at).toLocaleString('fr-FR')
       : '—';
 
-    let actions = '—';
+    let actions = `
+      <button class="danger" type="button" onclick="deleteIncomingTransfer(${Number(row.id)})">Supprimer</button>
+    `;
 
     if(row.status === 'pending'){
 
@@ -2272,6 +2285,15 @@ function openExternalTransferPdf(id){
     '_blank'
   );
 
+}
+
+async function deleteInternalTransaction(userId, transactionId){
+  if(!confirm('Supprimer définitivement cette opération de l’historique du compte ? Le solde du compte ne sera pas recalculé. Une copie sera conservée dans le journal administratif.')) return;
+  try{
+    await api('/api/admin/users/'+Number(userId)+'/transactions/'+Number(transactionId),{method:'DELETE'});
+    await transactions(Number(userId));
+    alert('Opération supprimée de l’historique.');
+  }catch(e){ alert('Impossible de supprimer cette opération.'); }
 }
 
 async function deleteExternalTransfer(id){
@@ -4909,6 +4931,7 @@ async function transactions(id){
             <th>
               Solde après
             </th>
+            <th>Actions</th>
 
           </tr>
 
@@ -4939,6 +4962,9 @@ async function transactions(id){
                 <td>
                   ${usd(x.balance_after_cents)}
                 </td>
+                <td>
+                  <button class="danger" type="button" onclick="deleteInternalTransaction(${Number(id)},${Number(x.id)})">Supprimer</button>
+                </td>
 
               </tr>
 
@@ -4947,7 +4973,7 @@ async function transactions(id){
             ||
 
             `<tr>
-              <td colspan="4">
+              <td colspan="5">
                 Aucune opération.
               </td>
             </tr>`
