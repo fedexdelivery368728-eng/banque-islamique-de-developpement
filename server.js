@@ -114,6 +114,14 @@ addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN notificatio
 addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN notification_language TEXT NOT NULL DEFAULT 'fr'");
 addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN bank_origin_country TEXT NOT NULL DEFAULT 'Maroc'");
 addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN bank_origin_address TEXT NOT NULL DEFAULT '10, Avenue du Développement, Casablanca, Maroc'");
+addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN bank_address TEXT NOT NULL DEFAULT ''");
+addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN bank_bic TEXT NOT NULL DEFAULT ''");
+addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN sender_bank_name TEXT NOT NULL DEFAULT ''");
+addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN sender_bank_address TEXT NOT NULL DEFAULT ''");
+addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN sender_bank_bic TEXT NOT NULL DEFAULT ''");
+addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN sender_rib TEXT NOT NULL DEFAULT ''");
+addExternalTransferColumn("ALTER TABLE external_transfers ADD COLUMN sender_iban TEXT NOT NULL DEFAULT ''");
+
 addUserColumn("ALTER TABLE users ADD COLUMN first_name TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN last_name TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN birth_date TEXT");
@@ -684,7 +692,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     ar:{bankTitle:'بنك التنمية الإسلامي',orderTitle:'شهادة تحويل',validation:'مساحة مخصصة للختم والتحقق المعتمد',orderNumber:'رقم الأمر',date:'التاريخ',issuingBank:'البنك المُصدِر',sender:'صاحب الأمر',beneficiary:'المستفيد',beneficiaryBank:'بنك المستفيد',details:'تفاصيل التحويل',bank:'البنك',countryLocation:'البلد / الموقع',address:'العنوان',bic:'BIC / SWIFT',name:'الاسم',rib:'RIB',iban:'IBAN',country:'البلد',accountIban:'الحساب / IBAN',notification:'الإشعار',notificationContact:'جهة الاتصال',notificationLanguage:'اللغة',amount:'المبلغ',reason:'السبب',condition:'شروط التحويل',status:'الحالة',verification:'التحقق عبر الإنترنت'}
   };
   const t=translations[lang]||translations.fr;
-  const originCountry=String(transfer.bank_origin_country||transfer.sender_bank_country||'').trim().toLowerCase();
+  const originCountry=String(sourceUser?.bank_country||transfer.bank_origin_country||transfer.sender_bank_country||'').trim().toLowerCase();
   const isDubaiAccount=/^(ae|uae)$/.test(originCountry)||/dubai|dubaï|emirates|émirats|united arab emirates|الإمارات/.test(originCountry);
   const templateAccent=isDubaiAccount?'#b28a45':'#087f68';
   const templateFill=isDubaiAccount?'#f5efe3':'#e8f2ee';
@@ -703,9 +711,11 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const amount=(Number(transfer.amount_cents||0)/100).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+(transfer.currency||'USD');
   const createdAt=transfer.created_at?new Date(transfer.created_at).toLocaleString('fr-FR'):'—';
   const sourceName=sourceUser?.name||sourceUser?.email||'—';
-  const issuerBank=transfer.bank_name||issuerDefaults.bank;
-  const issuerAddress=transfer.bank_address||issuerDefaults.address;
-  const issuerBic=transfer.bank_bic||issuerDefaults.bic;
+  const issuerBank=transfer.sender_bank_name||issuerDefaults.bank;
+  const issuerAddress=transfer.sender_bank_address||issuerDefaults.address;
+  const issuerBic=transfer.sender_bank_bic||sourceUser?.bic||'—';
+  const beneficiaryBankAddress=transfer.bank_address||'';
+  const beneficiaryBankBic=transfer.bank_bic||transfer.bic||'';
   const notification=transfer.notification_method==='sms'?'SMS':'Email';
   doc.font(fontPath).fillColor('#073d34');
   const logoPath=path.join(__dirname,'IMG_4145.jpeg');
@@ -720,8 +730,9 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   doc.moveTo(30,96).lineTo(565,96).lineWidth(1.5).strokeColor(templateAccent).stroke();
   doc.fontSize(18).fillColor('#073d34').text(t.orderTitle,30,105,{width:535,align:'center'});
   doc.fontSize(18).text(t.orderTitle,30.45,105,{width:535,align:'center'});
-  doc.fontSize(isDubaiAccount||lang==='ar'?11:8.5).fillColor('#222').text(t.date+': '+createdAt,310,128,{width:250,align:'right',lineBreak:false});
-  if(isDubaiAccount||lang==='ar') doc.fontSize(11).text(t.date+': '+createdAt,310.3,128,{width:250,align:'right',lineBreak:false});
+  doc.font(fontPath).fontSize(8).fillColor('#b42318').text('MAQUETTE — NON OFFICIEL',30,124,{width:535,align:'center'});
+  doc.fontSize(isDubaiAccount||lang==='ar'?11:8.5).fillColor('#222').text(t.date+': '+createdAt,310,140,{width:250,align:'right',lineBreak:false});
+  if(isDubaiAccount||lang==='ar') doc.fontSize(11).text(t.date+': '+createdAt,310.3,140,{width:250,align:'right',lineBreak:false});
   const leftX=34,rightX=310,colW=250;
   function section(title,x,y,w){
     const arabicLarge=isDubaiAccount||lang==='ar';
@@ -754,33 +765,32 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     for(const f of fields) y=field(f[0],f[1],x,y,w);
     return y+5;
   }
-  let ly=150, ry=150;
+  let ly=160, ry=160;
   ly=block(t.issuingBank,[
     [t.bank,issuerBank],[t.countryLocation,transfer.bank_origin_country||transfer.sender_bank_country||issuerDefaults.country],
     [t.address,issuerAddress],[t.bic,issuerBic]
   ],leftX,ly,colW);
   ly=block(t.sender,[
-    [t.name,sourceName],[t.rib,transfer.sender_rib||sourceUser?.rib_account_number||'—'],
-    [t.iban,transfer.sender_iban||sourceUser?.iban||'—'],[t.bic,transfer.sender_bic||sourceUser?.bic||issuerBic]
+    [t.name,sourceName],[t.rib,transfer.sender_rib||[sourceUser?.rib_account_number,sourceUser?.rib_key].filter(Boolean).join('')||'—'],
+    [t.iban,transfer.sender_iban||sourceUser?.iban||'—']
   ],leftX,ly,colW);
   ly=block(t.details,[
     [t.amount,amount], [t.reason,transfer.reason], [t.condition,transfer.condition_text], [t.status,transfer.status||'—']
   ],leftX,ly,colW);
   ry=block(t.beneficiary,[
-    [t.name,transfer.beneficiary_name],[t.country,transfer.beneficiary_country||transfer.beneficiary_bank_country||'Maroc'],
-    [t.rib,transfer.beneficiary_rib||'—'],[t.iban,transfer.beneficiary_iban||'—'],[t.bic,transfer.beneficiary_bic||issuerBic]
+    [t.name,transfer.beneficiary_name],[t.country,transfer.beneficiary_country||'—'],
+    [t.rib,transfer.account_no||'—'],[t.iban,transfer.iban||'—']
   ],rightX,ry,colW);
   ry=block(t.beneficiaryBank,[
-    [t.bank,transfer.bank_name||issuerBank],[t.address,transfer.bank_address||issuerAddress],
-    [t.accountIban,transfer.beneficiary_iban||transfer.beneficiary_rib||'—'],
-    [t.bic,transfer.bank_bic||transfer.beneficiary_bic||issuerBic]
+    [t.bank,transfer.bank_name||'—'],[t.address,beneficiaryBankAddress||'—'],
+    [t.bic,beneficiaryBankBic||'—']
   ],rightX,ry,colW);
   // Rubrique Notification supprimée de l’attestation PDF.
   const footerY=630;
   const demoStampPath=path.join(__dirname,isDubaiAccount?'cachet-Dubai.png':'cachets-Maroc.png');
   if(fs.existsSync(demoStampPath)){
     doc.image(demoStampPath,12,footerY+1,{fit:[330,100],align:'center',valign:'center'});
-    doc.save().font(fontPath).fontSize(9).fillColor('#b42318').text('SPÉCIMEN — NON OFFICIEL',24,footerY+103,{width:300,align:'center'}).restore();
+    doc.save().font(fontPath).fontSize(9).fillColor('#b42318').text('MAQUETTE — NON OFFICIEL',24,footerY+103,{width:300,align:'center'}).restore();
   }
   doc.image(qrBuffer,445,footerY+1,{width:68,height:68});
   doc.font(fontPath).fontSize(7).fillColor('#555').text(t.verification,405,footerY+70,{width:150,align:'center'});
@@ -3404,25 +3414,7 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
     const notificationMethod=String(req.body.notificationMethod||'email').trim().toLowerCase();
     const notificationLanguage=String(req.body.notificationLanguage||'fr').trim().toLowerCase();
 
-    const bankOriginCountry=String(req.body.bankOriginCountry||'').trim().toUpperCase();
-
-    const bankOrigins={
-      MA:{
-        country:'Maroc',
-        address:'10, Avenue du Développement, Casablanca, Maroc'
-      },
-      AE:{
-        country:'Émirats arabes unis (Dubaï)',
-        address:'Head Office Building 2, Al Maktoum Road (en face de Dnata), Deira, Dubai, United Arab Emirates'
-      }
-    };
-
-    const bankOrigin=bankOrigins[bankOriginCountry];
-
-    if(!bankOrigin){
-      return res.status(400).json({error:'INVALID_BANK_ORIGIN'});
-    }
-
+    const bankAddress=String(req.body.bankAddress||'').trim();
     const amountCents=parseCents(req.body.amount);
 
     if(!Number.isInteger(sourceUserId) || sourceUserId<=0){
@@ -3430,7 +3422,7 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
     }
 
     const sourceUser=db.prepare(`
-      SELECT id,name,email,balance_cents
+      SELECT *
       FROM users
       WHERE id=?
     `).get(sourceUserId);
@@ -3450,6 +3442,9 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
     if(!bankName){
       return res.status(400).json({error:'BANK_NAME_REQUIRED'});
     }
+    if(!bankAddress){
+      return res.status(400).json({error:'BANK_ADDRESS_REQUIRED'});
+    }
 
     if(!accountNo && !iban){
       return res.status(400).json({error:'ACCOUNT_OR_IBAN_REQUIRED'});
@@ -3463,87 +3458,33 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
       return res.status(400).json({error:'INVALID_AMOUNT'});
     }
 
+    const sourceCountry=String(sourceUser.bank_country||sourceUser.country||'MA').trim().toUpperCase();
+    const sourceIsDubai=/^(AE|UAE)$/.test(sourceCountry);
+    const senderBankName=sourceIsDubai?'Dubai Islamic Bank (DIB)':'Banque Islamique de Développement';
+    const senderBankAddress=sourceIsDubai
+      ? 'Head Office Building 2, Al Maktoum Road, Deira, Dubai, United Arab Emirates'
+      : '10, Avenue du Développement, Casablanca, Maroc';
+    const senderBankBic=String(sourceUser.bic||'').trim();
+    const senderRib=[sourceUser.rib_account_number,sourceUser.rib_key].filter(Boolean).join('');
+    const senderIban=String(sourceUser.iban||'').trim();
     const now=new Date().toISOString();
-
+    const insertValues=[
+      'admin',sourceUserId,adminId,beneficiaryName,beneficiaryCountry,bankName,bankAddress,bic,
+      accountNo,iban,bic,amountCents,currency,reason,beneficiaryEmail,beneficiaryPhone,
+      notificationMethod,notificationLanguage,sourceCountry,senderBankAddress,senderBankName,
+      senderBankAddress,senderBankBic,senderRib,senderIban,'pending_verification',conditionText,0,
+      '','','',now,now
+    ];
     const result=db.prepare(`
       INSERT INTO external_transfers(
-        source_type,
-        source_user_id,
-        source_admin_id,
-        beneficiary_name,
-        beneficiary_country,
-        bank_name,
-        account_no,
-        iban,
-        bic,
-        amount_cents,
-        currency,
-        reason,
-        beneficiary_email,
-        beneficiary_phone,
-        notification_method,
-        notification_language,
-        bank_origin_country,
-        bank_origin_address,
-        status,
-        condition_text,
-        condition_completed,
-        provider,
-        provider_transfer_id,
-        provider_status,
-        created_at,
-        updated_at
-      )
-      VALUES(
-        'admin',
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        'pending_verification',
-        ?,
-        0,
-        '',
-        '',
-        '',
-        ?,
-        ?
-      )
-    `).run(
-      sourceUserId,
-      adminId,
-      beneficiaryName,
-      beneficiaryCountry,
-      bankName,
-      accountNo,
-      iban,
-      bic,
-      amountCents,
-      currency,
-      reason,
-      beneficiaryEmail,
-      beneficiaryPhone,
-      notificationMethod,
-      notificationLanguage,
-      bankOrigin.country,
-      bankOrigin.address,
-      conditionText,
-      now,
-      now
-    );
+        source_type,source_user_id,source_admin_id,beneficiary_name,beneficiary_country,
+        bank_name,bank_address,bank_bic,account_no,iban,bic,amount_cents,currency,reason,
+        beneficiary_email,beneficiary_phone,notification_method,notification_language,
+        bank_origin_country,bank_origin_address,sender_bank_name,sender_bank_address,
+        sender_bank_bic,sender_rib,sender_iban,status,condition_text,condition_completed,
+        provider,provider_transfer_id,provider_status,created_at,updated_at
+      ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `).run(...insertValues);
 
     res.json({
       ok:true,
@@ -3557,7 +3498,9 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
 
   }catch(error){
 
-    console.error('Erreur création virement externe admin:',error);
+    console.error('Erreur création virement externe admin:',{
+      message:error?.message,code:error?.code,stack:error?.stack
+    });
 
     res.status(500).json({
       error:'ADMIN_EXTERNAL_TRANSFER_CREATE_FAILED'
