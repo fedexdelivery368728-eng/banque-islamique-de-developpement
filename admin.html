@@ -2274,6 +2274,26 @@ function openExternalTransferPdf(id){
 
 }
 
+async function deleteExternalTransfer(id){
+  const row=externalTransfersCache.find(item=>Number(item.id)===Number(id));
+  if(!row){ alert('Virement introuvable dans la liste.'); return; }
+  if(String(row.status||'')==='completed'){
+    alert('Un virement terminé ne peut pas être supprimé. Conservez son historique.');
+    return;
+  }
+  const ref=row.reference||('Virement #'+id);
+  if(!confirm('Supprimer le virement '+ref+' ? Cette action le retirera de la liste. Une copie de contrôle sera conservée dans le journal administratif.')) return;
+  try{
+    await api('/api/admin/external-transfers/'+Number(id),{method:'DELETE'});
+    alert('Virement supprimé de la liste.');
+    await loadExternalTransfers();
+  }catch(e){
+    alert(e.error==='COMPLETED_TRANSFER_LOCKED'
+      ? 'Un virement terminé ne peut pas être supprimé.'
+      : 'Impossible de supprimer ce virement.');
+  }
+}
+
 function externalTransferActions(row){
 
   const id=Number(row.id);
@@ -2288,9 +2308,15 @@ function externalTransferActions(row){
     </button>
   `;
 
+  const deleteButton=status==='completed' ? '' : `
+    <button type="button" onclick="deleteExternalTransfer(${id})">
+      Supprimer
+    </button>
+  `;
+
   if(status==='pending_verification'){
     return `
-      ${pdfButton}
+      ${pdfButton}${deleteButton}
       <button
         class="primary"
         onclick="updateExternalTransferStatus(${id},'verified')"
@@ -2307,7 +2333,7 @@ function externalTransferActions(row){
 
   if(status==='verified'){
     return `
-      ${pdfButton}
+      ${pdfButton}${deleteButton}
       <button
         class="primary"
         onclick="updateExternalTransferStatus(${id},'processing')"
@@ -2324,7 +2350,7 @@ function externalTransferActions(row){
 
   if(status==='processing'){
     return `
-      ${pdfButton}
+      ${pdfButton}${deleteButton}
       <button
         class="primary"
         onclick="updateExternalTransferStatus(${id},'completed')"
@@ -2341,7 +2367,7 @@ function externalTransferActions(row){
 
   if(status==='completed'){
     return `
-      ${pdfButton}
+      ${pdfButton}${deleteButton}
       <span class="muted">
         Terminé
       </span>
@@ -2350,7 +2376,7 @@ function externalTransferActions(row){
 
   if(status==='failed'){
     return `
-      ${pdfButton}
+      ${pdfButton}${deleteButton}
       <span class="muted">
         Échec / traité
       </span>
