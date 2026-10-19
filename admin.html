@@ -2279,10 +2279,6 @@ async function deleteExternalTransfer(id){
   try { row=(await api('/api/admin/external-transfers')).find(item=>Number(item.id)===Number(id)); }
   catch(e) { alert('Impossible de vérifier ce virement.'); return; }
   if(!row){ alert('Virement introuvable dans la liste.'); return; }
-  if(String(row.status||'')==='completed'){
-    alert('Un virement terminé ne peut pas être supprimé. Conservez son historique.');
-    return;
-  }
   const ref=row.reference||('Virement #'+id);
   if(!confirm('Supprimer le virement '+ref+' ? Cette action le retirera de la liste. Une copie de contrôle sera conservée dans le journal administratif.')) return;
   try{
@@ -2310,8 +2306,8 @@ function externalTransferActions(row){
     </button>
   `;
 
-  const deleteButton=status==='completed' ? '' : `
-    <button type="button" onclick="deleteExternalTransfer(${id})">
+  const deleteButton=`
+    <button type="button" class="danger" onclick="deleteExternalTransfer(${id})">
       Supprimer
     </button>
   `;
