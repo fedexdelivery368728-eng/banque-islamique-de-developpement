@@ -565,133 +565,70 @@ async function sendAccountCreationEmail({
 }
 
 async function generateInternalTransferAttestationPdf(transfer, lang='fr'){
-
   const translations={
-    fr:{
-      bankTitle:'Banque Islamique de Développement',
-      title:'ATTESTATION DE VIREMENT',
-      reference:'Référence de transaction',
-      executionDate:'Date d’exécution enregistrée',
-      amount:'Montant exécuté',
-      sender:'Compte débité',
-      beneficiary:'Compte bénéficiaire',
-      holder:'Titulaire',
-      account:'Compte / IBAN / RIB',
-      bank:'Banque',
-      reason:'Motif du virement',
-      noReason:'Non renseigné dans les données du virement',
-      footerTitle:'JUSTIFICATIF DE VIREMENT — À FOURNIR SUR DEMANDE',
-      footerText:'Des pièces justifiant le motif de l’opération peuvent être demandées selon la transaction et les contrôles applicables.',
-      locale:'fr-FR'
-    },
-    en:{
-      bankTitle:'Islamic Development Bank',
-      title:'ATTESTATION DE VIREMENT',
-      reference:'Transaction reference',
-      executionDate:'Execution date recorded',
-      amount:'Executed amount',
-      sender:'Debited account',
-      beneficiary:'Beneficiary account',
-      holder:'Account holder',
-      account:'Account / IBAN / RIB',
-      bank:'Bank',
-      reason:'Transfer purpose',
-      noReason:'Not recorded in the transfer data',
-      footerTitle:'TRANSFER SUPPORTING DOCUMENT — AVAILABLE UPON REQUEST',
-      footerText:'Documents supporting the purpose of the transaction may be requested depending on the transaction and applicable controls.',
-      locale:'en-US'
-    },
-    ar:{
-      bankTitle:'بنك التنمية الإسلامي',
-      title:'ATTESTATION DE VIREMENT',
-      reference:'مرجع المعاملة',
-      executionDate:'تاريخ التنفيذ المسجل',
-      amount:'المبلغ المنفذ',
-      sender:'الحساب المدين',
-      beneficiary:'حساب المستفيد',
-      holder:'صاحب الحساب',
-      account:'الحساب / IBAN / RIB',
-      bank:'البنك',
-      reason:'سبب التحويل',
-      noReason:'غير مسجل في بيانات التحويل',
-      footerTitle:'مستند إثبات التحويل — متاح عند الطلب',
-      footerText:'قد تُطلب مستندات تثبت سبب العملية وفقاً للمعاملة والضوابط المعمول بها.',
-      locale:'ar'
-    }
+    fr:{bankTitle:'Banque Islamique de Développement',title:'ATTESTATION DE VIREMENT',transfer:'Virement n°',reference:'Réf.',date:'Date d’exécution',amount:'Montant',sender:'ÉMETTEUR',beneficiary:'BÉNÉFICIAIRE',holder:'Titulaire',account:'Compte / IBAN / RIB',bank:'Banque',reason:'Motif',noReason:'Non renseigné',locale:'fr-FR'},
+    en:{bankTitle:'Islamic Development Bank',title:'ATTESTATION DE VIREMENT',transfer:'Transfer no.',reference:'Ref.',date:'Execution date',amount:'Amount',sender:'SENDER',beneficiary:'BENEFICIARY',holder:'Account holder',account:'Account / IBAN / RIB',bank:'Bank',reason:'Purpose',noReason:'Not provided',locale:'en-US'},
+    ar:{bankTitle:'بنك التنمية الإسلامي',title:'ATTESTATION DE VIREMENT',transfer:'رقم التحويل',reference:'مرجع',date:'تاريخ التنفيذ',amount:'المبلغ',sender:'المُرسِل',beneficiary:'المستفيد',holder:'صاحب الحساب',account:'الحساب / IBAN / RIB',bank:'البنك',reason:'السبب',noReason:'غير محدد',locale:'ar'}
   };
-
   const t=translations[lang]||translations.fr;
   const fontPath=path.join(__dirname,'fonts','NotoSansArabic[wdth,wght].ttf');
-  const doc=new PDFDocument({size:'A4',margin:45});
+  const doc=new PDFDocument({size:'A4',margin:48});
   const chunks=[];
   doc.on('data',chunk=>chunks.push(chunk));
-
   const finished=new Promise((resolve,reject)=>{
     doc.once('end',()=>resolve(Buffer.concat(chunks)));
     doc.once('error',reject);
   });
-
   const logoPath=path.join(__dirname,'IMG_4145.jpeg');
   if(fs.existsSync(logoPath)){
-    doc.image(logoPath,235,35,{fit:[125,70]});
-    doc.y=115;
+    doc.image(logoPath,48,34,{fit:[58,58]});
+    doc.image(logoPath,doc.page.width-106,34,{fit:[58,58]});
   }
-
-  doc.font(fontPath).fillColor('#073d34').fontSize(18)
-    .text(t.bankTitle,{align:'center'});
-  doc.moveDown(0.4).fontSize(16).text(t.title,{align:'center'});
-  doc.moveDown(1).fillColor('#222').fontSize(10);
-
+  doc.font(fontPath).fillColor('#073d34').fontSize(16).text(t.bankTitle,112,43,{width:doc.page.width-224,align:'center'});
+  doc.moveDown(0.2);
+  doc.fontSize(18).text(t.title,{align:'center'});
+  doc.moveDown(0.45);
+  const transferNumber=String(transfer.transfer_number||transfer.reference||transfer.id||'—');
+  const ref=String(transfer.reference||transfer.id||'—');
+  doc.fontSize(11).fillColor('#222').text(`${t.transfer} ${transferNumber}`,{align:'center'});
+  doc.moveDown(0.15).text(`${t.reference} ${ref}`,{align:'center'});
+  doc.moveDown(1.2);
+  const executionDate=new Date(transfer.completed_at||transfer.created_at).toLocaleString(t.locale,{timeZone:'UTC'});
+  const amount=(Number(transfer.amount_cents)/100).toLocaleString(t.locale,{minimumFractionDigits:2,maximumFractionDigits:2});
   function section(title){
-    doc.moveDown(0.5).fillColor('#073d34').fontSize(12).text(title);
-    doc.moveTo(45,doc.y+3).lineTo(550,doc.y+3).strokeColor('#087f68').stroke();
-    doc.moveDown(0.5).fillColor('#222').fontSize(10);
+    doc.moveDown(0.8);
+    doc.font(fontPath).fontSize(13).fillColor('#073d34').text(title,{underline:false});
+    doc.moveDown(0.35);
   }
-
   function field(label,value){
-    doc.font(fontPath).fontSize(10).fillColor('#222')
-      .text(`${label} : ${String(value)}`);
-    doc.moveDown(0.25);
+    doc.font(fontPath).fontSize(10.5).fillColor('#222').text(label,{continued:false});
+    doc.font(fontPath).fontSize(10.5).fillColor('#222').text(String(value||'—'),{indent:0});
+    doc.moveDown(0.3);
   }
-
-  const executionDate=new Date(transfer.completed_at).toLocaleString(t.locale,{
-    timeZone:'UTC',
-    timeZoneName:'short'
-  });
-  const amount=(Number(transfer.amount_cents)/100).toLocaleString(t.locale,{
-    minimumFractionDigits:2,
-    maximumFractionDigits:2
-  });
-
-  field(t.reference,transfer.reference);
-  field(t.executionDate,executionDate);
-  field(t.amount,`${amount} ${transfer.currency}`);
-
+  field(t.date,executionDate);
+  field(t.amount,`${amount} ${transfer.currency||'USD'}`);
   section(t.sender);
   field(t.holder,transfer.sender_name);
   field(t.account,transfer.sender_account_display);
-  field(t.bank,'Banque Islamique de Développement');
-
+  field(t.bank,transfer.sender_bank_name||'Banque Islamique de Développement');
   section(t.beneficiary);
-  field(t.holder,transfer.beneficiary_name);
+  field(t.holder,transfer.beneficiary_name||transfer.beneficiary_full_name);
   field(t.account,transfer.beneficiary_account_display);
-  field(t.bank,'Banque Islamique de Développement');
-
-  section(t.reason);
-  doc.font(fontPath).fontSize(10).fillColor('#222')
-    .text(String(transfer.reason||t.noReason));
-
-  const footerHeight=76;
-  const footerY=doc.page.height-doc.page.margins.bottom-footerHeight;
-  if(doc.y>footerY-12) doc.addPage();
-  const finalFooterY=doc.page.height-doc.page.margins.bottom-footerHeight;
-  doc.roundedRect(45,finalFooterY,505,footerHeight,5)
-    .lineWidth(1).strokeColor('#087f68').fillColor('#f3f7f5').fillAndStroke();
-  doc.font(fontPath).fillColor('#073d34').fontSize(9)
-    .text(t.footerTitle,56,finalFooterY+9,{width:483,align:'center'});
-  doc.fillColor('#42534c').fontSize(8)
-    .text(t.footerText,58,finalFooterY+29,{width:479,align:'center'});
-
+  field(t.bank,transfer.beneficiary_bank_name||'Banque Islamique de Développement');
+  if(String(transfer.reason||'').trim()){
+    section(t.reason);
+    doc.font(fontPath).fontSize(10.5).fillColor('#222').text(String(transfer.reason),{width:500});
+  }
+  const verifyRef=encodeURIComponent(ref);
+  const verificationUrl='https://bid-developpement.com/attestation-verification?ref='+verifyRef;
+  try{
+    const qr=await QRCode.toBuffer(verificationUrl,{width:110,margin:1});
+    const qrY=Math.min(Math.max(doc.y+14,doc.page.height-150),doc.page.height-130);
+    doc.image(qr,doc.page.width-145,qrY,{width:76});
+    doc.font(fontPath).fontSize(8).fillColor('#42534c').text('Vérification en ligne',doc.page.width-165,qrY+78,{width:115,align:'center'});
+  }catch(error){
+    console.error('INTERNAL_TRANSFER_QR_FAILED',error);
+  }
   doc.end();
   return finished;
 }
@@ -1802,19 +1739,15 @@ app.delete('/api/admin/internal-transfers/:id',adminAuth,(req,res)=>{
   const id=Number(req.params.id);
   if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'INVALID_TRANSFER_ID'});
   try{
-    const remove=db.transaction(()=>{
-      const row=db.prepare('SELECT * FROM internal_transfers WHERE id=?').get(id);
-      if(!row) throw new Error('INTERNAL_TRANSFER_NOT_FOUND');
-      db.prepare('INSERT INTO admin_deleted_records(record_type,record_id,record_json,deleted_by,deleted_at) VALUES(?,?,?,?,?)').run('internal_transfer',id,JSON.stringify(row),'admin',now());
-      db.prepare('DELETE FROM internal_transfers WHERE id=?').run(id);
-    });
-    remove(); return res.json({ok:true});
+    const result=db.prepare('DELETE FROM internal_transfers WHERE id=?').run(id);
+    if(!result.changes) return res.status(404).json({error:'INTERNAL_TRANSFER_NOT_FOUND'});
+    return res.json({ok:true,deleted:true});
   }catch(e){
-    if(e.message==='INTERNAL_TRANSFER_NOT_FOUND') return res.status(404).json({error:e.message});
     console.error('ADMIN_INTERNAL_TRANSFER_DELETE_FAILED',e);
     return res.status(500).json({error:'ADMIN_INTERNAL_TRANSFER_DELETE_FAILED'});
   }
 });
+
 app.get('/api/admin/internal-transfers',adminAuth,(req,res)=>{
   try{
 
