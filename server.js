@@ -723,15 +723,18 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const headerAddress=isDubai?'شارع المكتوم، بور سعيد، ديرة، ص.ب 1080، دبي، الإمارات العربية المتحدة':issuerAddress;
   const rtl=isDubai||lang==='ar';
   doc.font(fontPath).fillColor('#073d34');
-  if(fs.existsSync(logoPath)){doc.image(logoPath,30,22,{fit:[48,42]});doc.image(logoPath,517,22,{fit:[48,42]});}
-  doc.fontSize(rtl?15:13).text(headerTitle,82,25,{width:430,align:'center'});
-  doc.fontSize(rtl?9:8).fillColor('#465852').text(headerAddress,82,47,{width:430,align:'center'});
-  // En-tête simplifié : le BIC/SWIFT n'est pas affiché sous l'adresse.
-  doc.moveTo(30,85).lineWidth(1.6).strokeColor(accent).stroke();
-  doc.fontSize(18).fillColor('#073d34').text(t.title,35,97,{width:525,align:'center'});
-  doc.fontSize(8).fillColor('#b42318').text('MAQUETTE — NON OFFICIEL',35,121,{width:525,align:'center'});
-  doc.fontSize(9).fillColor('#222').text(t.date+': '+date,300,137,{width:260,align:'right'});
-  doc.moveTo(35,157).lineWidth(0.6).strokeColor('#cbd5d1').stroke();
+  if(fs.existsSync(logoPath)){
+    doc.image(logoPath,48,20,{fit:[66,58]});
+    doc.image(logoPath,476,20,{fit:[66,58]});
+  }
+  // Aucun nom ni adresse au centre : chaque logo porte son nom juste en dessous.
+  doc.fontSize(7.5).fillColor('#073d34').text(isDubai?'Dubai Islamic Bank (DIB)':'Banque Islamique de Développement',24,80,{width:115,align:'center'});
+  doc.fontSize(7.5).fillColor('#073d34').text(isDubai?'بنك دبي الإسلامي':'Banque Islamique de Développement',437,80,{width:145,align:'center'});
+  doc.moveTo(30,103).lineWidth(1.6).strokeColor(accent).stroke();
+  doc.fontSize(18).fillColor('#073d34').text(t.title,35,115,{width:525,align:'center'});
+  doc.fontSize(8).fillColor('#b42318').text('MAQUETTE — NON OFFICIEL',35,139,{width:525,align:'center'});
+  doc.fontSize(9).fillColor('#222').text(t.date+': '+date,300,151,{width:260,align:'right'});
+  doc.moveTo(35,171).lineWidth(0.6).strokeColor('#cbd5d1').stroke();
   const left=35,right=310,w=250;
   function heading(title,x,y){doc.roundedRect(x,y,w,21,3).fill(pale);doc.font(fontPath).fontSize(rtl?12:10).fillColor('#073d34').text(title,x+7,y+4,{width:w-14,lineBreak:false});return y+27;}
   function field(label,value,x,y){const labelText=label+':',val=String(value===undefined||value===null||value===''?'—':value),fsx=rtl?9.5:8.2;doc.font(fontPath).fontSize(fsx);const labelW=Math.min(doc.widthOfString(labelText)+7,92),valueW=w-labelW-7,lines=doc.heightOfString(val,{width:valueW,fontSize:fsx,lineGap:0}),h=Math.max(14,lines+2);doc.fillColor('#4c5b55').text(labelText,x,y,{width:labelW,height:h,fontSize:fsx,lineGap:0});doc.fillColor('#202725').text(val,x+labelW+7,y,{width:valueW,height:h,fontSize:fsx,lineGap:0});return y+h+3;}
