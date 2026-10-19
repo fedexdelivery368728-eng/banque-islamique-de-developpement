@@ -3080,6 +3080,47 @@ app.patch('/api/admin/users/:id',adminAuth,(req,res)=>{
 
 });
 
+app.delete('/api/admin/incoming-transfers/:id',adminAuth,(req,res)=>{
+  const id=Number(req.params.id);
+  if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'INVALID_TRANSFER_ID'});
+  try{
+    const remove=db.transaction(()=>{
+      const row=db.prepare('SELECT * FROM incoming_transfers WHERE id=?').get(id);
+      if(!row) throw new Error('INCOMING_TRANSFER_NOT_FOUND');
+      db.prepare('INSERT INTO admin_deleted_records(record_type,record_id,record_json,deleted_by,deleted_at) VALUES(?,?,?,?,?)')
+        .run('incoming_transfer',id,JSON.stringify(row),'admin',now());
+      db.prepare('DELETE FROM incoming_transfers WHERE id=?').run(id);
+    });
+    remove();
+    return res.json({ok:true});
+  }catch(e){
+    if(e.message==='INCOMING_TRANSFER_NOT_FOUND') return res.status(404).json({error:e.message});
+    console.error('ADMIN_INCOMING_TRANSFER_DELETE_FAILED',e);
+    return res.status(500).json({error:'ADMIN_INCOMING_TRANSFER_DELETE_FAILED'});
+  }
+});
+
+app.delete('/api/admin/users/:userId/transactions/:transactionId',adminAuth,(req,res)=>{
+  const userId=Number(req.params.userId), transactionId=Number(req.params.transactionId);
+  if(!Number.isInteger(userId)||userId<1||!Number.isInteger(transactionId)||transactionId<1)
+    return res.status(400).json({error:'INVALID_TRANSACTION_ID'});
+  try{
+    const remove=db.transaction(()=>{
+      const row=db.prepare('SELECT * FROM transactions WHERE id=? AND user_id=?').get(transactionId,userId);
+      if(!row) throw new Error('TRANSACTION_NOT_FOUND');
+      db.prepare('INSERT INTO admin_deleted_records(record_type,record_id,record_json,deleted_by,deleted_at) VALUES(?,?,?,?,?)')
+        .run('internal_transaction',transactionId,JSON.stringify(row),'admin',now());
+      db.prepare('DELETE FROM transactions WHERE id=? AND user_id=?').run(transactionId,userId);
+    });
+    remove();
+    return res.json({ok:true});
+  }catch(e){
+    if(e.message==='TRANSACTION_NOT_FOUND') return res.status(404).json({error:e.message});
+    console.error('ADMIN_INTERNAL_TRANSACTION_DELETE_FAILED',e);
+    return res.status(500).json({error:'ADMIN_INTERNAL_TRANSACTION_DELETE_FAILED'});
+  }
+});
+
 app.get('/api/admin/users/:id/transactions',adminAuth,(req,res)=>{
   const id=Number(req.params.id);
 
@@ -3934,6 +3975,47 @@ language:user.notification_language || 'fr'
   });
 });
 
+
+app.delete('/api/admin/incoming-transfers/:id',adminAuth,(req,res)=>{
+  const id=Number(req.params.id);
+  if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'INVALID_TRANSFER_ID'});
+  try{
+    const remove=db.transaction(()=>{
+      const row=db.prepare('SELECT * FROM incoming_transfers WHERE id=?').get(id);
+      if(!row) throw new Error('INCOMING_TRANSFER_NOT_FOUND');
+      db.prepare('INSERT INTO admin_deleted_records(record_type,record_id,record_json,deleted_by,deleted_at) VALUES(?,?,?,?,?)')
+        .run('incoming_transfer',id,JSON.stringify(row),'admin',now());
+      db.prepare('DELETE FROM incoming_transfers WHERE id=?').run(id);
+    });
+    remove();
+    return res.json({ok:true});
+  }catch(e){
+    if(e.message==='INCOMING_TRANSFER_NOT_FOUND') return res.status(404).json({error:e.message});
+    console.error('ADMIN_INCOMING_TRANSFER_DELETE_FAILED',e);
+    return res.status(500).json({error:'ADMIN_INCOMING_TRANSFER_DELETE_FAILED'});
+  }
+});
+
+app.delete('/api/admin/users/:userId/transactions/:transactionId',adminAuth,(req,res)=>{
+  const userId=Number(req.params.userId), transactionId=Number(req.params.transactionId);
+  if(!Number.isInteger(userId)||userId<1||!Number.isInteger(transactionId)||transactionId<1)
+    return res.status(400).json({error:'INVALID_TRANSACTION_ID'});
+  try{
+    const remove=db.transaction(()=>{
+      const row=db.prepare('SELECT * FROM transactions WHERE id=? AND user_id=?').get(transactionId,userId);
+      if(!row) throw new Error('TRANSACTION_NOT_FOUND');
+      db.prepare('INSERT INTO admin_deleted_records(record_type,record_id,record_json,deleted_by,deleted_at) VALUES(?,?,?,?,?)')
+        .run('internal_transaction',transactionId,JSON.stringify(row),'admin',now());
+      db.prepare('DELETE FROM transactions WHERE id=? AND user_id=?').run(transactionId,userId);
+    });
+    remove();
+    return res.json({ok:true});
+  }catch(e){
+    if(e.message==='TRANSACTION_NOT_FOUND') return res.status(404).json({error:e.message});
+    console.error('ADMIN_INTERNAL_TRANSACTION_DELETE_FAILED',e);
+    return res.status(500).json({error:'ADMIN_INTERNAL_TRANSACTION_DELETE_FAILED'});
+  }
+});
 
 app.get('/api/admin/incoming-transfers',adminAuth,(req,res)=>{
   const rows=db.prepare(`
