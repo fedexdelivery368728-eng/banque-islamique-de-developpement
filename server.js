@@ -726,7 +726,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   if(fs.existsSync(logoPath)){doc.image(logoPath,30,22,{fit:[48,42]});doc.image(logoPath,517,22,{fit:[48,42]});}
   doc.fontSize(rtl?15:13).text(headerTitle,82,25,{width:430,align:'center'});
   doc.fontSize(rtl?9:8).fillColor('#465852').text(headerAddress,82,47,{width:430,align:'center'});
-  if(!isDubai) doc.fontSize(7).text(t.bic+': '+issuerBic+'  |  '+issuerDefaults.country,82,63,{width:430,align:'center'});
+  // En-tête simplifié : le BIC/SWIFT n'est pas affiché sous l'adresse.
   doc.moveTo(30,85).lineWidth(1.6).strokeColor(accent).stroke();
   doc.fontSize(18).fillColor('#073d34').text(t.title,35,97,{width:525,align:'center'});
   doc.fontSize(8).fillColor('#b42318').text('MAQUETTE — NON OFFICIEL',35,121,{width:525,align:'center'});
@@ -737,10 +737,10 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   function field(label,value,x,y){const labelText=label+':',val=String(value===undefined||value===null||value===''?'—':value),fsx=rtl?9.5:8.2;doc.font(fontPath).fontSize(fsx);const labelW=Math.min(doc.widthOfString(labelText)+7,92),valueW=w-labelW-7,lines=doc.heightOfString(val,{width:valueW,fontSize:fsx,lineGap:0}),h=Math.max(14,lines+2);doc.fillColor('#4c5b55').text(labelText,x,y,{width:labelW,height:h,fontSize:fsx,lineGap:0});doc.fillColor('#202725').text(val,x+labelW+7,y,{width:valueW,height:h,fontSize:fsx,lineGap:0});return y+h+3;}
   function block(title,fields,x,y){y=heading(title,x,y);for(const pair of fields)y=field(pair[0],pair[1],x,y);return y+8;}
   let ly=165,ry=165;
-  ly=block(t.issuer,[[t.bank,issuerBank],[t.country,transfer.bank_origin_country||transfer.sender_bank_country||issuerDefaults.country],[t.address,issuerAddress],[t.bic,issuerBic]],left,ly);
+  ly=block(t.issuer,[[t.bank,issuerBank],[t.country,transfer.bank_origin_country||transfer.sender_bank_country||issuerDefaults.country],[t.address,issuerAddress]],left,ly);
   ly=block(t.sender,[[t.name,sourceName],[t.rib,transfer.sender_rib||[sourceUser?.rib_account_number,sourceUser?.rib_key].filter(Boolean).join('')||'—'],[t.iban,transfer.sender_iban||sourceUser?.iban||'—']],left,ly);
   ry=block(t.beneficiary,[[t.name,transfer.beneficiary_name],[t.country,transfer.beneficiary_country||'—'],[t.rib,transfer.account_no||'—'],[t.iban,transfer.iban||'—']],right,ry);
-  ry=block(t.beneficiaryBank,[[t.bank,transfer.bank_name||'—'],[t.address,transfer.bank_address||'—'],[t.bic,transfer.bank_bic||transfer.bic||'—']],right,ry);
+  ry=block(t.beneficiaryBank,[[t.bank,transfer.bank_name||'—'],[t.address,transfer.bank_address||'—']],right,ry);
   const detailY=Math.max(ly,ry)+3;
   doc.roundedRect(35,detailY,525,59,4).lineWidth(0.8).strokeColor(accent).fillColor('#fff').fillAndStroke();
   doc.font(fontPath).fontSize(9).fillColor('#073d34').text(t.details,45,detailY+7,{width:500});
