@@ -732,30 +732,30 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   doc.fontSize(7.5).fillColor('#073d34').text(isDubai?'بنك دبي الإسلامي':'Banque Islamique de Développement',437,80,{width:145,align:'center'});
   doc.moveTo(30,103).lineWidth(1.6).strokeColor(accent).stroke();
   doc.fontSize(18).fillColor('#073d34').text(t.title,35,115,{width:525,align:'center'});
-  doc.fontSize(8).fillColor('#b42318').text('MAQUETTE — NON OFFICIEL',35,139,{width:525,align:'center'});
+  // La mention de maquette est déplacée au pied du document.
   doc.fontSize(9).fillColor('#222').text(t.date+': '+date,300,151,{width:260,align:'right'});
   doc.moveTo(35,171).lineWidth(0.6).strokeColor('#cbd5d1').stroke();
   const left=35,right=310,w=250;
   function heading(title,x,y){doc.roundedRect(x,y,w,21,3).fill(pale);doc.font(fontPath).fontSize(rtl?12:10).fillColor('#073d34').text(title,x+7,y+4,{width:w-14,lineBreak:false});return y+27;}
   function field(label,value,x,y){const labelText=label+':',val=String(value===undefined||value===null||value===''?'—':value),fsx=rtl?9.5:8.2;doc.font(fontPath).fontSize(fsx);const labelW=Math.min(doc.widthOfString(labelText)+7,92),valueW=w-labelW-7,lines=doc.heightOfString(val,{width:valueW,fontSize:fsx,lineGap:0}),h=Math.max(14,lines+2);doc.fillColor('#4c5b55').text(labelText,x,y,{width:labelW,height:h,fontSize:fsx,lineGap:0});doc.fillColor('#202725').text(val,x+labelW+7,y,{width:valueW,height:h,fontSize:fsx,lineGap:0});return y+h+3;}
   function block(title,fields,x,y){y=heading(title,x,y);for(const pair of fields)y=field(pair[0],pair[1],x,y);return y+8;}
-  let ly=165,ry=165;
-  ly=block(t.issuer,[[t.bank,issuerBank],[t.country,transfer.bank_origin_country||transfer.sender_bank_country||issuerDefaults.country],[t.address,issuerAddress]],left,ly);
-  ly=block(t.sender,[[t.name,sourceName],[t.rib,transfer.sender_rib||[sourceUser?.rib_account_number,sourceUser?.rib_key].filter(Boolean).join('')||'—'],[t.iban,transfer.sender_iban||sourceUser?.iban||'—']],left,ly);
-  ry=block(t.beneficiary,[[t.name,transfer.beneficiary_name],[t.country,transfer.beneficiary_country||'—'],[t.rib,transfer.account_no||'—'],[t.iban,transfer.iban||'—']],right,ry);
-  ry=block(t.beneficiaryBank,[[t.bank,transfer.bank_name||'—'],[t.address,transfer.bank_address||'—']],right,ry);
-  const detailY=Math.max(ly,ry)+3;
-  doc.roundedRect(35,detailY,525,59,4).lineWidth(0.8).strokeColor(accent).fillColor('#fff').fillAndStroke();
-  doc.font(fontPath).fontSize(9).fillColor('#073d34').text(t.details,45,detailY+7,{width:500});
-  doc.fontSize(8.5).fillColor('#27332e').text(t.amount+': '+amount,45,detailY+23,{width:245});
-  doc.fontSize(8.5).fillColor('#27332e').text(t.status+': En attente de justificatif',300,detailY+23,{width:250});
-  doc.fontSize(8.5).fillColor('#27332e').text(t.reason+': '+String(transfer.reason||'—'),45,detailY+40,{width:245});
-  doc.fontSize(8.5).fillColor('#27332e').text(t.condition+': '+String(transfer.condition_text||'—'),300,detailY+40,{width:250});
-  const footerY=Math.min(detailY+72,665),stampPath=path.join(__dirname,isDubai?'cachet-Dubai.png':'cachets-Maroc.png');
-  if(fs.existsSync(stampPath)) doc.image(stampPath,22,footerY,{fit:[340,95]});
-  doc.image(qrBuffer,470,footerY+3,{width:62,height:62});
-  doc.font(fontPath).fontSize(7).fillColor('#555').text(t.verification,438,footerY+68,{width:125,align:'center'});
-  doc.fontSize(7).fillColor('#5c6964').text('Document de démonstration — le QR code ouvre la page de vérification.',35,790,{width:385});
+  let ly=168,ry=168;
+  ly=block('Émetteur (Compte source)',[[t.name,sourceName],[t.iban,transfer.sender_iban||sourceUser?.iban||'—'],[t.bank,issuerBank],[t.country,transfer.bank_origin_country||transfer.sender_bank_country||issuerDefaults.country]],left,ly);
+  ry=block('Bénéficiaire',[[t.name,transfer.beneficiary_name],[t.iban,transfer.iban||transfer.account_no||'—'],[t.bank,transfer.bank_name||'—'],[t.country,transfer.beneficiary_country||'—']],right,ry);
+  const statusY=Math.max(ly,ry)+5;
+  doc.roundedRect(35,statusY,525,62,9).fillColor(pale).fill();
+  doc.font(fontPath).fontSize(9).fillColor('#075b45').text('Statut du virement',55,statusY+11,{width:470,align:'center'});
+  doc.fontSize(14).fillColor('#075b45').text('En attente de justificatif',55,statusY+29,{width:470,align:'center'});
+  const bottomY=statusY+80;
+  doc.moveTo(35,bottomY).lineWidth(0.7).strokeColor('#9fc6c0').stroke();
+  doc.font(fontPath).fontSize(10).fillColor('#073d34').text(t.reason+' :',45,bottomY+20,{width:245});
+  doc.fontSize(8.5).fillColor('#27332e').text(String(transfer.reason||'—'),45,bottomY+37,{width:245});
+  doc.fontSize(10).fillColor('#073d34').text(t.condition+' :',45,bottomY+66,{width:260});
+  doc.fontSize(8.5).fillColor('#27332e').text(String(transfer.condition_text||'—'),45,bottomY+83,{width:260});
+  doc.image(qrBuffer,450,bottomY+20,{width:82,height:82});
+  doc.fontSize(7).fillColor('#555').text(t.verification,425,bottomY+106,{width:132,align:'center'});
+  doc.moveTo(35,770).lineWidth(0.6).strokeColor('#9fc6c0').stroke();
+  doc.fontSize(7).fillColor('#5c6964').text('Maquette de démonstration — document non officiel. Le QR code ouvre la page de vérification.',35,781,{width:525,align:'center'});
   doc.end(); return finished;
 }
 async function sendTransactionEmail({
