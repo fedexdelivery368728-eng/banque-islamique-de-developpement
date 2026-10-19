@@ -635,17 +635,17 @@ async function generateInternalTransferAttestationPdf(transfer, lang='fr'){
 
 async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const translations={
-    fr:{bank:'Banque Islamique de Développement',title:'ATTESTATION DE VIREMENT',date:'Date',issuer:'BANQUE ÉMETTRICE',sender:'DONNEUR D’ORDRE',beneficiary:'BÉNÉFICIAIRE',beneficiaryBank:'BANQUE BÉNÉFICIAIRE',details:'DÉTAILS DU VIREMENT',name:'Nom',country:'Pays',address:'Adresse',bic:'BIC / SWIFT',rib:'RIB',iban:'IBAN',amount:'Montant',status:'Statut',reason:'Motif',condition:'Condition du virement',verification:'Vérification en ligne'},
-    en:{bank:'Islamic Development Bank',title:'TRANSFER CERTIFICATE',date:'Date',issuer:'ISSUING BANK',sender:'ORDERING CUSTOMER',beneficiary:'BENEFICIARY',beneficiaryBank:'BENEFICIARY BANK',details:'TRANSFER DETAILS',name:'Name',country:'Country',address:'Address',bic:'BIC / SWIFT',rib:'RIB',iban:'IBAN',amount:'Amount',status:'Status',reason:'Reason',condition:'Transfer condition',verification:'Online verification'},
-    ar:{bank:'بنك التنمية الإسلامي',title:'شهادة تحويل',date:'التاريخ',issuer:'البنك المُصدِر',sender:'صاحب الأمر',beneficiary:'المستفيد',beneficiaryBank:'بنك المستفيد',details:'تفاصيل التحويل',name:'الاسم',country:'البلد',address:'العنوان',bic:'BIC / SWIFT',rib:'RIB',iban:'IBAN',amount:'المبلغ',status:'الحالة',reason:'السبب',condition:'شروط التحويل',verification:'التحقق عبر الإنترنت'}
+    fr:{bank:'Banque Islamique de Développement',title:'ATTESTATION DE VIREMENT',date:'Date',transfer:'Virement n°',reference:'Réf.',senderSection:'ÉMETTEUR',beneficiarySection:'BÉNÉFICIAIRE',name:'Nom',country:'Pays',address:'Adresse',bankLabel:'Banque',bic:'BIC / SWIFT',rib:'RIB',iban:'IBAN',amount:'Montant',status:'Statut du virement',pending:'En attente de justificatif',reason:'Motif',condition:'Condition du virement',verification:'Vérification en ligne',footer:'Document de démonstration — non officiel. Le QR code ouvre la page de vérification.'},
+    en:{bank:'Islamic Development Bank',title:'TRANSFER CERTIFICATE',date:'Date',transfer:'Transfer no.',reference:'Reference',senderSection:'SENDER',beneficiarySection:'BENEFICIARY',name:'Name',country:'Country',address:'Address',bankLabel:'Bank',bic:'BIC / SWIFT',rib:'RIB',iban:'IBAN',amount:'Amount',status:'Transfer status',pending:'Awaiting supporting documents',reason:'Reason',condition:'Transfer conditions',verification:'Online verification',footer:'Demonstration document — not official. The QR code opens the verification page.'},
+    ar:{bank:'بنك التنمية الإسلامي',title:'شهادة تحويل',date:'التاريخ',transfer:'رقم التحويل',reference:'المرجع',senderSection:'المرسِل',beneficiarySection:'المستفيد',name:'الاسم',country:'البلد',address:'العنوان',bankLabel:'البنك',bic:'BIC / SWIFT',rib:'RIB',iban:'IBAN',amount:'المبلغ',status:'حالة التحويل',pending:'بانتظار المستندات الداعمة',reason:'السبب',condition:'شروط التحويل',verification:'التحقق عبر الإنترنت',footer:'مستند تجريبي غير رسمي. يفتح رمز QR صفحة التحقق.'}
   };
   const t=translations[lang]||translations.fr;
   const originCountry=String(sourceUser?.bank_country||transfer.bank_origin_country||transfer.sender_bank_country||'').trim().toLowerCase();
   const countryName=value=>{
     const v=String(value||'').trim(), k=v.toLowerCase();
-    if(['ma','mar','maroc','morocco'].includes(k)) return 'Maroc';
-    if(['ae','uae','united arab emirates','émirats arabes unis','emirates'].includes(k)) return 'Émirats arabes unis';
-    if(['cm','cameroun','cameroon'].includes(k)) return 'Cameroun';
+    if(['ma','mar','maroc','morocco'].includes(k)) return lang==='en'?'Morocco':lang==='ar'?'المغرب':'Maroc';
+    if(['ae','uae','united arab emirates','émirats arabes unis','emirates'].includes(k)) return lang==='en'?'United Arab Emirates':lang==='ar'?'الإمارات العربية المتحدة':'Émirats arabes unis';
+    if(['cm','cameroun','cameroon'].includes(k)) return lang==='en'?'Cameroon':lang==='ar'?'الكاميرون':'Cameroun';
     return v||'—';
   };
   const isDubai=/^(ae|uae)$/.test(originCountry)||/dubai|dubaï|emirates|émirats|united arab emirates|الإمارات/.test(originCountry);
@@ -659,8 +659,8 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const verificationUrl='https://bid-developpement.com/attestation-verification?ref='+encodeURIComponent(orderNumber);
   const qrDataUrl=await QRCode.toDataURL(verificationUrl,{width:180,margin:1,errorCorrectionLevel:'M'});
   const qrBuffer=Buffer.from(qrDataUrl.replace(/^data:image\/png;base64,/,''),'base64');
-  const amount=(Number(transfer.amount_cents||0)/100).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+(transfer.currency||'USD');
-  const date=transfer.created_at?new Date(transfer.created_at).toLocaleString('fr-FR'):'—';
+  const amount=(Number(transfer.amount_cents||0)/100).toLocaleString(lang==='en'?'en-US':lang==='ar'?'ar':'fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+(transfer.currency||'USD');
+  const date=transfer.created_at?new Date(transfer.created_at).toLocaleString(lang==='en'?'en-GB':lang==='ar'?'ar':'fr-FR'):'—';
   const issuerBank=transfer.sender_bank_name||issuerDefaults.bank, issuerAddress=transfer.sender_bank_address||issuerDefaults.address;
   const issuerBic=transfer.sender_bank_bic||sourceUser?.bic||issuerDefaults.bic, sourceName=sourceUser?.name||sourceUser?.email||'—';
   const headerTitle=isDubai?'Dubai Islamic Bank (DIB)':t.bank;
@@ -677,35 +677,35 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   doc.fontSize(8).fillColor('#073d34').text(bankLabel,8,83,{width:145,align:'center'});
   doc.fontSize(8).fillColor('#073d34').text(bankLabel,437,83,{width:145,align:'center'});
   doc.moveTo(30,108).lineWidth(1.6).strokeColor(accent).stroke();
-  doc.fontSize(18).fillColor('#073d34').text(t.title,35,126,{width:525,align:'center',lineBreak:false});
-  doc.font(fontPath).fontSize(10).fillColor('#202725').text('Virement n° e567878t7728878',35,157,{width:525,align:'center',lineBreak:false});
-  doc.font(fontPath).fontSize(10).fillColor('#202725').text('Réf. 00567',35,177,{width:525,align:'center',lineBreak:false});
-  doc.font(fontPath).fontSize(9).fillColor('#222').text(t.date+': '+date,285,204,{width:275,align:'right'});
+  doc.fontSize(21).fillColor('#073d34').text(t.title,35,126,{width:525,align:'center',lineBreak:false});
+  doc.font(fontPath).fontSize(12).fillColor('#202725').text(t.transfer+' '+orderNumber,35,157,{width:525,align:'center',lineBreak:false});
+  doc.font(fontPath).fontSize(12).fillColor('#202725').text(t.reference+' '+String(transfer.reference||transfer.reference_number||'00567'),35,180,{width:525,align:'center',lineBreak:false});
+  doc.font(fontPath).fontSize(11).fillColor('#222').text(t.date+': '+date,285,207,{width:275,align:'right'});
   doc.moveTo(35,228).lineWidth(0.6).strokeColor('#cbd5d1').stroke();
   const left=35,right=310,w=250;
-  function field(label,value,x,y){const labelText=label+':',val=String(value===undefined||value===null||value===''?'—':value),fsx=rtl?9.5:8.2;doc.font(fontPath).fontSize(fsx);const labelW=Math.min(doc.widthOfString(labelText)+7,92),valueW=w-labelW-7,lines=doc.heightOfString(val,{width:valueW,fontSize:fsx,lineGap:0}),h=Math.max(14,lines+2);doc.font('Helvetica-Bold').fontSize(fsx).fillColor('#4c5b55').text(labelText,x,y,{width:labelW,height:h,fontSize:fsx,lineGap:0});doc.font('Helvetica-Bold').fontSize(fsx).fillColor('#202725').text(val,x+labelW+7,y,{width:valueW,height:h,fontSize:fsx,lineGap:0});return y+h+3;}
+  function field(label,value,x,y){const labelText=label+':',val=String(value===undefined||value===null||value===''?'—':value),fsx=rtl?11:10;doc.font(fontPath).fontSize(fsx);const labelW=Math.min(doc.widthOfString(labelText)+7,92),valueW=w-labelW-7,lines=doc.heightOfString(val,{width:valueW,fontSize:fsx,lineGap:0}),h=Math.max(14,lines+2);doc.font('Helvetica-Bold').fontSize(fsx).fillColor('#4c5b55').text(labelText,x,y,{width:labelW,height:h,fontSize:fsx,lineGap:0});doc.font('Helvetica-Bold').fontSize(fsx).fillColor('#202725').text(val,x+labelW+7,y,{width:valueW,height:h,fontSize:fsx,lineGap:0});return y+h+3;}
   function block(title,fields,x,y){
-    doc.font(lang==='ar'?fontPath:'Helvetica-Bold').fontSize(12).fillColor('#073d34').text(title,x,y,{width:w,lineBreak:false});
+    doc.font(lang==='ar'?fontPath:'Helvetica-Bold').fontSize(14).fillColor('#073d34').text(title,x,y,{width:w,lineBreak:false});
     y+=24;
     for(const pair of fields)y=field(pair[0],pair[1],x,y);
     return y+18;
   }
-  let ly=240,ry=240;
-  ly=block('ÉMETTEUR',[[t.name,sourceName],[t.iban,transfer.sender_iban||sourceUser?.iban||'—'],[t.bank,issuerBank],[t.country,countryName(transfer.bank_origin_country||transfer.sender_bank_country||sourceUser?.bank_country||issuerDefaults.country)]],left,ly);
-  ry=block('BÉNÉFICIAIRE',[[t.name,transfer.beneficiary_name],[t.iban,transfer.iban||transfer.account_no||'—'],[t.bank,transfer.bank_name||'—'],[t.country,countryName(transfer.beneficiary_country)]],right,ry);
+  let ly=242,ry=242;
+  ly=block(t.senderSection,[[t.name,sourceName],[t.iban,transfer.sender_iban||sourceUser?.iban||'—'],[t.bankLabel,issuerBank],[t.country,countryName(transfer.bank_origin_country||transfer.sender_bank_country||sourceUser?.bank_country||issuerDefaults.country)]],left,ly);
+  ry=block(t.beneficiarySection,[[t.name,transfer.beneficiary_name],[t.iban,transfer.iban||transfer.account_no||'—'],[t.bankLabel,transfer.bank_name||'—'],[t.country,countryName(transfer.beneficiary_country)]],right,ry);
   const statusY=Math.max(ly,ry)+18;
-  doc.font(lang==='ar'?fontPath:'Helvetica-Bold').fontSize(12).fillColor('#073d34').text('Statut du virement',45,statusY,{width:480});
-  doc.font(fontPath).fontSize(12).fillColor('#075b45').text('En attente de justificatif',45,statusY+24,{width:480});
+  doc.font(lang==='ar'?fontPath:'Helvetica-Bold').fontSize(14).fillColor('#073d34').text(t.status,45,statusY,{width:480});
+  doc.font(fontPath).fontSize(13).fillColor('#075b45').text(t.pending,45,statusY+26,{width:480});
   const bottomY=statusY+66;
   doc.moveTo(35,bottomY).lineWidth(0.7).strokeColor('#9fc6c0').stroke();
-  doc.font(fontPath).fontSize(10).fillColor('#073d34').text(t.reason+' :',45,bottomY+20,{width:245});
-  doc.fontSize(8.5).fillColor('#27332e').text(String(transfer.reason||'—'),45,bottomY+37,{width:245});
-  doc.fontSize(10).fillColor('#073d34').text(t.condition+' :',45,bottomY+66,{width:260});
-  doc.fontSize(8.5).fillColor('#27332e').text(String(transfer.condition_text||'—'),45,bottomY+83,{width:260});
+  doc.font(fontPath).fontSize(11).fillColor('#073d34').text(t.reason+' :',45,bottomY+20,{width:245});
+  doc.fontSize(10).fillColor('#27332e').text(String(transfer.reason||'—'),45,bottomY+40,{width:245});
+  doc.fontSize(11).fillColor('#073d34').text(t.condition+' :',45,bottomY+70,{width:260});
+  doc.fontSize(10).fillColor('#27332e').text(String(transfer.condition_text||'—'),45,bottomY+88,{width:260});
   doc.image(qrBuffer,450,bottomY+20,{width:82,height:82});
   doc.fontSize(7).fillColor('#555').text(t.verification,425,bottomY+106,{width:132,align:'center'});
   doc.moveTo(35,770).lineWidth(0.6).strokeColor('#9fc6c0').stroke();
-  doc.fontSize(7).fillColor('#5c6964').text('Maquette de démonstration — document non officiel. Le QR code ouvre la page de vérification.',35,781,{width:525,align:'center'});
+  doc.fontSize(8).fillColor('#5c6964').text(t.footer,35,781,{width:525,align:'center'});
   doc.end(); return finished;
 }
 async function sendTransactionEmail({
