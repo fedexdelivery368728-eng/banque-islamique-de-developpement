@@ -2809,9 +2809,10 @@ async function loadExternalTransferUsers(){
       info.textContent = 'Sélectionnez un compte source pour afficher ses coordonnées bancaires.';
       return;
     }
-    const country = String(user.bank_country || user.country || 'MA').toUpperCase();
-    const bank = /^(AE|UAE)$/.test(country) ? 'Dubai Islamic Bank (DIB)' : 'Banque Islamique de Développement';
-    const address = /^(AE|UAE)$/.test(country)
+    const countryCode = String(user.bank_country || user.country || 'MA').trim().toUpperCase();
+    const country = ({MA:'Maroc',MAR:'Maroc',AE:'Émirats arabes unis',UAE:'Émirats arabes unis',CM:'Cameroun'})[countryCode] || countryCode;
+    const bank = /^(AE|UAE)$/.test(countryCode) ? 'Dubai Islamic Bank (DIB)' : 'Banque Islamique de Développement';
+    const address = /^(AE|UAE)$/.test(countryCode)
       ? 'Head Office Building 2, Al Maktoum Road, Deira, Dubai, United Arab Emirates'
       : '10, Avenue du Développement, Casablanca, Maroc';
     info.textContent = [
