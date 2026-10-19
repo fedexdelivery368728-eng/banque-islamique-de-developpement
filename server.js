@@ -206,6 +206,42 @@ app.use(session({
 
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 const now=()=>new Date().toISOString();
+
+function validateExternalBankDetails({accountNo,iban,bic}){
+  const cleanIban=String(iban||'').replace(/\\s+/g,'').toUpperCase();
+  const cleanAccount=String(accountNo||'').trim();
+  const cleanBic=String(bic||'').replace(/\\s+/g,'').toUpperCase();
+
+  if(!/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/.test(cleanBic)){
+    return {ok:false,error:'INVALID_BIC_FORMAT'};
+  }
+
+  if(cleanIban){
+    if(!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/.test(cleanIban) ||
+       cleanIban.length<15 || cleanIban.length>34){
+      return {ok:false,error:'INVALID_IBAN_FORMAT'};
+    }
+
+    const rearranged=cleanIban.slice(4)+cleanIban.slice(0,4);
+    let remainder=0;
+    for(const char of rearranged){
+      const digits=char>='A'&&char<='Z'
+        ? String(char.charCodeAt(0)-55)
+        : char;
+      for(const digit of digits){
+        remainder=(remainder*10+Number(digit))%97;
+      }
+    }
+    if(remainder!==1){
+      return {ok:false,error:'INVALID_IBAN_CHECKSUM'};
+    }
+  }else if(!/^[A-Za-z0-9][A-Za-z0-9 .\/-]{2,33}$/.test(cleanAccount)){
+    return {ok:false,error:'INVALID_ACCOUNT_NUMBER_FORMAT'};
+  }
+
+  return {ok:true,level:'format_and_checksum_only'};
+}
+
 async function sendInfobipSms({to, text}){
 
   const baseUrl =
@@ -3145,6 +3181,14 @@ const currency=
 
     if(!bic){
       return res.status(400).json({error:'BIC_REQUIRED'});
+    }
+
+    const bankDetailsCheck=validateExternalBankDetails({accountNo,iban,bic});
+    if(!bankDetailsCheck.ok){
+      return res.status(400).json({
+        error:bankDetailsCheck.error,
+        message:'Coordonnées bancaires invalides : vérifiez le format, l’IBAN et sa clé de contrôle. Cela ne confirme pas à lui seul que le compte existe.'
+      });
     }
 
     if(!Number.isFinite(amountCents) || amountCents<=0){
