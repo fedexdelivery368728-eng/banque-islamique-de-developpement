@@ -2275,7 +2275,9 @@ function openExternalTransferPdf(id){
 }
 
 async function deleteExternalTransfer(id){
-  const row=externalTransfersCache.find(item=>Number(item.id)===Number(id));
+  let row;
+  try { row=(await api('/api/admin/external-transfers')).find(item=>Number(item.id)===Number(id)); }
+  catch(e) { alert('Impossible de vérifier ce virement.'); return; }
   if(!row){ alert('Virement introuvable dans la liste.'); return; }
   if(String(row.status||'')==='completed'){
     alert('Un virement terminé ne peut pas être supprimé. Conservez son historique.');
