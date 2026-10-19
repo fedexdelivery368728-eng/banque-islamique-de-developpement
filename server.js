@@ -731,8 +731,8 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   doc.fontSize(18).fillColor('#073d34').text(t.orderTitle,30,105,{width:535,align:'center'});
   doc.fontSize(18).text(t.orderTitle,30.45,105,{width:535,align:'center'});
   doc.font(fontPath).fontSize(8).fillColor('#b42318').text('MAQUETTE — NON OFFICIEL',30,124,{width:535,align:'center'});
-  doc.fontSize(isDubaiAccount||lang==='ar'?11:8.5).fillColor('#222').text(t.date+': '+createdAt,310,128,{width:250,align:'right',lineBreak:false});
-  if(isDubaiAccount||lang==='ar') doc.fontSize(11).text(t.date+': '+createdAt,310.3,128,{width:250,align:'right',lineBreak:false});
+  doc.fontSize(isDubaiAccount||lang==='ar'?11:8.5).fillColor('#222').text(t.date+': '+createdAt,310,140,{width:250,align:'right',lineBreak:false});
+  if(isDubaiAccount||lang==='ar') doc.fontSize(11).text(t.date+': '+createdAt,310.3,140,{width:250,align:'right',lineBreak:false});
   const leftX=34,rightX=310,colW=250;
   function section(title,x,y,w){
     const arabicLarge=isDubaiAccount||lang==='ar';
@@ -765,7 +765,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     for(const f of fields) y=field(f[0],f[1],x,y,w);
     return y+5;
   }
-  let ly=150, ry=150;
+  let ly=160, ry=160;
   ly=block(t.issuingBank,[
     [t.bank,issuerBank],[t.countryLocation,transfer.bank_origin_country||transfer.sender_bank_country||issuerDefaults.country],
     [t.address,issuerAddress],[t.bic,issuerBic]
