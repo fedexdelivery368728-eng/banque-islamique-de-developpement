@@ -3421,7 +3421,7 @@ app.get('/api/admin/external-transfers/:id/pdf',adminAuth,async (req,res)=>{
 
     res.setHeader(
       'Content-Disposition',
-      'inline; filename="ordre-virement-simulation-'+
+      'inline; filename="attestation-virement-demonstration-'+
       orderNumber+
       '.pdf"'
     );
