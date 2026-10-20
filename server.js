@@ -1970,29 +1970,10 @@ app.get('/api/admin/internal-transfers/:id/pdf',adminAuth,async(req,res)=>{
 
     const attestationTransfer=attestation.transfer;
 
-    const pdfLang=['fr','en','ar'].includes(req.query.lang) ? req.query.lang : 'fr';
-
-    // Réutiliser le même gabarit PDF que les virements externes pour les virements sortants.
-    const outgoingPdfTransfer={
-      ...attestationTransfer,
-      order_number:'OV-'+String(attestationTransfer.id).padStart(8,'0'),
-      created_at:attestationTransfer.completed_at,
-      sender_bank_name:attestationTransfer.sender_bank_name||'',
-      sender_bank_address:attestationTransfer.sender_bank_address||'',
-      sender_bank_bic:attestationTransfer.sender_bank_bic||'',
-      sender_iban:attestationTransfer.sender_account_display,
-      beneficiary_name:attestationTransfer.beneficiary_name,
-      iban:attestationTransfer.beneficiary_account_display,
-      bank_name:attestationTransfer.beneficiary_bank_name||attestationTransfer.beneficiary_bank||'',
-      beneficiary_country:attestationTransfer.beneficiary_country||'',
-      condition_text:attestationTransfer.condition_text||''
-    };
-    const outgoingPdfSource={
-      name:attestationTransfer.sender_name,
-      bank_country:attestationTransfer.bank_origin_country||attestationTransfer.sender_bank_country||'',
-      iban:attestationTransfer.sender_account_display
-    };
-    const pdf=await generateExternalTransferPdf(outgoingPdfTransfer,outgoingPdfSource,pdfLang);
+    const pdf=await generateInternalTransferAttestationPdf(
+      attestationTransfer,
+      ['fr','en','ar'].includes(req.query.lang) ? req.query.lang : 'fr'
+    );
 
     res.setHeader(
       'Content-Type',
