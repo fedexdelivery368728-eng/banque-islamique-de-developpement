@@ -2361,6 +2361,19 @@ async function deleteExternalTransfer(id){
   }
 }
 
+async function editExternalTransfer(id){
+  let row;
+  try{row=(await api('/api/admin/external-transfers')).find(x=>Number(x.id)===Number(id));}catch(e){alert('Impossible de charger le virement.');return;}
+  if(!row){alert('Virement introuvable.');return;}
+  const ask=(label,key)=>{const v=prompt(label,row[key]||'');return v===null?null:v.trim();};
+  const fields=[['Nom du bénéficiaire','beneficiary_name'],['Pays du bénéficiaire','beneficiary_country'],['Banque bénéficiaire','bank_name'],['IBAN / compte','iban'],['BIC / SWIFT','bic'],['Pays de la banque émettrice','bank_origin_country'],['Adresse de la banque émettrice','bank_origin_address'],['Motif','reason'],['Conditions du virement','condition_text']];
+  const payload={};
+  for(const [label,key] of fields){const value=ask(label,key==='iban'?(row.iban||row.account_no):key);if(value===null)return;payload[key]=value;}
+  const lang=prompt('Langue de l’attestation et du QR : fr, en ou ar',row.notification_language||'fr');if(lang===null)return;if(!['fr','en','ar'].includes(lang.trim())){alert('Langue invalide.');return;}payload.notification_language=lang.trim();
+  try{const result=await api('/api/admin/external-transfers/'+Number(id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(result?.ok!==true)throw new Error('Réponse inattendue');await loadExternalTransfers();alert('Modifications enregistrées. Le montant et la référence sont inchangés.');}
+  catch(e){console.error('Erreur modification virement externe:',e);alert('Impossible d’enregistrer les modifications.');}
+}
+
 function externalTransferActions(row){
 
   const id=Number(row.id);
@@ -2375,6 +2388,8 @@ function externalTransferActions(row){
     </button>
   `;
 
+  const editButton='<button type="button" onclick="editExternalTransfer('+id+')">Modifier</button>';
+
   const deleteButton=`
     <button type="button" class="danger" onclick="deleteExternalTransfer(${id})">
       Supprimer
@@ -2383,7 +2398,7 @@ function externalTransferActions(row){
 
   if(status==='pending_verification'){
     return `
-      ${pdfButton}${deleteButton}
+      ${editButton}${pdfButton}${deleteButton}
       <button
         class="primary"
         onclick="updateExternalTransferStatus(${id},'verified')"
