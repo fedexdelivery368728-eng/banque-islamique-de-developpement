@@ -669,6 +669,23 @@ async function generateInternalTransferAttestationPdf(transfer, lang='fr'){
   return finished;
 }
 
+function localizeTransferReason(value,lang){
+  const raw=String(value||'').trim(); if(!raw) return '—';
+  if(/achat\s+d[’']?oeuvres\s+d[’']?art/i.test(raw)||/achat\s+d[’']œuvres\s+d[’']art/i.test(raw))
+    return lang==='en'?'Purchase of artworks':lang==='ar'?'شراء أعمال فنية':raw;
+  return raw;
+}
+function localizeTransferCondition(value,lang){
+  const raw=String(value||'').trim(); if(!raw) return '—';
+  if(/TAFIN/i.test(raw)&&/contrat/i.test(raw)&&/(oeuvres|œuvres|oeuvre|œuvre)/i.test(raw))
+    return lang==='en'?'THE CONTRACT MUST BE SIGNED BY TAFIN (INTERNATIONAL AND NATIONAL AFFAIRS TRIBUNAL) AT ITS HEADQUARTERS IN THE COUNTRY OF ORIGIN OF THE ARTWORKS.':lang==='ar'?'يجب توقيع العقد من قبل TAFIN (محكمة الشؤون الدولية والوطنية) في مقرها في بلد منشأ الأعمال الفنية.':raw;
+  return raw;
+}
+function localizeTransferStatus(value,lang){
+  const v=String(value||'').toLowerCase();
+  const labels={pending_verification:{fr:'En attente de vérification',en:'Awaiting verification',ar:'بانتظار التحقق'},verified:{fr:'Vérifié',en:'Verified',ar:'تم التحقق'},processing:{fr:'En cours de traitement',en:'Processing',ar:'قيد المعالجة'},completed:{fr:'Terminé',en:'Completed',ar:'مكتمل'},failed:{fr:'Échoué',en:'Failed',ar:'فشل'}};
+  return labels[v]?.[lang]||String(value||'—');
+}
 async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const translations={
     fr:{bank:'Banque Islamique de Développement',title:'ATTESTATION DE VIREMENT',date:'Date',transfer:'Virement n°',reference:'Réf.',senderSection:'ÉMETTEUR',beneficiarySection:'BÉNÉFICIAIRE',name:'Nom',country:'Pays',address:'Adresse',bankLabel:'Banque',bic:'BIC / SWIFT',rib:'RIB',iban:'IBAN',amount:'Montant',status:'Statut du virement',pending:'En attente de justificatif',reason:'Motif',condition:'Condition du virement',verification:'Vérification en ligne',footer:'Document de démonstration — non officiel. Le QR code ouvre la page de vérification.'},
@@ -741,9 +758,9 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const bottomY=statusY+66;
   doc.moveTo(35,bottomY).lineWidth(0.7).strokeColor('#9fc6c0').stroke();
   doc.font(fontPath).fontSize(11).fillColor('#073d34').text(t.reason+' :',45,bottomY+20,{width:245});
-  doc.fontSize(10).fillColor('#27332e').text(String(transfer.reason||'—'),45,bottomY+40,{width:245});
+  doc.fontSize(10).fillColor('#27332e').text(localizeTransferReason(transfer.reason,lang),45,bottomY+40,{width:245});
   doc.fontSize(11).fillColor('#073d34').text(t.condition+' :',45,bottomY+70,{width:260});
-  doc.fontSize(10).fillColor('#27332e').text(String(transfer.condition_text||'—'),45,bottomY+88,{width:260});
+  doc.fontSize(10).fillColor('#27332e').text(localizeTransferCondition(transfer.condition_text,lang),45,bottomY+88,{width:260});
   doc.image(qrBuffer,450,bottomY+20,{width:82,height:82});
   doc.fontSize(7).fillColor('#555').text(t.verification,425,bottomY+106,{width:132,align:'center'});
   doc.moveTo(35,770).lineWidth(0.6).strokeColor('#9fc6c0').stroke();
@@ -4814,7 +4831,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
 
     res.send(`
       <!doctype html>
-      <html lang="fr">
+      <html lang="${lang}" dir="${lang==='ar'?'rtl':'ltr'}">
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -4940,10 +4957,10 @@ app.get('/verification/:orderNumber',(req,res)=>{
 
             <h1>${esc(issuerBank)}</h1>
 
-            <div>${lang==='en'?'TRANSFER ORDER':lang==='ar'?'أمر تحويل':'ORDRE DE VIREMENT'}</div>
+            <div>${lang==='en'?'TRANSFER CERTIFICATE':lang==='ar'?'شهادة تحويل':'ATTESTATION DE VIREMENT'}</div>
 
             <div class="simulation">
-              Vérification de l’attestation de virement
+              ${lang==='en'?'Transfer certificate verification':lang==='ar'?'التحقق من شهادة التحويل':'Vérification de l’attestation de virement'}
             </div>
           </div>
 
@@ -4963,7 +4980,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
 
             <div class="field">
               <div class="label">${lang==='en'?'Status':lang==='ar'?'الحالة':'Statut'}</div>
-              <div class="value">${esc(transfer.status)}</div>
+              <div class="value">${esc(localizeTransferStatus(transfer.status,lang))}</div>
             </div>
 
           </div>
@@ -4980,7 +4997,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
             </div>
 
             <div class="field">
-              <div class="label">Pays / implantation</div>
+              <div class="label">${lang==='en'?'Country / location':lang==='ar'?'البلد / الموقع':'Pays / implantation'}</div>
               <div class="value">
                 ${esc(transfer.bank_origin_country)}
               </div>
@@ -5075,21 +5092,21 @@ app.get('/verification/:orderNumber',(req,res)=>{
             <div class="field">
               <div class="label">${lang==='en'?'Reason':lang==='ar'?'السبب':'Motif'}</div>
               <div class="value">
-                ${esc(transfer.reason)}
+                ${esc(localizeTransferReason(transfer.reason,lang))}
               </div>
             </div>
 
             <div class="field">
               <div class="label">${lang==='en'?'Transfer condition':lang==='ar'?'شروط التحويل':'Condition du virement'}</div>
               <div class="value">
-                ${esc(transfer.condition_text)}
+                ${esc(localizeTransferCondition(transfer.condition_text,lang))}
               </div>
             </div>
 
           </div>
 
           <div class="notice">
-            Vérification de l’attestation de virement
+            ${lang==='en'?'Transfer certificate verification':lang==='ar'?'التحقق من شهادة التحويل':'Vérification de l’attestation de virement'}
           </div>
 
         </div>
