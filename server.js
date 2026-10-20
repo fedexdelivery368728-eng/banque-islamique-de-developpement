@@ -697,8 +697,11 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const qrBuffer=Buffer.from(qrDataUrl.replace(/^data:image\/png;base64,/,''),'base64');
   const amount=(Number(transfer.amount_cents||0)/100).toLocaleString(lang==='en'?'en-US':lang==='ar'?'ar':'fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+(transfer.currency||'USD');
   const date=transfer.created_at?new Date(transfer.created_at).toLocaleString(lang==='en'?'en-GB':lang==='ar'?'ar':'fr-FR'):'—';
-  const issuerBank=transfer.sender_bank_name||issuerDefaults.bank, issuerAddress=transfer.sender_bank_address||issuerDefaults.address;
-  const issuerBic=transfer.sender_bank_bic||sourceUser?.bic||issuerDefaults.bic, sourceName=sourceUser?.name||sourceUser?.email||'—';
+  // Le pays du compte source prime sur les anciennes valeurs par défaut du virement.
+  const issuerBank=isDubai?issuerDefaults.bank:(transfer.sender_bank_name||issuerDefaults.bank);
+  const issuerAddress=isDubai?issuerDefaults.address:(transfer.sender_bank_address||issuerDefaults.address);
+  const issuerBic=isDubai?issuerDefaults.bic:(transfer.sender_bank_bic||sourceUser?.bic||issuerDefaults.bic);
+  const sourceName=sourceUser?.name||sourceUser?.email||'—';
   const headerTitle=isDubai?'Dubai Islamic Bank (DIB)':t.bank;
   const headerAddress=isDubai?'شارع المكتوم، بور سعيد، ديرة، ص.ب 1080، دبي، الإمارات العربية المتحدة':issuerAddress;
   const rtl=isDubai||lang==='ar';
@@ -730,7 +733,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
     return y+18;
   }
   let ly=242,ry=242;
-  ly=block(t.senderSection,[[t.name,sourceName],[t.iban,transfer.sender_iban||sourceUser?.iban||'—'],[t.bankLabel,issuerBank],[t.country,countryName(transfer.bank_origin_country||transfer.sender_bank_country||sourceUser?.bank_country||issuerDefaults.country)]],left,ly);
+  ly=block(t.senderSection,[[t.name,sourceName],[t.iban,transfer.sender_iban||sourceUser?.iban||'—'],[t.bankLabel,issuerBank],[t.country,countryName(sourceUser?.bank_country||transfer.bank_origin_country||transfer.sender_bank_country||issuerDefaults.country)]],left,ly);
   ry=block(t.beneficiarySection,[[t.name,transfer.beneficiary_name],[t.iban,transfer.iban||transfer.account_no||'—'],[t.bankLabel,transfer.bank_name||'—'],[t.country,countryName(transfer.beneficiary_country)]],right,ry);
   const statusY=Math.max(ly,ry)+18;
   doc.font(lang==='ar'?fontPath:'Helvetica-Bold').fontSize(14).fillColor('#073d34').text(t.status,45,statusY,{width:480});
