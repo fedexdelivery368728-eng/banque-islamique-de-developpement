@@ -2398,7 +2398,7 @@ function externalTransferActions(row){
 
   if(status==='pending_verification'){
     return `
-      ${editButton}${pdfButton}${deleteButton}
+      ${editButton}${editButton}${pdfButton}${deleteButton}
       <button
         class="primary"
         onclick="updateExternalTransferStatus(${id},'verified')"
@@ -2415,7 +2415,7 @@ function externalTransferActions(row){
 
   if(status==='verified'){
     return `
-      ${pdfButton}${deleteButton}
+      ${editButton}${pdfButton}${deleteButton}
       <button
         class="primary"
         onclick="updateExternalTransferStatus(${id},'processing')"
@@ -2432,7 +2432,7 @@ function externalTransferActions(row){
 
   if(status==='processing'){
     return `
-      ${pdfButton}${deleteButton}
+      ${editButton}${pdfButton}${deleteButton}
       <button
         class="primary"
         onclick="updateExternalTransferStatus(${id},'completed')"
@@ -2449,7 +2449,7 @@ function externalTransferActions(row){
 
   if(status==='completed'){
     return `
-      ${pdfButton}${deleteButton}
+      ${editButton}${pdfButton}${deleteButton}
       <span class="muted">
         Terminé
       </span>
@@ -2458,7 +2458,7 @@ function externalTransferActions(row){
 
   if(status==='failed'){
     return `
-      ${pdfButton}${deleteButton}
+      ${editButton}${pdfButton}${deleteButton}
       <span class="muted">
         Échec / traité
       </span>
