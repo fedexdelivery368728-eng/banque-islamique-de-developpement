@@ -1368,8 +1368,14 @@ button.primary:hover,
 
   <input
     id="rcountry"
-    placeholder="Pays"
+    placeholder="Pays de résidence"
   >
+
+  <label for="rbankCountry">Pays du compte bancaire</label>
+  <select id="rbankCountry" required>
+    <option value="MA" selected>Maroc</option>
+    <option value="AE">Émirats arabes unis — Dubaï</option>
+  </select>
 
   <h3>Pièce d'identité</h3>
 
@@ -2302,7 +2308,7 @@ async function register(){
           address:raddress.value,
           city:rcity.value,
           country:rcountry.value,
-
+          bankCountry:rbankCountry.value,
           idType:ridType.value,
           idNumber:ridNumber.value,
           idIssueDate:ridIssueDate.value,
