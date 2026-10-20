@@ -4761,7 +4761,8 @@ app.get('/verification/:orderNumber',(req,res)=>{
         et.*,
         u.name AS source_user_name,
         u.email AS source_user_email,
-        u.iban AS source_user_iban
+        u.iban AS source_user_iban,
+        u.bank_country AS source_bank_country
       FROM external_transfers et
       LEFT JOIN users u
         ON u.id=et.source_user_id
@@ -4815,7 +4816,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
 
     const lang=['fr','en','ar'].includes(String(transfer.notification_language||'').toLowerCase()) ? String(transfer.notification_language).toLowerCase() : 'fr';
     const orderNumberDisplay='OV-'+String(transfer.id).padStart(8,'0');
-    const origin=String(transfer.bank_origin_country||'').trim().toLowerCase();
+    const origin=String(transfer.bank_origin_country||transfer.source_bank_country||'').trim().toLowerCase();
     const isDubai=['ae','uae','united arab emirates','emirats arabes unis','emirates'].includes(origin)||/dubai|dubaï|الإمارات/.test(origin);
     const issuerBank=isDubai?(lang==='ar'?'بنك دبي الإسلامي':'Dubai Islamic Bank (DIB)'):(lang==='ar'?'البنك الإسلامي للتنمية':lang==='en'?'Islamic Development Bank':'Banque Islamique de Développement');
     const verifyLabel=lang==='en'?'Transfer certificate verification':lang==='ar'?'التحقق من شهادة التحويل':'Vérification de l’attestation de virement';
@@ -4844,10 +4845,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
       transfer.source_user_iban ||
       '—';
 
-    const notification=
-      transfer.notification_method === 'sms'
-        ? 'SMS'
-        : 'Email';
+    const notification=transfer.notification_method==='sms'?'SMS':lang==='ar'?'البريد الإلكتروني':lang==='en'?'Email':'E-mail';
 
     const esc=value=>String(value??'—')
       .replace(/&/g,'&amp;')
@@ -4992,7 +4990,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
           </div>
 
           <div class="order">
-            ${lang==='en'?'Transfer reference:':lang==='ar'?'مرجع التحويل:':'Numéro de l’ordre :'}
+            ${lang==='en'?'Transfer reference:':lang==='ar'?'مرجع التحويل:':'Référence du virement :'}
             ${esc(orderNumberDisplay)}
           </div>
 
@@ -5026,14 +5024,14 @@ app.get('/verification/:orderNumber',(req,res)=>{
             <div class="field">
               <div class="label">${lang==='en'?'Country / location':lang==='ar'?'البلد / الموقع':'Pays / implantation'}</div>
               <div class="value">
-                ${esc(transfer.bank_origin_country)}
+                ${esc(transfer.bank_origin_country||transfer.source_bank_country)}
               </div>
             </div>
 
             <div class="field">
               <div class="label">${lang==='en'?'Address':lang==='ar'?'العنوان':'Adresse'}</div>
               <div class="value">
-                ${esc(transfer.bank_origin_address)}
+                ${esc(transfer.bank_origin_address||(isDubai?'68 Al Maktoum Road, Port Saeed, Deira, P.O. Box 1080, Dubai, United Arab Emirates':'10, Avenue du Développement, Casablanca, Maroc'))}
               </div>
             </div>
 
@@ -5112,7 +5110,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
             </div>
 
             <div class="field">
-              <div class="label">${lang==='en'?'Notification':lang==='ar'?'الإشعار':'Notification'}</div>
+              <div class="label">${lang==='en'?'Notification method':lang==='ar'?'طريقة الإشعار':'Mode de notification'}</div>
               <div class="value">${esc(notification)}</div>
             </div>
 
@@ -5124,7 +5122,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
             </div>
 
             <div class="field">
-              <div class="label">${lang==='en'?'Transfer condition':lang==='ar'?'شروط التحويل':'Condition du virement'}</div>
+              <div class="label">${lang==='en'?'Transfer conditions':lang==='ar'?'شروط التحويل':'Conditions du virement'}</div>
               <div class="value">
                 ${esc(localizeTransferCondition(transfer.condition_text,lang))}
               </div>
