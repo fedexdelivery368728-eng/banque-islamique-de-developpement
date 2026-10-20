@@ -4814,7 +4814,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
 
-        <title>${esc(orderNumberDisplay)} — Vérification</title>
+        <title>${esc(orderNumberDisplay)} — ${lang==='en'?'Verification':lang==='ar'?'التحقق':'Vérification'}</title>
 
         <style>
           *{
@@ -4935,7 +4935,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
 
             <h1>Banque Islamique de Développement</h1>
 
-            <div>ORDRE DE VIREMENT</div>
+            <div>${lang==='en'?'TRANSFER ORDER':lang==='ar'?'أمر تحويل':'ORDRE DE VIREMENT'}</div>
 
             <div class="simulation">
               Vérification de l’attestation de virement
@@ -4943,7 +4943,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
           </div>
 
           <div class="order">
-            Numéro de l'ordre :
+            ${lang==='en'?'Transfer reference:':lang==='ar'?'مرجع التحويل:':'Numéro de l’ordre :'}
             ${esc(orderNumberDisplay)}
           </div>
 
