@@ -1143,6 +1143,11 @@ app.post('/api/register',(req,res)=>{
 const pass =
   String(req.body.password || '');
 
+  const bankCountry =
+    String(req.body.bankCountry || 'MA').trim().toUpperCase() === 'AE'
+      ? 'AE'
+      : 'MA';
+
 if(
   !firstName ||
   !lastName ||
@@ -1248,7 +1253,7 @@ notification_language
       hash(pass),
       0,
       now(),
-      'MA',
+      bankCountry,
 
       firstName,
       lastName,
@@ -1299,7 +1304,7 @@ db.prepare(`
 const rib =
   saveRibData(
     userId,
-    'MA'
+    bankCountry
   );
 
 req.session.uid = userId;
