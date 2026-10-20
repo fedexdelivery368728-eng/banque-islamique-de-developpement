@@ -2398,7 +2398,7 @@ function externalTransferActions(row){
 
   if(status==='pending_verification'){
     return `
-      ${editButton}${editButton}${pdfButton}${deleteButton}
+      ${editButton}${pdfButton}${deleteButton}
       <button
         class="primary"
         onclick="updateExternalTransferStatus(${id},'verified')"
