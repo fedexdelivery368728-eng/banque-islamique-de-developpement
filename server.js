@@ -2424,6 +2424,7 @@ app.get('/api/admin/users',adminAuth,(req,res)=>{
       balance_cents,
       created_at,
       active,
+      bank_country,
       iban,
       bic,
       bank_code,
