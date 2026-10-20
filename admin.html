@@ -325,6 +325,30 @@ section.card:has(#externalTransfersTable) tbody tr:hover td {
   @page{size:A4;margin:10mm}
 }
 
+
+/* Saisie des dates : champ lisible, tactile et calendrier facile à ouvrir */
+input[type="date"],
+input[type="datetime-local"]{
+  width:100%;
+  min-height:46px;
+  max-width:100%;
+  padding:11px 12px;
+  background:#fff;
+  color:#17332d;
+  accent-color:#087f68;
+  cursor:pointer;
+  font-variant-numeric:tabular-nums;
+  touch-action:manipulation;
+}
+input[type="date"]:focus,
+input[type="datetime-local"]:focus{
+  outline:2px solid #087f68;
+  outline-offset:1px;
+  border-color:#087f68;
+}
+@media(max-width:600px){
+  input[type="date"],input[type="datetime-local"]{font-size:16px;min-height:48px;}
+}
 </style>
 </head>
 
@@ -5331,6 +5355,25 @@ check();
   syncLanguages();
 })();
 
+
+// Harmonise tous les champs de date, y compris ceux créés dynamiquement dans l'administration.
+function prepareDateFields(root=document){
+  root.querySelectorAll('input[type="date"],input[type="datetime-local"]').forEach(input=>{
+    input.lang='fr';
+    input.autocomplete='off';
+    input.setAttribute('title','Choisir une date dans le calendrier ou saisir la date');
+    input.setAttribute('aria-label',input.getAttribute('aria-label')||input.labels?.[0]?.textContent?.trim()||'Choisir une date');
+  });
+}
+prepareDateFields();
+if(document.body && 'MutationObserver' in window){
+  new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{
+    if(node.nodeType===1){
+      if(node.matches?.('input[type="date"],input[type="datetime-local"]')) prepareDateFields(node.parentElement||document);
+      else if(node.querySelector?.('input[type="date"],input[type="datetime-local"]')) prepareDateFields(node);
+    }
+  }))).observe(document.body,{childList:true,subtree:true});
+}
 </script>
 
 </body>
