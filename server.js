@@ -4947,28 +4947,28 @@ app.get('/verification/:orderNumber',(req,res)=>{
             ${esc(orderNumberDisplay)}
           </div>
 
-          <h2>Informations générales</h2>
+          <h2>${lang==='en'?'General information':lang==='ar'?'المعلومات العامة':'Informations générales'}</h2>
 
           <div class="grid">
 
             <div class="field">
-              <div class="label">Date</div>
+              <div class="label">${lang==='en'?'Date':lang==='ar'?'التاريخ':'Date'}</div>
               <div class="value">${esc(createdAt)}</div>
             </div>
 
             <div class="field">
-              <div class="label">Statut</div>
+              <div class="label">${lang==='en'?'Status':lang==='ar'?'الحالة':'Statut'}</div>
               <div class="value">${esc(transfer.status)}</div>
             </div>
 
           </div>
 
-          <h2>Banque émettrice</h2>
+          <h2>${lang==='en'?'Issuing bank':lang==='ar'?'البنك المُصدِر':'Banque émettrice'}</h2>
 
           <div class="grid">
 
             <div class="field">
-              <div class="label">Banque</div>
+              <div class="label">${lang==='en'?'Bank':lang==='ar'?'البنك':'Banque'}</div>
               <div class="value">
                 Banque Islamique de Développement
               </div>
@@ -4982,7 +4982,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
             </div>
 
             <div class="field">
-              <div class="label">Adresse</div>
+              <div class="label">${lang==='en'?'Address':lang==='ar'?'العنوان':'Adresse'}</div>
               <div class="value">
                 ${esc(transfer.bank_origin_address)}
               </div>
@@ -4990,35 +4990,35 @@ app.get('/verification/:orderNumber',(req,res)=>{
 
           </div>
 
-          <h2>Donneur d'ordre</h2>
+          <h2>${lang==='en'?'Ordering customer':lang==='ar'?'صاحب التحويل':"Donneur d'ordre"}</h2>
 
           <div class="grid">
 
             <div class="field">
-              <div class="label">Nom</div>
+              <div class="label">${lang==='en'?'Name':lang==='ar'?'الاسم':'Nom'}</div>
               <div class="value">${esc(sourceName)}</div>
             </div>
 
             <div class="field">
-              <div class="label">Compte / IBAN</div>
+              <div class="label">${lang==='en'?'Account / IBAN':lang==='ar'?'الحساب / IBAN':'Compte / IBAN'}</div>
               <div class="value">${esc(sourceIban)}</div>
             </div>
 
           </div>
 
-          <h2>Bénéficiaire</h2>
+          <h2>${lang==='en'?'Beneficiary':lang==='ar'?'المستفيد':'Bénéficiaire'}</h2>
 
           <div class="grid">
 
             <div class="field">
-              <div class="label">Nom</div>
+              <div class="label">${lang==='en'?'Name':lang==='ar'?'الاسم':'Nom'}</div>
               <div class="value">
                 ${esc(transfer.beneficiary_name)}
               </div>
             </div>
 
             <div class="field">
-              <div class="label">Pays</div>
+              <div class="label">${lang==='en'?'Country':lang==='ar'?'البلد':'Pays'}</div>
               <div class="value">
                 ${esc(transfer.beneficiary_country)}
               </div>
@@ -5026,26 +5026,26 @@ app.get('/verification/:orderNumber',(req,res)=>{
 
           </div>
 
-          <h2>Banque bénéficiaire</h2>
+          <h2>${lang==='en'?'Beneficiary bank':lang==='ar'?'بنك المستفيد':'Banque bénéficiaire'}</h2>
 
           <div class="grid">
 
             <div class="field">
-              <div class="label">Banque</div>
+              <div class="label">${lang==='en'?'Bank':lang==='ar'?'البنك':'Banque'}</div>
               <div class="value">
                 ${esc(transfer.bank_name)}
               </div>
             </div>
 
             <div class="field">
-              <div class="label">Compte / IBAN</div>
+              <div class="label">${lang==='en'?'Account / IBAN':lang==='ar'?'الحساب / IBAN':'Compte / IBAN'}</div>
               <div class="value">
                 ${esc(transfer.iban || transfer.account_no)}
               </div>
             </div>
 
             <div class="field">
-              <div class="label">BIC / SWIFT</div>
+              <div class="label">${lang==='en'?'BIC / SWIFT':'BIC / SWIFT'}</div>
               <div class="value">
                 ${esc(transfer.bic)}
               </div>
@@ -5053,29 +5053,29 @@ app.get('/verification/:orderNumber',(req,res)=>{
 
           </div>
 
-          <h2>Détails du virement</h2>
+          <h2>${lang==='en'?'Transfer details':lang==='ar'?'تفاصيل التحويل':'Détails du virement'}</h2>
 
           <div class="grid">
 
             <div class="field">
-              <div class="label">Montant</div>
+              <div class="label">${lang==='en'?'Amount':lang==='ar'?'المبلغ':'Montant'}</div>
               <div class="value">${esc(amount)}</div>
             </div>
 
             <div class="field">
-              <div class="label">Notification</div>
+              <div class="label">${lang==='en'?'Notification':lang==='ar'?'الإشعار':'Notification'}</div>
               <div class="value">${esc(notification)}</div>
             </div>
 
             <div class="field">
-              <div class="label">Motif</div>
+              <div class="label">${lang==='en'?'Reason':lang==='ar'?'السبب':'Motif'}</div>
               <div class="value">
                 ${esc(transfer.reason)}
               </div>
             </div>
 
             <div class="field">
-              <div class="label">Condition du virement</div>
+              <div class="label">${lang==='en'?'Transfer condition':lang==='ar'?'شروط التحويل':'Condition du virement'}</div>
               <div class="value">
                 ${esc(transfer.condition_text)}
               </div>
