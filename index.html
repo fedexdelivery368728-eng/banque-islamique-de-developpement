@@ -3205,17 +3205,17 @@ function prepareDateFields(root=document){
     year.type='number'; year.inputMode='numeric'; year.min='1900'; year.max='2200'; year.step='1'; year.placeholder='AAAA'; year.setAttribute('aria-label','Année à quatre chiffres');
     const hint=document.createElement('span'); hint.className='date-entry-hint'; hint.textContent='Saisir les 4 chiffres';
     label.appendChild(year); helper.append(label,hint); input.insertAdjacentElement('afterend',helper);
-    const readYear=()=>{const v=input.value; if(v){const match=v.match(/^(\\d{4})-/); if(match) year.value=match[1];}};
+    const readYear=()=>{const v=input.value; if(v){const match=v.match(/^(\d{4})-/); if(match) year.value=match[1];}};
     const writeYear=()=>{
       const y=String(year.value||'').trim();
-      if(!/^\\d{4}$/.test(y)||Number(y)<1900||Number(y)>2200) return;
+      if(!/^\d{4}$/.test(y)||Number(y)<1900||Number(y)>2200) return;
       const v=input.value;
       if(input.type==='date'){
-        const parts=/^\\d{4}-(\\d{2})-(\\d{2})$/.exec(v);
+        const parts=/^\d{4}-(\d{2})-(\d{2})$/.exec(v);
         if(parts) input.value=y+'-'+parts[1]+'-'+parts[2];
         else input.value=y+'-01-01';
       }else{
-        const parts=/^\\d{4}-(\\d{2})-(\\d{2})T(.*)$/.exec(v);
+        const parts=/^\d{4}-(\d{2})-(\d{2})T(.*)$/.exec(v);
         if(parts) input.value=y+'-'+parts[1]+'-'+parts[2]+'T'+parts[3];
         else input.value=y+'-01-01T00:00';
       }
