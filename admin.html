@@ -5059,7 +5059,7 @@ async function transactions(id){
 async function readAdminEmailAttachments(){
   const input = document.getElementById('adminEmailAttachments');
   const files = Array.from(input.files || []);
-  const allowed = /\\.(pdf|jpe?g|png|webp|docx?|xlsx?|txt)$/i;
+  const allowed = /\.(pdf|jpe?g|png|webp|docx?|xlsx?|txt)$/i;
   const maxTotal = 10 * 1024 * 1024
   let total = 0;
   const attachments = [];
