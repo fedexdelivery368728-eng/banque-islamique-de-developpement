@@ -686,7 +686,7 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   };
   const isDubai=/^(ae|uae)$/.test(originCountry)||/dubai|dubaï|emirates|émirats|united arab emirates|الإمارات/.test(originCountry);
   const accent=isDubai?'#b28a45':'#087f68', pale=isDubai?'#f5efe3':'#e8f2ee';
-  const issuerDefaults=isDubai?{bank:'Dubai Islamic Bank (DIB)',address:'Al Maktoum Road, Port Saeed, Deira, PO Box 1080, Dubai, UAE',bic:'DUIBAEAD',country:'Émirats arabes unis'}:{bank:'Banque Islamique de Développement',address:'10, Avenue du Développement, Casablanca, Maroc',bic:'ISLDMAMC',country:'Maroc'};
+  const issuerDefaults=isDubai?{bank:'Dubai Islamic Bank (DIB)',address:'68 Al Maktoum Road, Port Saeed, Deira, P.O. Box 1080, Dubai, United Arab Emirates',bic:'DUIBAEAD',country:'Émirats arabes unis'}:{bank:'Banque Islamique de Développement',address:'10, Avenue du Développement, Casablanca, Maroc',bic:'ISLDMAMC',country:'Maroc'};
   const doc=new PDFDocument({size:'A4',margin:28});
   const chunks=[]; doc.on('data',chunk=>chunks.push(chunk));
   const finished=new Promise((resolve,reject)=>{doc.on('end',()=>resolve(Buffer.concat(chunks)));doc.on('error',reject);});
@@ -3143,7 +3143,7 @@ const currency=
       },
       AE:{
         country:'Émirats arabes unis (Dubaï)',
-        address:'Head Office Building 2, Al Maktoum Road (en face de Dnata), Deira, Dubai, United Arab Emirates'
+        address:'68 Al Maktoum Road, Port Saeed, Deira, P.O. Box 1080, Dubai, United Arab Emirates'
       }
     };
 
