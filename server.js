@@ -1970,10 +1970,25 @@ app.get('/api/admin/internal-transfers/:id/pdf',adminAuth,async(req,res)=>{
 
     const attestationTransfer=attestation.transfer;
 
-    const pdf=await generateInternalTransferAttestationPdf(
-      attestationTransfer,
-      ['fr','en','ar'].includes(req.query.lang) ? req.query.lang : 'fr'
-    );
+    const pdfLang=['fr','en','ar'].includes(req.query.lang) ? req.query.lang : 'fr';
+    const internalPdfTransfer={
+      ...attestationTransfer,
+      order_number:attestationTransfer.reference,
+      reference:attestationTransfer.reference,
+      created_at:attestationTransfer.completed_at,
+      sender_iban:attestationTransfer.sender_account_display,
+      beneficiary_name:attestationTransfer.beneficiary_name,
+      iban:attestationTransfer.beneficiary_account_display,
+      bank_name:attestationTransfer.beneficiary_bank_name||attestationTransfer.beneficiary_bank||'',
+      beneficiary_country:attestationTransfer.beneficiary_country||'',
+      condition_text:''
+    };
+    const internalPdfSource={
+      name:attestationTransfer.sender_name,
+      bank_country:attestationTransfer.sender_bank_country||'',
+      iban:attestationTransfer.sender_account_display
+    };
+    const pdf=await generateExternalTransferPdf(internalPdfTransfer,internalPdfSource,pdfLang);
 
     res.setHeader(
       'Content-Type',
