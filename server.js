@@ -5094,7 +5094,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
             </div>
 
             <div class="field">
-              <div class="label">${lang==='en'?'BIC / SWIFT':'BIC / SWIFT'}</div>
+              <div class="label">BIC / SWIFT</div>
               <div class="value">
                 ${esc(transfer.bic)}
               </div>
