@@ -2476,7 +2476,7 @@ function updateExternalBankOriginAddress(){
 
   if(country.value === 'AE'){
     address.value =
-      'Head Office Building 2, Al Maktoum Road (en face de Dnata), Deira, Dubaï, Émirats arabes unis';
+      '68 Al Maktoum Road, Port Saeed, Deira, P.O. Box 1080, Dubai, United Arab Emirates';
   }else{
     address.value =
       '10, Avenue du Développement, Casablanca, Maroc';
@@ -2843,7 +2843,7 @@ async function loadExternalTransferUsers(){
     const country = ({MA:'Maroc',MAR:'Maroc',AE:'Émirats arabes unis',UAE:'Émirats arabes unis',CM:'Cameroun'})[countryCode] || countryCode;
     const bank = /^(AE|UAE)$/.test(countryCode) ? 'Dubai Islamic Bank (DIB)' : 'Banque Islamique de Développement';
     const address = /^(AE|UAE)$/.test(countryCode)
-      ? 'Head Office Building 2, Al Maktoum Road, Deira, Dubai, United Arab Emirates'
+      ? '68 Al Maktoum Road, Port Saeed, Deira, P.O. Box 1080, Dubai, United Arab Emirates'
       : '10, Avenue du Développement, Casablanca, Maroc';
     info.textContent = [
       'Titulaire : ' + (user.name || user.email || '—'),
