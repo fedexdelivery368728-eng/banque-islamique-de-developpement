@@ -705,6 +705,13 @@ async function generateExternalTransferPdf(transfer, sourceUser, lang='fr'){
   const accent=isDubai?'#b28a45':'#087f68', pale=isDubai?'#f5efe3':'#e8f2ee';
   const issuerDefaults=isDubai?{bank:'Dubai Islamic Bank (DIB)',address:'68 Al Maktoum Road, Port Saeed, Deira, P.O. Box 1080, Dubai, United Arab Emirates',bic:'DUIBAEAD',country:'Émirats arabes unis'}:{bank:'Banque Islamique de Développement',address:'10, Avenue du Développement, Casablanca, Maroc',bic:'ISLDMAMC',country:'Maroc'};
   const doc=new PDFDocument({size:'A4',margin:28});
+  // Filigrane visible pour éviter toute confusion avec une attestation bancaire officielle.
+  doc.save();
+  doc.rotate(-32,{origin:[297,420]});
+  doc.font('Helvetica-Bold').fontSize(34).fillColor('#a7b8b1').opacity(0.22)
+    .text('DEMONSTRATION - NON OFFICIEL',55,405,{width:600,align:'center',lineBreak:false});
+  doc.restore();
+  doc.opacity(1);
   const chunks=[]; doc.on('data',chunk=>chunks.push(chunk));
   const finished=new Promise((resolve,reject)=>{doc.on('end',()=>resolve(Buffer.concat(chunks)));doc.on('error',reject);});
   const fontPath=path.join(__dirname,'fonts','NotoSansArabic[wdth,wght].ttf'), logoPath=path.join(__dirname,'IMG_4145.jpeg');
