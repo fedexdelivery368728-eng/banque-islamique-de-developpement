@@ -4702,7 +4702,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
         <body>
           <div class="card">
             <h1>Ordre introuvable</h1>
-            <div class="simulation">Vérification de l’attestation de virement</div>
+            <div class="simulation">${verifyLabel}</div>
             <p>Le numéro d'ordre fourni n'est pas valide.</p>
           </div>
         </body>
@@ -4771,6 +4771,11 @@ app.get('/verification/:orderNumber',(req,res)=>{
 
     const lang=['fr','en','ar'].includes(String(transfer.notification_language||'').toLowerCase()) ? String(transfer.notification_language).toLowerCase() : 'fr';
     const orderNumberDisplay='OV-'+String(transfer.id).padStart(8,'0');
+    const origin=String(transfer.bank_origin_country||'').trim().toLowerCase();
+    const isDubai=['ae','uae','united arab emirates','emirats arabes unis','emirates'].includes(origin)||/dubai|dubaï|الإمارات/.test(origin);
+    const issuerBank=isDubai?(lang==='ar'?'بنك دبي الإسلامي':'Dubai Islamic Bank (DIB)'):(lang==='ar'?'البنك الإسلامي للتنمية':lang==='en'?'Islamic Development Bank':'Banque Islamique de Développement');
+    const verifyLabel=lang==='en'?'Transfer certificate verification':lang==='ar'?'التحقق من شهادة التحويل':'Vérification de l’attestation de virement';
+    const generalLabel=lang==='en'?'General information':lang==='ar'?'المعلومات العامة':'Informations générales';
 
     const createdAt=
       transfer.created_at
@@ -4933,7 +4938,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
               alt="Banque Islamique de Développement"
             >
 
-            <h1>Banque Islamique de Développement</h1>
+            <h1>${esc(issuerBank)}</h1>
 
             <div>${lang==='en'?'TRANSFER ORDER':lang==='ar'?'أمر تحويل':'ORDRE DE VIREMENT'}</div>
 
@@ -4947,7 +4952,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
             ${esc(orderNumberDisplay)}
           </div>
 
-          <h2>${lang==='en'?'General information':lang==='ar'?'المعلومات العامة':'Informations générales'}</h2>
+          <h2>${generalLabel}</h2>
 
           <div class="grid">
 
@@ -4970,7 +4975,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
             <div class="field">
               <div class="label">${lang==='en'?'Bank':lang==='ar'?'البنك':'Banque'}</div>
               <div class="value">
-                Banque Islamique de Développement
+                ${esc(issuerBank)}
               </div>
             </div>
 
