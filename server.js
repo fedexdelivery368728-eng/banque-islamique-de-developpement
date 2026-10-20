@@ -3576,6 +3576,33 @@ app.delete('/api/admin/external-transfers/:id',adminAuth,(req,res)=>{
   }
 });
 
+app.patch('/api/admin/external-transfers/:id',adminAuth,(req,res)=>{
+  const id=Number(req.params.id);
+  if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'INVALID_TRANSFER_ID'});
+  const fields=['beneficiary_name','beneficiary_country','bank_name','iban','account_no','bic','bank_origin_country','bank_origin_address','sender_bank_name','sender_bank_address','sender_bank_bic','reason','condition_text','notification_language'];
+  const input=req.body||{};
+  const values={};
+  for(const key of fields){
+    if(input[key]!==undefined){
+      if(typeof input[key]!=='string' && input[key]!==null) return res.status(400).json({error:'INVALID_FIELD',field:key});
+      values[key]=String(input[key]??'').trim();
+    }
+  }
+  if(values.notification_language!==undefined && !['fr','en','ar'].includes(values.notification_language)) return res.status(400).json({error:'INVALID_NOTIFICATION_LANGUAGE'});
+  if(!Object.keys(values).length) return res.status(400).json({error:'NO_FIELDS_TO_UPDATE'});
+  try{
+    const existing=db.prepare('SELECT id FROM external_transfers WHERE id=?').get(id);
+    if(!existing) return res.status(404).json({error:'EXTERNAL_TRANSFER_NOT_FOUND'});
+    const columns=Object.keys(values);
+    db.prepare('UPDATE external_transfers SET '+columns.map(k=>k+'=?').join(',')+',updated_at=? WHERE id=?')
+      .run(...columns.map(k=>values[k]),now(),id);
+    return res.json({ok:true,transfer:db.prepare('SELECT * FROM external_transfers WHERE id=?').get(id)});
+  }catch(e){
+    console.error('ADMIN_EXTERNAL_TRANSFER_UPDATE_FAILED',e);
+    return res.status(500).json({error:'ADMIN_EXTERNAL_TRANSFER_UPDATE_FAILED'});
+  }
+});
+
 app.patch('/api/admin/external-transfers/:id/status',adminAuth,(req,res)=>{
   try{
 
