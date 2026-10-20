@@ -4712,7 +4712,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
     if(!match){
       return res.status(404).send(`
         <!doctype html>
-        <html lang="${lang}">
+        <html lang="fr">
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -4746,7 +4746,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
         <body>
           <div class="card">
             <h1>Ordre introuvable</h1>
-            <div class="simulation">${verifyLabel}</div>
+            <div class="simulation">Vérification de l’attestation de virement</div>
             <p>Le numéro d'ordre fourni n'est pas valide.</p>
           </div>
         </body>
