@@ -327,6 +327,12 @@ section.card:has(#externalTransfersTable) tbody tr:hover td {
 
 
 /* Saisie des dates : champ lisible, tactile et calendrier facile à ouvrir */
+/* Année séparée pour éviter les difficultés du champ date natif sur Safari */
+.date-entry-helper{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:13px;color:#52645e}
+.date-entry-helper label{font-weight:600}
+.date-entry-helper input[type="number"]{width:108px;min-height:38px;padding:7px 9px;font-size:16px}
+.date-entry-helper .date-entry-hint{font-size:12px}
+
 input[type="date"],
 input[type="datetime-local"]{
   width:100%;
@@ -5356,22 +5362,52 @@ check();
 })();
 
 
-// Harmonise tous les champs de date, y compris ceux créés dynamiquement dans l'administration.
+
+// Ajoute une saisie directe de l'année à côté de chaque calendrier, tout en conservant la date ISO pour le serveur.
 function prepareDateFields(root=document){
-  root.querySelectorAll('input[type="date"],input[type="datetime-local"]').forEach(input=>{
+  const fields=[];
+  if(root.matches?.('input[type="date"],input[type="datetime-local"]')) fields.push(root);
+  root.querySelectorAll?.('input[type="date"],input[type="datetime-local"]').forEach(input=>fields.push(input));
+  fields.forEach(input=>{
     input.lang='fr';
     input.autocomplete='off';
-    input.setAttribute('title','Choisir une date dans le calendrier ou saisir la date');
-    input.setAttribute('aria-label',input.getAttribute('aria-label')||input.labels?.[0]?.textContent?.trim()||'Choisir une date');
+    input.setAttribute('title','Choisir le jour et le mois dans le calendrier; saisir l’année dans le champ juste dessous');
+    if(input.dataset.yearHelperReady==='1') return;
+    input.dataset.yearHelperReady='1';
+    const helper=document.createElement('div');
+    helper.className='date-entry-helper';
+    const label=document.createElement('label');
+    label.textContent='Année';
+    const year=document.createElement('input');
+    year.type='number'; year.inputMode='numeric'; year.min='1900'; year.max='2200'; year.step='1'; year.placeholder='AAAA'; year.setAttribute('aria-label','Année à quatre chiffres');
+    const hint=document.createElement('span'); hint.className='date-entry-hint'; hint.textContent='Saisir les 4 chiffres';
+    label.appendChild(year); helper.append(label,hint); input.insertAdjacentElement('afterend',helper);
+    const readYear=()=>{const v=input.value; if(v){const match=v.match(/^(\\d{4})-/); if(match) year.value=match[1];}};
+    const writeYear=()=>{
+      const y=String(year.value||'').trim();
+      if(!/^\\d{4}$/.test(y)||Number(y)<1900||Number(y)>2200) return;
+      const v=input.value;
+      if(input.type==='date'){
+        const parts=/^\\d{4}-(\\d{2})-(\\d{2})$/.exec(v);
+        if(parts) input.value=y+'-'+parts[1]+'-'+parts[2];
+        else input.value=y+'-01-01';
+      }else{
+        const parts=/^\\d{4}-(\\d{2})-(\\d{2})T(.*)$/.exec(v);
+        if(parts) input.value=y+'-'+parts[1]+'-'+parts[2]+'T'+parts[3];
+        else input.value=y+'-01-01T00:00';
+      }
+      input.dispatchEvent(new Event('input',{bubbles:true})); input.dispatchEvent(new Event('change',{bubbles:true}));
+    };
+    year.addEventListener('change',writeYear);
+    year.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();writeYear();year.blur();}});
+    input.addEventListener('input',readYear); input.addEventListener('change',readYear);
+    readYear();
   });
 }
 prepareDateFields();
 if(document.body && 'MutationObserver' in window){
   new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{
-    if(node.nodeType===1){
-      if(node.matches?.('input[type="date"],input[type="datetime-local"]')) prepareDateFields(node.parentElement||document);
-      else if(node.querySelector?.('input[type="date"],input[type="datetime-local"]')) prepareDateFields(node);
-    }
+    if(node.nodeType===1) prepareDateFields(node);
   }))).observe(document.body,{childList:true,subtree:true});
 }
 </script>
