@@ -3381,7 +3381,7 @@ app.get('/api/admin/external-transfers/:id/pdf',adminAuth,async (req,res)=>{
         sourceUser,
         ['fr','en','ar'].includes(req.query.lang)
           ? req.query.lang
-          : 'fr'
+          : (['fr','en','ar'].includes(transfer.notification_language) ? transfer.notification_language : 'fr')
       );
 
     const orderNumber=
