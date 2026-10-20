@@ -2233,6 +2233,7 @@ function setLanguage(l){
 }
 
 let clientIncomingTransfers = [];
+let clientAccountCurrency = "USD";
 
 function renderIncomingTransfers(){
   const incomingBox=document.getElementById("incomingTransfers");
@@ -2255,7 +2256,7 @@ function renderIncomingTransfers(){
 
   incomingBox.innerHTML=incoming.map(x=>{
     const status=x.status==="available"?t.available:x.status==="cancelled"?t.cancelled:t.pending;
-    const amount=money(x.amount_cents,accountCurrency);
+    const amount=money(x.amount_cents,clientAccountCurrency);
     const sender=String(x.sender_name||"—");
     const condition=String(x.condition_text||t.noCondition);
     return `
@@ -2616,6 +2617,7 @@ async function load(){
 
   const accountCurrency =
   me.account_currency || "USD";
+  clientAccountCurrency = accountCurrency;
 
 balance.textContent =
   money(me.balance_cents,accountCurrency);
