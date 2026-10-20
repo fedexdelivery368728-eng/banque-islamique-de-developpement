@@ -2213,6 +2213,7 @@ const money=(v,currency="USD")=>
 
 function setLanguage(l){
   lang=l;
+  document.documentElement.lang=l;
   document.documentElement.dir=l==="ar"?"rtl":"ltr";
 
   document.querySelectorAll("[data-k]").forEach(
@@ -2227,6 +2228,46 @@ function setLanguage(l){
 
   const accountTab = document.querySelector('.tabs button[onclick*="myAccount"]');
   if(accountTab) accountTab.textContent=tr("myAccount");
+
+  renderIncomingTransfers();
+}
+
+let clientIncomingTransfers = [];
+
+function renderIncomingTransfers(){
+  const incomingBox=document.getElementById("incomingTransfers");
+  const incomingCard=document.getElementById("incomingTransfersCard");
+  if(!incomingBox || !incomingCard) return;
+
+  const labels={
+    fr:{title:"Virement entrant",empty:"Aucun virement entrant.",amount:"Montant :",sender:"Expéditeur :",condition:"Condition demandée :",noCondition:"Aucune condition précisée",status:"Statut :",available:"Disponible",cancelled:"Annulé",pending:"🔒 En attente",warning:"⚠️ Montant non disponible tant que la condition n’est pas validée."},
+    en:{title:"Incoming transfer",empty:"No incoming transfers.",amount:"Amount:",sender:"Sender:",condition:"Requested condition:",noCondition:"No condition specified",status:"Status:",available:"Available",cancelled:"Cancelled",pending:"🔒 Pending",warning:"⚠️ Funds are unavailable until the condition is validated."},
+    ar:{title:"حوالة واردة",empty:"لا توجد حوالات واردة.",amount:"المبلغ:",sender:"المرسل:",condition:"الشرط المطلوب:",noCondition:"لم يتم تحديد أي شرط",status:"الحالة:",available:"متاح",cancelled:"ملغاة",pending:"🔒 قيد الانتظار",warning:"⚠️ المبلغ غير متاح حتى يتم التحقق من الشرط."}
+  };
+  const t=labels[lang]||labels.fr;
+  const incoming=Array.isArray(clientIncomingTransfers)?clientIncomingTransfers:[];
+  incomingCard.style.display=incoming.some(x=>x.status==="pending")?"block":"none";
+
+  if(incoming.length===0){
+    incomingBox.innerHTML='<p class="muted">'+t.empty+'</p>';
+    return;
+  }
+
+  incomingBox.innerHTML=incoming.map(x=>{
+    const status=x.status==="available"?t.available:x.status==="cancelled"?t.cancelled:t.pending;
+    const amount=money(x.amount_cents,accountCurrency);
+    const sender=String(x.sender_name||"—");
+    const condition=String(x.condition_text||t.noCondition);
+    return `
+      <div class="card" style="margin-top:12px">
+        <strong>🔒 ${t.title}</strong>
+        <p><strong>${t.amount}</strong> ${amount}</p>
+        <p><strong>${t.sender}</strong> ${sender}</p>
+        <p><strong>${t.condition}</strong> ${condition}</p>
+        <p><strong>${t.status}</strong> ${status}</p>
+        ${x.status==="pending"?'<p class="muted">'+t.warning+'</p>':''}
+      </div>`;
+  }).join("");
 }
 
 function mode(m){
@@ -2625,78 +2666,8 @@ account.textContent =
     me.rib?.bic || me.bic || "À renseigner";
 
   let bs=await api("/api/beneficiaries");
-  let incoming=await api("/api/incoming-transfers");
-
-  const incomingBox =
-    document.getElementById("incomingTransfers");
-    const incomingCard =
-  document.getElementById("incomingTransfersCard");
-
-incomingCard.style.display =
-  incoming.some(x => x.status === "pending")
-    ? "block"
-    : "none";
-
-  if(incoming.length===0){
-
-    incomingBox.innerHTML =
-      '<p class="muted">Aucun virement entrant.</p>';
-
-  }else{
-
-    incomingBox.innerHTML =
-      incoming.map(x=>{
-
-        const status =
-          x.status==="available"
-          ? "Disponible"
-          : x.status==="cancelled"
-          ? "Annulé"
-          : "🔒 En attente";
-
-        const amount =
-          money(
-            x.amount_cents,
-            accountCurrency
-          );
-
-        return `
-          <div class="card" style="margin-top:12px">
-
-            <strong>🔒 Virement entrant</strong>
-
-            <p>
-              <strong>Montant :</strong>
-              ${amount}
-            </p>
-
-            <p>
-              <strong>Expéditeur :</strong>
-              ${x.sender_name}
-            </p>
-
-            <p>
-              <strong>Condition demandée :</strong>
-              ${x.condition_text || "Aucune condition précisée"}
-            </p>
-
-            <p>
-              <strong>Statut :</strong>
-              ${status}
-            </p>
-
-            ${
-              x.status==="pending"
-              ? '<p class="muted">⚠️ Montant non disponible tant que la condition n’est pas validée.</p>'
-              : ''
-            }
-
-          </div>
-        `;
-
-      }).join("");
-
-  }
+  clientIncomingTransfers=await api("/api/incoming-transfers");
+  renderIncomingTransfers();
   internalBeneficiary.innerHTML=
     bs.map(
       b=>`<option value="${b.id}">
