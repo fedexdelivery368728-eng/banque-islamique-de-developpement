@@ -4668,7 +4668,7 @@ app.get('/verification/:orderNumber',(req,res)=>{
     if(!match){
       return res.status(404).send(`
         <!doctype html>
-        <html lang="fr">
+        <html lang="${lang}">
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -4769,17 +4769,17 @@ app.get('/verification/:orderNumber',(req,res)=>{
       `);
     }
 
-    const orderNumberDisplay=
-      'OV-'+String(transfer.id).padStart(8,'0');
+    const lang=['fr','en','ar'].includes(String(transfer.notification_language||'').toLowerCase()) ? String(transfer.notification_language).toLowerCase() : 'fr';
+    const orderNumberDisplay='OV-'+String(transfer.id).padStart(8,'0');
 
     const createdAt=
       transfer.created_at
-        ? new Date(transfer.created_at).toLocaleString('fr-FR')
+        ? new Date(transfer.created_at).toLocaleString(lang==='en'?'en-GB':lang==='ar'?'ar':'fr-FR')
         : '—';
 
     const amount=
       (Number(transfer.amount_cents||0)/100)
-        .toLocaleString('fr-FR',{
+        .toLocaleString(lang==='en'?'en-US':lang==='ar'?'ar':'fr-FR',{
           minimumFractionDigits:2,
           maximumFractionDigits:2
         })+
