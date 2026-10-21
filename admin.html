@@ -356,6 +356,7 @@ input[type="datetime-local"]:focus{
   input[type="date"],input[type="datetime-local"]{font-size:16px;min-height:48px;}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 </head>
 
 <body>
@@ -497,6 +498,9 @@ input[type="datetime-local"]:focus{
   </div>
 
 
+
+
+<div class="card" style="padding:14px 18px"><a class="primary" href="#customQrTool" style="display:inline-block;padding:11px 15px;border-radius:9px;text-decoration:none">Générateur de code QR personnalisé ↗</a></div>
 
   <!-- STATISTIQUES -->
 
@@ -1085,6 +1089,8 @@ input[type="datetime-local"]:focus{
   </section>
 
 
+
+<section class="card" id="customQrTool"><h2>Générateur de code QR personnalisé</h2><p class="muted">Outil indépendant des comptes et des virements : encodez un texte ou un lien de votre choix.</p><label for="customQrContent">Texte ou lien</label><textarea id="customQrContent" rows="4" maxlength="2500" placeholder="Saisissez un texte ou https://exemple.com" style="width:100%;resize:vertical"></textarea><div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-top:12px"><div><label for="customQrSize">Taille</label><select id="customQrSize"><option value="180">180 × 180</option><option value="256" selected>256 × 256</option><option value="384">384 × 384</option><option value="512">512 × 512</option></select></div><div><label for="customQrColor">Couleur</label><input id="customQrColor" type="color" value="#073d34" style="height:44px;width:64px;padding:4px"></div><button type="button" class="primary" onclick="generateCustomQr()">Générer le QR</button><button type="button" onclick="downloadCustomQr()">Télécharger PNG</button></div><div id="customQrResult" style="margin-top:18px;min-height:10px"></div><p class="muted" style="font-size:13px">N’encodez pas de mots de passe, données bancaires ou informations confidentielles.</p></section>
 </section>
 
 </div>
@@ -5425,6 +5431,10 @@ if(document.body && 'MutationObserver' in window){
     if(node.nodeType===1) prepareDateFields(node);
   }))).observe(document.body,{childList:true,subtree:true});
 }
+
+let customQrInstance=null;
+function generateCustomQr(){const value=document.getElementById('customQrContent').value.trim(),out=document.getElementById('customQrResult');out.replaceChildren();if(!value){out.textContent='Saisissez un texte ou un lien.';return;}if(typeof QRCode==='undefined'){out.textContent='La librairie QR ne s’est pas chargée. Vérifiez la connexion puis réessayez.';return;}const size=Number(document.getElementById('customQrSize').value)||256, color=document.getElementById('customQrColor').value||'#073d34',holder=document.createElement('div');holder.id='customQrCanvas';holder.style.cssText='display:inline-block;padding:12px;background:white;border:1px solid #dce5e1;border-radius:10px';out.appendChild(holder);try{customQrInstance=new QRCode(holder,{text:value,width:size,height:size,colorDark:color,colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});const p=document.createElement('p');p.className='muted';p.textContent='QR généré. Scannez-le pour vérifier son contenu.';out.appendChild(p);}catch(e){out.textContent='Échec de génération. Essayez un contenu plus court.';}}
+function downloadCustomQr(){const holder=document.getElementById('customQrCanvas');if(!holder){alert('Générez d’abord un QR code.');return;}const canvas=holder.querySelector('canvas'),img=holder.querySelector('img'),url=canvas?canvas.toDataURL('image/png'):img?img.src:null;if(!url){alert('Le QR n’est pas prêt.');return;}const a=document.createElement('a');a.href=url;a.download='code-qr-personnalise.png';document.body.appendChild(a);a.click();a.remove();}
 </script>
 
 </body>
