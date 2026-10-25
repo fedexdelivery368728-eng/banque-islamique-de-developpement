@@ -195,6 +195,17 @@ addUserColumn("ALTER TABLE users ADD COLUMN bank_country TEXT DEFAULT 'MA'");
 addUserColumn("ALTER TABLE users ADD COLUMN notification_method TEXT");
 addUserColumn("ALTER TABLE users ADD COLUMN notification_language TEXT NOT NULL DEFAULT 'fr'");
 
+db.exec(`
+CREATE TABLE IF NOT EXISTS transfer_tracking(
+ id INTEGER PRIMARY KEY AUTOINCREMENT, token TEXT NOT NULL UNIQUE,
+ transfer_type TEXT NOT NULL, transfer_id INTEGER NOT NULL, user_id INTEGER,
+ recipient_email TEXT NOT NULL DEFAULT '', recipient_name TEXT NOT NULL DEFAULT '',
+ language TEXT NOT NULL DEFAULT 'fr', reference TEXT NOT NULL DEFAULT '',
+ status TEXT NOT NULL DEFAULT 'En cours de traitement', opened_at TEXT, paused_at TEXT,
+ paused_total_ms INTEGER NOT NULL DEFAULT 0, released_85 INTEGER NOT NULL DEFAULT 0,
+ created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE(transfer_type,transfer_id)
+);
+`);
 app.set('trust proxy',1);
 app.use(express.json({ limit: '20mb' }));
 app.use(session({
@@ -890,6 +901,16 @@ async function sendTransactionEmail({
 
   }
 }
+function createTransferTracking({type,transferId,userId,email,name,language,reference,status='En cours de traitement'}){
+ if(!['internal','external','incoming'].includes(type)||!Number.isInteger(Number(transferId))||Number(transferId)<1)return null;
+ let row=db.prepare('SELECT * FROM transfer_tracking WHERE transfer_type=? AND transfer_id=?').get(type,Number(transferId));if(row)return row;
+ const result=db.prepare('INSERT INTO transfer_tracking(token,transfer_type,transfer_id,user_id,recipient_email,recipient_name,language,reference,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)').run(crypto.randomBytes(24).toString('hex'),type,Number(transferId),Number(userId)||null,String(email||'').trim().toLowerCase(),String(name||'Client'),['fr','en','ar'].includes(language)?language:'fr',String(reference||''),status,now(),now());
+ row=db.prepare('SELECT * FROM transfer_tracking WHERE id=?').get(result.lastInsertRowid);
+ if(row.recipient_email&&resend){const url='https://bid-developpement.com/suivi-virement/'+encodeURIComponent(row.token);const m={fr:{subject:'Lien de suivi de démonstration',title:'Suivi du virement — démonstration',body:'Un suivi de démonstration a été créé pour la référence '+(row.reference||row.transfer_id)+'. <a href="'+url+'">Ouvrir le suivi</a>. La progression est simulée et ne confirme pas un transfert bancaire réel.'},en:{subject:'Demonstration transfer tracking link',title:'Transfer tracking — demo',body:'A demonstration tracking page was created for reference '+(row.reference||row.transfer_id)+'. <a href="'+url+'">Open tracking</a>. Progress is simulated and does not confirm a real bank transfer.'},ar:{subject:'رابط متابعة تجريبي للتحويل',title:'متابعة التحويل — عرض تجريبي',body:'تم إنشاء متابعة تجريبية للمرجع '+(row.reference||row.transfer_id)+'. <a href="'+url+'">فتح المتابعة</a>. التقدم محاكاة ولا يؤكد تحويلاً مصرفياً حقيقياً.'}}[row.language];sendTransactionEmail({to:row.recipient_email,name:row.recipient_name,subject:m.subject,title:m.title,message:m.body,amountCents:0,balanceCents:0,showBalance:false,language:row.language});}
+ return row;
+}
+function trackingProgress(row){if(!row.opened_at)return 0;const start=new Date(row.opened_at).getTime();if(!Number.isFinite(start))return 0;const paused=Number(row.paused_total_ms||0)+(row.paused_at?Math.max(0,Date.now()-new Date(row.paused_at).getTime()):0);const pct=Math.floor(Math.max(0,Date.now()-start-paused)/(3*60*60*1000))*5;return Number(row.released_85)===1?Math.min(100,pct):Math.min(85,pct);}
+function notifyTrackingStatus(row,status){if(!row||!row.recipient_email||!resend)return;const lang=['fr','en','ar'].includes(row.language)?row.language:'fr';const m={fr:{subject:'Mise à jour du suivi de démonstration',title:'Mise à jour du suivi',body:'Le statut du suivi de démonstration '+(row.reference||row.transfer_id)+' a été mis à jour : <strong>'+String(status).slice(0,120)+'</strong>. Cette page est une simulation.'},en:{subject:'Demonstration tracking update',title:'Tracking update',body:'The demonstration tracking status for '+(row.reference||row.transfer_id)+' changed to <strong>'+String(status).slice(0,120)+'</strong>. This page is simulated.'},ar:{subject:'تحديث المتابعة التجريبية',title:'تحديث المتابعة',body:'تم تحديث حالة المتابعة التجريبية '+(row.reference||row.transfer_id)+' إلى <strong>'+String(status).slice(0,120)+'</strong>. هذه الصفحة محاكاة.'}}[lang];sendTransactionEmail({to:row.recipient_email,name:row.recipient_name,subject:m.subject,title:m.title,message:m.body,amountCents:0,balanceCents:0,showBalance:false,language:lang});}
 function auth(req,res,next){if(!req.session.uid)return res.status(401).json({error:'AUTH_REQUIRED'});next()}
 function accountNumber(id){
   const row = db.prepare(`
@@ -1578,6 +1599,7 @@ app.post('/api/account-transfer',auth,(req,res)=>{
       new Date().toISOString()
     );
 
+    createTransferTracking({type:'internal',transferId:Number(result.lastInsertRowid),userId:beneficiaryUser.id,email:beneficiaryUser.email,name:beneficiaryUser.name,language:beneficiaryUser.notification_language,reference,status:'En cours de traitement'});
     res.json({
       ok:true,
       id:result.lastInsertRowid,
@@ -3325,6 +3347,8 @@ const currency=
       now
     );
 
+    const trackingUser=db.prepare('SELECT name,email,notification_language FROM users WHERE id=?').get(userId);
+    createTransferTracking({type:'external',transferId:Number(result.lastInsertRowid),userId,email:trackingUser?.email,name:trackingUser?.name,language:trackingUser?.notification_language,reference:'EXT-'+String(result.lastInsertRowid).padStart(8,'0'),status:'En cours de traitement'});
     res.json({
       ok:true,
       transferId:result.lastInsertRowid,
@@ -3551,6 +3575,7 @@ app.post('/api/admin/external-transfers',adminAuth,(req,res)=>{
       ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `).run(...insertValues);
 
+    createTransferTracking({type:'external',transferId:Number(result.lastInsertRowid),userId:sourceUser.id,email:sourceUser.email,name:sourceUser.name,language:notificationLanguage,reference:'EXT-'+String(result.lastInsertRowid).padStart(8,'0'),status:'En cours de traitement'});
     res.json({
       ok:true,
       transferId:result.lastInsertRowid,
@@ -3976,6 +4001,7 @@ app.post('/api/admin/incoming-transfers',adminAuth,(req,res)=>{
     'pending',
     now()
   );
+  createTransferTracking({type:'incoming',transferId:Number(result.lastInsertRowid),userId:user.id,email:user.email,name:user.name,language:user.notification_language,reference:reference||('INC-'+String(result.lastInsertRowid).padStart(8,'0')),status:'En cours de traitement'});
 if(user.email){
 
   sendTransactionEmail({
@@ -5182,6 +5208,11 @@ app.get('/attestation-verification',(req,res)=>{
   return res.redirect(302,'/verification/'+encodeURIComponent(ref));
 });
 
+app.get('/api/transfer-tracking/:token',(req,res)=>{let row=db.prepare('SELECT * FROM transfer_tracking WHERE token=?').get(String(req.params.token||''));if(!row)return res.status(404).json({error:'TRACKING_NOT_FOUND'});if(!row.opened_at){db.prepare('UPDATE transfer_tracking SET opened_at=?,updated_at=? WHERE id=?').run(now(),now(),row.id);row=db.prepare('SELECT * FROM transfer_tracking WHERE id=?').get(row.id);}res.set('Cache-Control','no-store').json({ok:true,reference:row.reference||String(row.transfer_id),status:row.status,progress:trackingProgress(row),paused:!!row.paused_at,released85:Number(row.released_85)===1,demo:true});});
+app.get('/api/admin/transfer-tracking',adminAuth,(req,res)=>res.json(db.prepare('SELECT * FROM transfer_tracking ORDER BY id DESC').all().map(row=>({...row,progress:trackingProgress(row),paused:!!row.paused_at,released85:Number(row.released_85)===1}))));
+app.patch('/api/admin/transfer-tracking/:id',adminAuth,(req,res)=>{const id=Number(req.params.id),action=String(req.body.action||'').toLowerCase();if(!Number.isInteger(id)||id<1)return res.status(400).json({error:'INVALID_TRACKING_ID'});const row=db.prepare('SELECT * FROM transfer_tracking WHERE id=?').get(id);if(!row)return res.status(404).json({error:'TRACKING_NOT_FOUND'});if(action==='pause'){if(!row.paused_at)db.prepare('UPDATE transfer_tracking SET paused_at=?,updated_at=? WHERE id=?').run(now(),now(),id);}else if(action==='resume'){if(row.paused_at)db.prepare('UPDATE transfer_tracking SET paused_total_ms=paused_total_ms+?,paused_at=NULL,updated_at=? WHERE id=?').run(Math.max(0,Date.now()-new Date(row.paused_at).getTime()),now(),id);}else if(action==='release85')db.prepare('UPDATE transfer_tracking SET released_85=1,updated_at=? WHERE id=?').run(now(),id);else if(action==='status'){const status=String(req.body.status||'').trim().slice(0,120);if(!status)return res.status(400).json({error:'STATUS_REQUIRED'});db.prepare('UPDATE transfer_tracking SET status=?,updated_at=? WHERE id=?').run(status,now(),id);notifyTrackingStatus(row,status);}else return res.status(400).json({error:'INVALID_ACTION'});const fresh=db.prepare('SELECT * FROM transfer_tracking WHERE id=?').get(id);res.json({ok:true,tracking:{...fresh,progress:trackingProgress(fresh),paused:!!fresh.paused_at,released85:Number(fresh.released_85)===1}});});
+app.get('/suivi-virement/:token',(req,res)=>res.sendFile(path.join(__dirname,'tracking.html')));
+app.get('/admin-suivi-virements',(req,res)=>res.sendFile(path.join(__dirname,'admin-tracking.html')));
 app.get('/admin',(req,res)=>{
   res.sendFile(path.join(__dirname,'admin.html'));
 });
