@@ -3912,6 +3912,12 @@ if(completedUpdate.changes!==1){
       WHERE id=?
     `).get(transferId);
 
+    const tracking=db.prepare("SELECT * FROM transfer_tracking WHERE transfer_type='external' AND transfer_id=?").get(transferId);
+    if(tracking && tracking.status!==updated.status){
+      db.prepare('UPDATE transfer_tracking SET status=?,updated_at=? WHERE id=?').run(updated.status,now(),tracking.id);
+      notifyTrackingStatus(tracking,updated.status);
+    }
+
     res.json({
       ok:true,
       transfer:updated
@@ -4546,6 +4552,12 @@ app.post('/api/admin/incoming-transfers/:id/validate',adminAuth,(req,res)=>{
 
     const incoming = result.incoming;
 
+    const tracking=db.prepare("SELECT * FROM transfer_tracking WHERE transfer_type='incoming' AND transfer_id=?").get(id);
+    if(tracking && tracking.status!=='available'){
+      db.prepare('UPDATE transfer_tracking SET status=?,updated_at=? WHERE id=?').run('available',now(),tracking.id);
+      notifyTrackingStatus(tracking,'available');
+    }
+
     const client=db.prepare(`
   SELECT name,email,notification_language
   FROM users
@@ -4640,6 +4652,12 @@ app.post('/api/admin/incoming-transfers/:id/cancel',adminAuth,(req,res)=>{
     return res.status(409).json({
       error:'ALREADY_PROCESSED'
     });
+  }
+
+  const tracking=db.prepare("SELECT * FROM transfer_tracking WHERE transfer_type='incoming' AND transfer_id=?").get(id);
+  if(tracking && tracking.status!=='cancelled'){
+    db.prepare('UPDATE transfer_tracking SET status=?,updated_at=? WHERE id=?').run('cancelled',now(),tracking.id);
+    notifyTrackingStatus(tracking,'cancelled');
   }
 
   res.json({
