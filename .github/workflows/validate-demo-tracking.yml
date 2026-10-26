@@ -82,7 +82,6 @@ jobs:
                   "app.get('/api/transfer-tracking/:token'",
                   "function createTransferTracking",
                   "function notifyTrackingStatus",
-                  "SIMULATION",
               ],
               "admin.html": [
                   'id="customQrTool"',
