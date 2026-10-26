@@ -2199,6 +2199,11 @@ app.post('/api/admin/internal-transfers/:id/validate',adminAuth,(req,res)=>{
 
     })();
 
+    const tracking=db.prepare("SELECT * FROM transfer_tracking WHERE transfer_type='internal' AND transfer_id=?").get(id);
+    if(tracking && tracking.status!=='completed'){
+      db.prepare('UPDATE transfer_tracking SET status=?,updated_at=? WHERE id=?').run('completed',now(),tracking.id);
+    }
+
     const amountText=
       (Number(result.transfer.amount_cents||0)/100)
         .toLocaleString('fr-FR',{
@@ -4555,7 +4560,6 @@ app.post('/api/admin/incoming-transfers/:id/validate',adminAuth,(req,res)=>{
     const tracking=db.prepare("SELECT * FROM transfer_tracking WHERE transfer_type='incoming' AND transfer_id=?").get(id);
     if(tracking && tracking.status!=='available'){
       db.prepare('UPDATE transfer_tracking SET status=?,updated_at=? WHERE id=?').run('available',now(),tracking.id);
-      notifyTrackingStatus(tracking,'available');
     }
 
     const client=db.prepare(`
