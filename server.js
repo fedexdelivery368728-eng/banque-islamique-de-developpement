@@ -3671,7 +3671,7 @@ app.patch('/api/admin/external-transfers/:id/status',adminAuth,(req,res)=>{
       });
     }
 
-    if(!['verified','processing','completed','failed'].includes(nextStatus)){
+    if(!['verified','processing','completed','failed','cancelled'].includes(nextStatus)){
       return res.status(400).json({
         error:'INVALID_EXTERNAL_TRANSFER_STATUS'
       });
@@ -3692,11 +3692,12 @@ app.patch('/api/admin/external-transfers/:id/status',adminAuth,(req,res)=>{
     const currentStatus=String(transfer.status||'');
 
     const allowed={
-      pending_verification:['verified','failed'],
-      verified:['processing','failed'],
-      processing:['completed','failed'],
+      pending_verification:['verified','failed','cancelled'],
+      verified:['processing','failed','cancelled'],
+      processing:['completed','failed','cancelled'],
       completed:[],
-      failed:[]
+      failed:[],
+      cancelled:[]
     };
 
     if(!allowed[currentStatus] ||
@@ -3832,7 +3833,7 @@ if(completedUpdate.changes!==1){
   error.code='EXTERNAL_TRANSFER_STATUS_CHANGED';
   throw error;
 }   
-      }else if(nextStatus==='failed'){
+      }else if(nextStatus==='failed' || nextStatus==='cancelled'){
 
         if(currentStatus==='processing'){
 
@@ -3883,7 +3884,7 @@ if(completedUpdate.changes!==1){
 
         const failedUpdate=db.prepare(`
           UPDATE external_transfers
-          SET status='failed',
+          SET status=?,
               provider=?,
               provider_transfer_id=?,
               provider_status=?,
@@ -3891,9 +3892,10 @@ if(completedUpdate.changes!==1){
           WHERE id=?
             AND status=?
         `).run(
+          nextStatus,
           provider,
           providerTransferId,
-          providerStatus || 'failed',
+          providerStatus || nextStatus,
           nowValue,
           transferId,
           currentStatus
