@@ -114,5 +114,21 @@ jobs:
                       errors.append(f"{filename}: missing required marker {marker!r}")
           if errors:
               raise SystemExit("\\n".join(errors))
-          print("Tracking API, client page, admin controls and custom QR markers verified.")
+          incoming_validate = server.split(
+              "app.post('/api/admin/incoming-transfers/:id/validate'", 1
+          )[1].split(
+              "app.post('/api/admin/incoming-transfers/:id/cancel'", 1
+          )[0]
+          if "notifyTrackingStatus(tracking,'available')" in incoming_validate:
+              raise SystemExit("Duplicate tracking email still sent on incoming validation")
+
+          internal_validate = server.split(
+              "app.post('/api/admin/internal-transfers/:id/validate'", 1
+          )[1].split(
+              "app.post('/api/admin/setup'", 1
+          )[0]
+          if "transfer_type='internal' AND transfer_id=?" not in internal_validate:
+              raise SystemExit("Internal transfer tracking is not synchronized on validation")
+
+          print("Tracking API, client page, admin controls, custom QR, and notification safeguards verified.")
           PY
