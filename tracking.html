@@ -12,7 +12,20 @@ ar:{title:'متابعة التحويل',tag:'متابعة إرشادية',refere
 };
 let t=labels.fr;
 function setLanguage(lang){t=labels[lang]||labels.fr;document.documentElement.lang=labels[lang]?lang:'fr';document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.title=t.title;$('tag').textContent=t.tag;$('heading').textContent=t.title;$('referenceLabel').textContent=t.reference;$('status').textContent=t.loading;$('ref').textContent=t.loading;$('message').textContent=t.progress;}
-async function refresh(){try{const r=await fetch('/api/transfer-tracking/'+encodeURIComponent(token),{cache:'no-store'}),d=await r.json();if(!r.ok)throw Error();setLanguage(d.language);$('ref').textContent=d.reference;$('percent').textContent=d.progress+'%';$('fill').style.width=d.progress+'%';$('status').textContent=d.status;$('message').textContent=d.paused?t.paused:d.progress>=85&&!d.released85?t.waiting:t.progress}catch(e){$('ref').textContent='—';$('status').textContent=t.missing;$('message').textContent=t.verify}}
+function localizeStatus(status,lang){
+const raw=String(status||'').trim();
+const key=raw.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[’']/g,'').replace(/\\s+/g,' ');
+const inProgress=['virement en court','virement en cours','en cours de traitement','transfer in progress','processing transfer','التحويل قيد المعالجة','متابعة تطور التحويل جارية'].includes(key);
+if(inProgress)return lang==='ar'?'التحويل قيد المعالجة':lang==='en'?'Transfer in progress':'Virement en cours';
+const paused=['progression mise en pause par ladministrateur','progress paused by the administrator','تم إيقاف التقدم مؤقتًا من قبل المسؤول'].includes(key);
+if(paused)return lang==='ar'?'تم إيقاف التقدم مؤقتًا من قبل المسؤول':lang==='en'?'Progress paused by the administrator':'Progression mise en pause par l’administrateur.';
+const cancelled=['virement annule','transfer cancelled','transfer canceled','تم إلغاء التحويل'].includes(key);
+if(cancelled)return lang==='ar'?'تم إلغاء التحويل':lang==='en'?'Transfer cancelled':'Virement annulé';
+const completed=['virement termine','virement effectué','transfer completed','completed','تم التحويل'].includes(key);
+if(completed)return lang==='ar'?'اكتمل التحويل':lang==='en'?'Transfer completed':'Virement terminé';
+return raw;
+}
+async function refresh(){try{const r=await fetch('/api/transfer-tracking/'+encodeURIComponent(token),{cache:'no-store'}),d=await r.json();if(!r.ok)throw Error();setLanguage(d.language);$('ref').textContent=d.reference;$('percent').textContent=d.progress+'%';$('fill').style.width=d.progress+'%';$('status').textContent=localizeStatus(d.status,d.language);$('message').textContent=d.paused?t.paused:d.progress>=85&&!d.released85?t.waiting:t.progress}catch(e){$('ref').textContent='—';$('status').textContent=t.missing;$('message').textContent=t.verify}}
 await refresh();setInterval(refresh,60000);
 })();
 </script></body></html>
