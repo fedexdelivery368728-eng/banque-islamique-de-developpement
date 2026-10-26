@@ -130,5 +130,17 @@ jobs:
           if "transfer_type='internal' AND transfer_id=?" not in internal_validate:
               raise SystemExit("Internal transfer tracking is not synchronized on validation")
 
-          print("Tracking API, client page, admin controls, custom QR, and notification safeguards verified.")
+          external_status = server.split(
+              "app.patch('/api/admin/external-transfers/:id/status'", 1
+          )[1].split(
+              "app.post('/api/admin/incoming-transfers'", 1
+          )[0]
+          if "'cancelled'" not in external_status or "nextStatus==='cancelled'" not in external_status:
+              raise SystemExit("External transfer cancellation is not handled by the status API")
+          if "updateExternalTransferStatus(${id},'cancelled')" not in admin:
+              raise SystemExit("Admin cancellation action is missing")
+          if "Annulé / remboursé si nécessaire" not in admin:
+              raise SystemExit("Cancelled external transfer status display is missing")
+
+          print("Tracking API, client page, admin controls, custom QR, notifications, and external cancellation verified.")
           PY
