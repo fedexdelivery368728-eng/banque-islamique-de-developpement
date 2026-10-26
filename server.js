@@ -910,7 +910,25 @@ function createTransferTracking({type,transferId,userId,email,name,language,refe
  return row;
 }
 function trackingProgress(row){if(!row.opened_at)return 0;const nowMs=Date.now(),paused=Number(row.paused_total_ms||0)+(row.paused_at?Math.max(0,nowMs-new Date(row.paused_at).getTime()):0);if(Number(row.released_85)===1&&row.released_at){const released=new Date(row.released_at).getTime();return Math.min(100,85+Math.floor(Math.max(0,nowMs-released-paused)/(3*60*60*1000))*5);}const start=new Date(row.opened_at).getTime();if(!Number.isFinite(start))return 0;return Math.min(85,Math.floor(Math.max(0,nowMs-start-paused)/(3*60*60*1000))*5);}
-function notifyTrackingStatus(row,status){if(!row||!row.recipient_email||!resend)return;const safeStatus=String(status).slice(0,120).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');const lang=['fr','en','ar'].includes(row.language)?row.language:'fr';const m={fr:{subject:'Mise à jour du suivi de démonstration',title:'Mise à jour du suivi',body:'Le statut du suivi de démonstration '+(row.reference||row.transfer_id)+' a été mis à jour : <strong>'+safeStatus+'</strong>. Cette page est une simulation.'},en:{subject:'Demonstration tracking update',title:'Tracking update',body:'The demonstration tracking status for '+(row.reference||row.transfer_id)+' changed to <strong>'+safeStatus+'</strong>. This page is simulated.'},ar:{subject:'تحديث المتابعة التجريبية',title:'تحديث المتابعة',body:'تم تحديث حالة المتابعة التجريبية '+(row.reference||row.transfer_id)+' إلى <strong>'+safeStatus+'</strong>. هذه الصفحة محاكاة.'}}[lang];sendTransactionEmail({to:row.recipient_email,name:row.recipient_name,subject:m.subject,title:m.title,message:m.body,amountCents:0,balanceCents:0,showBalance:false,language:lang});}
+function notifyTrackingStatus(row,status){
+  if(!row||!row.recipient_email||!resend)return;
+  const lang=['fr','en','ar'].includes(row.language)?row.language:'fr';
+  const labels={
+    fr:{pending_verification:'En attente de vérification',verified:'Vérifié',processing:'En cours de traitement',completed:'Terminé',failed:'Échec',cancelled:'Annulé',available:'Disponible',paused:'En pause',in_progress:'En cours'},
+    en:{pending_verification:'Awaiting verification',verified:'Verified',processing:'Processing',completed:'Completed',failed:'Failed',cancelled:'Cancelled',available:'Available',paused:'Paused',in_progress:'In progress'},
+    ar:{pending_verification:'بانتظار التحقق',verified:'تم التحقق',processing:'قيد المعالجة',completed:'مكتمل',failed:'فشل',cancelled:'ملغى',available:'متاح',paused:'متوقف مؤقتاً',in_progress:'قيد التنفيذ'}
+  };
+  const rawStatus=String(status||'').slice(0,120);
+  const safeStatus=(labels[lang][rawStatus]||rawStatus).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const reference=String(row.reference||row.transfer_id||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const cancelled=rawStatus==='cancelled';
+  const messages={
+    fr:{subject:cancelled?'Virement annulé — suivi de démonstration':'Mise à jour du suivi de démonstration',title:cancelled?'Virement annulé':'Mise à jour du suivi',body:cancelled?'Le virement de démonstration '+reference+' a été annulé. Statut : <strong>'+safeStatus+'</strong>. Cette page est une simulation et ne confirme aucun transfert bancaire réel.':'Le statut du suivi de démonstration '+reference+' a été mis à jour : <strong>'+safeStatus+'</strong>. Cette page est une simulation et ne confirme aucun transfert bancaire réel.'},
+    en:{subject:cancelled?'Transfer cancelled — demonstration tracking':'Demonstration tracking update',title:cancelled?'Transfer cancelled':'Tracking update',body:cancelled?'Demonstration transfer '+reference+' has been cancelled. Status: <strong>'+safeStatus+'</strong>. This page is simulated and does not confirm a real bank transfer.':'The demonstration tracking status for '+reference+' changed to <strong>'+safeStatus+'</strong>. This page is simulated and does not confirm a real bank transfer.'},
+    ar:{subject:cancelled?'إلغاء التحويل — متابعة تجريبية':'تحديث المتابعة التجريبية',title:cancelled?'تم إلغاء التحويل':'تحديث المتابعة',body:cancelled?'تم إلغاء التحويل التجريبي '+reference+'. الحالة: <strong>'+safeStatus+'</strong>. هذه الصفحة محاكاة ولا تؤكد إجراء تحويل مصرفي حقيقي.':'تم تحديث حالة المتابعة التجريبية '+reference+' إلى <strong>'+safeStatus+'</strong>. هذه الصفحة محاكاة ولا تؤكد إجراء تحويل مصرفي حقيقي.'}
+  }[lang];
+  sendTransactionEmail({to:row.recipient_email,name:row.recipient_name,subject:messages.subject,title:messages.title,message:messages.body,amountCents:0,balanceCents:0,showBalance:false,language:lang});
+}
 function auth(req,res,next){if(!req.session.uid)return res.status(401).json({error:'AUTH_REQUIRED'});next()}
 function accountNumber(id){
   const row = db.prepare(`
