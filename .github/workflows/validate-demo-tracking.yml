@@ -65,3 +65,55 @@ jobs:
           for file in /tmp/inline-js/*.js; do
             node --check "$file"
           done
+      - name: Verify tracking and QR integration markers
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          server = Path("server.js").read_text(encoding="utf-8")
+          admin = Path("admin.html").read_text(encoding="utf-8")
+          tracking_admin = Path("admin-tracking.html").read_text(encoding="utf-8")
+          tracking_client = Path("tracking.html").read_text(encoding="utf-8")
+
+          required = {
+              "server.js": [
+                  "app.get('/api/admin/transfer-tracking'",
+                  "app.patch('/api/admin/transfer-tracking/:id'",
+                  "app.get('/api/transfer-tracking/:token'",
+                  "function createTransferTracking",
+                  "function notifyTrackingStatus",
+                  "SIMULATION",
+              ],
+              "admin.html": [
+                  'id="customQrTool"',
+                  'id="customQrContent"',
+                  'id="customQrResult"',
+                  "function generateCustomQr",
+                  'href="/admin-suivi-virements"',
+              ],
+              "admin-tracking.html": [
+                  "/api/admin/transfer-tracking",
+                  "release85",
+                  "Changer statut / notifier",
+              ],
+              "tracking.html": [
+                  "/api/transfer-tracking/",
+                  "SIMULATION DE DÉMONSTRATION",
+                  "Évolution du virement en cours",
+              ],
+          }
+          files = {
+              "server.js": server,
+              "admin.html": admin,
+              "admin-tracking.html": tracking_admin,
+              "tracking.html": tracking_client,
+          }
+          errors = []
+          for filename, markers in required.items():
+              for marker in markers:
+                  if marker not in files[filename]:
+                      errors.append(f"{filename}: missing required marker {marker!r}")
+          if errors:
+              raise SystemExit("\\n".join(errors))
+          print("Tracking API, client page, admin controls and custom QR markers verified.")
+          PY
