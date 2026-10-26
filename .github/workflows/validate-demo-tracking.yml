@@ -1,0 +1,146 @@
+name: Validate demo tracking changes
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, feature/demo-transfer-tracking-notifications]
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Check server syntax
+        run: node --check server.js
+      - name: Check inline JavaScript in tracking pages
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+
+          files = ["admin.html", "admin-tracking.html", "tracking.html"]
+          class Scripts(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.in_script = False
+                  self.skip = False
+                  self.parts = []
+                  self.current = []
+              def handle_starttag(self, tag, attrs):
+                  if tag.lower() == "script":
+                      attrs = dict(attrs)
+                      self.in_script = True
+                      self.skip = "src" in attrs or attrs.get("type", "").lower() in ("application/json", "application/ld+json")
+                      self.current = []
+              def handle_data(self, data):
+                  if self.in_script and not self.skip:
+                      self.current.append(data)
+              def handle_endtag(self, tag):
+                  if tag.lower() == "script" and self.in_script:
+                      if not self.skip and "".join(self.current).strip():
+                          self.parts.append("".join(self.current))
+                      self.in_script = False
+                      self.skip = False
+
+          out = Path("/tmp/inline-js")
+          out.mkdir(exist_ok=True)
+          count = 0
+          for filename in files:
+              parser = Scripts()
+              parser.feed(Path(filename).read_text(encoding="utf-8"))
+              for index, script in enumerate(parser.parts, 1):
+                  target = out / f"{Path(filename).stem}-{index}.js"
+                  target.write_text(script, encoding="utf-8")
+                  print(f"Checking {filename} inline script #{index}")
+                  count += 1
+          if count == 0:
+              raise SystemExit("No inline JavaScript found")
+          print(f"Extracted {count} inline script(s)")
+          PY
+          for file in /tmp/inline-js/*.js; do
+            node --check "$file"
+          done
+      - name: Verify tracking and QR integration markers
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          server = Path("server.js").read_text(encoding="utf-8")
+          admin = Path("admin.html").read_text(encoding="utf-8")
+          tracking_admin = Path("admin-tracking.html").read_text(encoding="utf-8")
+          tracking_client = Path("tracking.html").read_text(encoding="utf-8")
+
+          required = {
+              "server.js": [
+                  "app.get('/api/admin/transfer-tracking'",
+                  "app.patch('/api/admin/transfer-tracking/:id'",
+                  "app.get('/api/transfer-tracking/:token'",
+                  "function createTransferTracking",
+                  "function notifyTrackingStatus",
+              ],
+              "admin.html": [
+                  'id="customQrTool"',
+                  'id="customQrContent"',
+                  'id="customQrResult"',
+                  "function generateCustomQr",
+                  'href="/admin-suivi-virements"',
+              ],
+              "admin-tracking.html": [
+                  "/api/admin/transfer-tracking",
+                  "release85",
+                  "Changer statut / notifier",
+              ],
+              "tracking.html": [
+                  "/api/transfer-tracking/",
+                  "SIMULATION DE DÉMONSTRATION",
+                  "Évolution du virement en cours",
+              ],
+          }
+          files = {
+              "server.js": server,
+              "admin.html": admin,
+              "admin-tracking.html": tracking_admin,
+              "tracking.html": tracking_client,
+          }
+          errors = []
+          for filename, markers in required.items():
+              for marker in markers:
+                  if marker not in files[filename]:
+                      errors.append(f"{filename}: missing required marker {marker!r}")
+          if errors:
+              raise SystemExit("\\n".join(errors))
+          incoming_validate = server.split(
+              "app.post('/api/admin/incoming-transfers/:id/validate'", 1
+          )[1].split(
+              "app.post('/api/admin/incoming-transfers/:id/cancel'", 1
+          )[0]
+          if "notifyTrackingStatus(tracking,'available')" in incoming_validate:
+              raise SystemExit("Duplicate tracking email still sent on incoming validation")
+
+          internal_validate = server.split(
+              "app.post('/api/admin/internal-transfers/:id/validate'", 1
+          )[1].split(
+              "app.post('/api/admin/setup'", 1
+          )[0]
+          if "transfer_type='internal' AND transfer_id=?" not in internal_validate:
+              raise SystemExit("Internal transfer tracking is not synchronized on validation")
+
+          external_status = server.split(
+              "app.patch('/api/admin/external-transfers/:id/status'", 1
+          )[1].split(
+              "app.post('/api/admin/incoming-transfers'", 1
+          )[0]
+          if "'cancelled'" not in external_status or "nextStatus==='cancelled'" not in external_status:
+              raise SystemExit("External transfer cancellation is not handled by the status API")
+          if "updateExternalTransferStatus(${id},'cancelled')" not in admin:
+              raise SystemExit("Admin cancellation action is missing")
+          if "Annulé / remboursé si nécessaire" not in admin:
+              raise SystemExit("Cancelled external transfer status display is missing")
+
+          print("Tracking API, client page, admin controls, custom QR, notifications, and external cancellation verified.")
+          PY

@@ -502,6 +502,8 @@ input[type="datetime-local"]:focus{
 
 <div class="card" style="padding:14px 18px"><a class="primary" href="#customQrTool" style="display:inline-block;padding:11px 15px;border-radius:9px;text-decoration:none">Générateur de code QR personnalisé ↗</a></div>
 
+  <div class="card" style="padding:14px 18px"><a class="primary" href="/admin-suivi-virements" style="display:inline-block;padding:11px 15px;border-radius:9px;text-decoration:none">Suivi des virements ↗</a></div>
+
   <!-- STATISTIQUES -->
 
   <div class="grid">
@@ -2264,6 +2266,8 @@ async function updateExternalTransferStatus(id,status){
     message='Confirmer que le virement a été effectivement traité ?';
   }else if(status==='failed'){
     message='Confirmer l’échec du virement ? Si le montant a déjà été débité, il sera remboursé.';
+  }else if(status==='cancelled'){
+    message='Confirmer l’annulation du virement ? Si le montant a déjà été débité, il sera remboursé.';
   }
 
   if(!confirm(message)){
@@ -2416,6 +2420,11 @@ function externalTransferActions(row){
       >
         Refuser
       </button>
+      <button
+        onclick="updateExternalTransferStatus(${id},'cancelled')"
+      >
+        Annuler
+      </button>
     `;
   }
 
@@ -2429,7 +2438,7 @@ function externalTransferActions(row){
         Lancer le traitement
       </button>
       <button
-        onclick="updateExternalTransferStatus(${id},'failed')"
+        onclick="updateExternalTransferStatus(${id},'cancelled')"
       >
         Annuler
       </button>
@@ -2450,6 +2459,11 @@ function externalTransferActions(row){
       >
         Échec / rembourser
       </button>
+      <button
+        onclick="updateExternalTransferStatus(${id},'cancelled')"
+      >
+        Annuler / rembourser
+      </button>
     `;
   }
 
@@ -2467,6 +2481,15 @@ function externalTransferActions(row){
       ${editButton}${pdfButton}${deleteButton}
       <span class="muted">
         Échec / traité
+      </span>
+    `;
+  }
+
+  if(status==='cancelled'){
+    return `
+      ${editButton}${pdfButton}${deleteButton}
+      <span class="muted">
+        Annulé / remboursé si nécessaire
       </span>
     `;
   }
