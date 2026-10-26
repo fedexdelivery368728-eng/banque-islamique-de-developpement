@@ -11,8 +11,10 @@ en:{title:'Transfer tracking',tag:'INDICATIVE TRACKING',reference:'Reference:',l
 ar:{title:'متابعة التحويل',tag:'متابعة إرشادية',reference:'المرجع:',loading:'جارٍ التحميل…',paused:'تم إيقاف التقدم مؤقتًا من قبل المسؤول.',waiting:'التقدم متوقف عند 85٪ بانتظار موافقة المسؤول.',progress:'متابعة تطور التحويل جارية.',missing:'رابط المتابعة غير موجود.',verify:'يرجى التحقق من الرابط الذي تلقيته.'}
 };
 let t=labels.fr;
-function setLanguage(lang){t=labels[lang]||labels.fr;document.documentElement.lang=labels[lang]?lang:'fr';document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.title=t.title;$('tag').textContent=t.tag;$('heading').textContent=t.title;$('referenceLabel').textContent=t.reference;$('status').textContent=t.loading;$('ref').textContent=t.loading;$('message').textContent=t.progress;}
-function localizeStatus(status,lang){
+function normalizeLanguage(value){const v=String(value||'fr').trim().toLowerCase();if(v==='ar'||v.startsWith('arab')||v.includes('العربية')||v.includes('عربي'))return 'ar';if(v==='en'||v.startsWith('english')||v.includes('anglais'))return 'en';return 'fr';}
+function setLanguage(value){const lang=normalizeLanguage(value);t=labels[lang];document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.title=t.title;$('tag').textContent=t.tag;$('heading').textContent=t.title;$('referenceLabel').textContent=t.reference;$('status').textContent=t.loading;$('ref').textContent=t.loading;$('message').textContent=t.progress;}
+function localizeStatus(status,language){
+const lang=normalizeLanguage(language);
 const raw=String(status||'').trim();
 const key=raw.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[’']/g,'').replace(/\\s+/g,' ');
 const inProgress=['virement en court','virement en cours','en cours de traitement','transfer in progress','processing transfer','التحويل قيد المعالجة','متابعة تطور التحويل جارية'].includes(key);
@@ -25,7 +27,7 @@ const completed=['virement termine','virement effectué','transfer completed','c
 if(completed)return lang==='ar'?'اكتمل التحويل':lang==='en'?'Transfer completed':'Virement terminé';
 return raw;
 }
-async function refresh(){try{const r=await fetch('/api/transfer-tracking/'+encodeURIComponent(token),{cache:'no-store'}),d=await r.json();if(!r.ok)throw Error();setLanguage(d.language);$('ref').textContent=d.reference;$('percent').textContent=d.progress+'%';$('fill').style.width=d.progress+'%';$('status').textContent=localizeStatus(d.status,d.language);$('message').textContent=d.paused?t.paused:d.progress>=85&&!d.released85?t.waiting:t.progress}catch(e){$('ref').textContent='—';$('status').textContent=t.missing;$('message').textContent=t.verify}}
+async function refresh(){try{const r=await fetch('/api/transfer-tracking/'+encodeURIComponent(token),{cache:'no-store'}),d=await r.json();if(!r.ok)throw Error();const lang=normalizeLanguage(d.language);setLanguage(lang);$('ref').textContent=d.reference;$('percent').textContent=d.progress+'%';$('fill').style.width=d.progress+'%';$('status').textContent=localizeStatus(d.status,lang);$('message').textContent=d.paused?t.paused:d.progress>=85&&!d.released85?t.waiting:t.progress}catch(e){$('ref').textContent='—';$('status').textContent=t.missing;$('message').textContent=t.verify}}
 await refresh();setInterval(refresh,60000);
 })();
 </script></body></html>
