@@ -6,10 +6,47 @@ const fs=require('fs');
 const path=require('path');
 const PDFDocument=require('pdfkit');
 const QRCode=require('qrcode');
-const { Resend } = require('resend');
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
+const nodemailer = require('nodemailer');
+
+const MAIL_FROM = process.env.MAIL_FROM || 'assis@bid-developpement.com';
+const PUBLIC_BASE_URL = String(process.env.PUBLIC_BASE_URL || 'https://bid-developpement.com')
+  .trim()
+  .replace(/\/+$/, '');
+const smtpPort = Number(process.env.ZOHO_SMTP_PORT || 465);
+const smtpTransport = process.env.ZOHO_SMTP_USER && process.env.ZOHO_SMTP_PASSWORD
+  ? nodemailer.createTransport({
+      host: process.env.ZOHO_SMTP_HOST || 'smtppro.zoho.com',
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: process.env.ZOHO_SMTP_USER,
+        pass: process.env.ZOHO_SMTP_PASSWORD
+      }
+    })
   : null;
+
+async function sendApplicationEmail({from, to, subject, html, text, attachments}) {
+  if (!smtpTransport) {
+    const error = new Error('Zoho SMTP is not configured.');
+    error.code = 'EMAIL_SERVICE_NOT_CONFIGURED';
+    throw error;
+  }
+
+  const toList = Array.isArray(to) ? to.join(', ') : to;
+  return smtpTransport.sendMail({
+    from: `Banque Islamique de Développement <${MAIL_FROM}>`,
+    to: toList,
+    subject,
+    html,
+    text,
+    attachments: attachments?.map(file => ({
+      ...file,
+      content: typeof file.content === 'string'
+        ? Buffer.from(file.content, 'base64')
+        : file.content
+    }))
+  });
+}
 
 const app=express();
 const dataDir=process.env.DATA_DIR || path.join(__dirname,'data');
@@ -347,11 +384,10 @@ async function sendAccountCreationEmail({
   language = 'fr'
 }) {
 
-  if (!resend) {
-    console.log(
-      'Resend non configuré : email de création de compte ignoré en local.'
-    );
-    return;
+  if (!smtpTransport) {
+    const error = new Error('Zoho SMTP non configuré : e-mail de création non envoyé.');
+    error.code = 'EMAIL_SERVICE_NOT_CONFIGURED';
+    throw error;
   }
 
   const translations = {
@@ -370,7 +406,7 @@ async function sendAccountCreationEmail({
       iban: 'IBAN',
       bic: 'BIC',
       access:
-        'Vous pouvez accéder à votre espace client en cliquant sur le bouton ci-dessous.',
+        'Connectez-vous avec le mot de passe choisi lors de votre inscription. Pour votre sécurité, il ne sera pas envoyé par e-mail.',
       button: '🔐 Se connecter à mon espace client'
     },
 
@@ -388,7 +424,7 @@ async function sendAccountCreationEmail({
       iban: 'IBAN',
       bic: 'BIC',
       access:
-        'You can access your client area by clicking the button below.',
+        'Sign in with the password you chose during registration. For your security, it is not sent by email.',
       button: '🔐 Sign in to my client area'
     },
 
@@ -406,7 +442,7 @@ async function sendAccountCreationEmail({
       iban: 'IBAN',
       bic: 'BIC',
       access:
-        'يمكنك الدخول إلى مساحة العميل الخاصة بك من خلال الضغط على الزر أدناه.',
+        'سجّل الدخول باستخدام كلمة المرور التي اخترتها عند التسجيل. حفاظاً على أمانك، لن يتم إرسالها عبر البريد الإلكتروني.',
       button: '🔐 تسجيل الدخول إلى مساحة العميل'
     }
 
@@ -417,7 +453,7 @@ async function sendAccountCreationEmail({
 
   try {
 
-    const result = await resend.emails.send({
+    const result = await sendApplicationEmail({
 
       from: 'Banque Islamique de Développement <admin@bid-developpement.com>',
 
@@ -447,7 +483,6 @@ async function sendAccountCreationEmail({
 
             <p>
               <strong>${translations.fr.email} :</strong> ${email}<br>
-              <strong>${translations.fr.password} :</strong> ${password}
             </p>
 
             <h3>${translations.fr.bankInfo}</h3>
@@ -472,7 +507,7 @@ async function sendAccountCreationEmail({
 
             <p style="margin:25px 0;">
               <a
-                href="https://virtual-bank-demo-production.up.railway.app"
+                href="${PUBLIC_BASE_URL}/client"
                 style="display:inline-block;padding:12px 22px;background:#087f68;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;"
               >
                 ${translations.fr.button}
@@ -500,7 +535,6 @@ async function sendAccountCreationEmail({
 
             <p>
               <strong>${translations.en.email} :</strong> ${email}<br>
-              <strong>${translations.en.password} :</strong> ${password}
             </p>
 
             <h3>${translations.en.bankInfo}</h3>
@@ -525,7 +559,7 @@ async function sendAccountCreationEmail({
 
             <p style="margin:25px 0;">
               <a
-                href="https://virtual-bank-demo-production.up.railway.app"
+                href="${PUBLIC_BASE_URL}/client"
                 style="display:inline-block;padding:12px 22px;background:#087f68;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;"
               >
                 ${translations.en.button}
@@ -557,7 +591,6 @@ async function sendAccountCreationEmail({
 
             <p>
               <strong>${translations.ar.email} :</strong> ${email}<br>
-              <strong>${translations.ar.password} :</strong> ${password}
             </p>
 
             <h3>${translations.ar.bankInfo}</h3>
@@ -582,7 +615,7 @@ async function sendAccountCreationEmail({
 
             <p style="margin:25px 0;">
               <a
-                href="https://virtual-bank-demo-production.up.railway.app"
+                href="${PUBLIC_BASE_URL}/client"
                 style="display:inline-block;padding:12px 22px;background:#087f68;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;"
               >
                 ${translations.ar.button}
@@ -797,8 +830,8 @@ async function sendTransactionEmail({
   language='fr'
 }) {
 
-  if (!resend) {
-    console.log('Resend non configuré : email de transaction ignoré en local.');
+  if (!smtpTransport) {
+    console.log('Zoho SMTP non configuré : e-mail de transaction ignoré.');
     return;
   }
 
@@ -843,7 +876,7 @@ async function sendTransactionEmail({
     const balance =
       (balanceCents / 100).toFixed(2);
 
-    await resend.emails.send({
+    await sendApplicationEmail({
 
       from:
         'Banque Islamique de Développement <admin@bid-developpement.com>',
@@ -906,12 +939,12 @@ function createTransferTracking({type,transferId,userId,email,name,language,refe
  let row=db.prepare('SELECT * FROM transfer_tracking WHERE transfer_type=? AND transfer_id=?').get(type,Number(transferId));if(row)return row;
  const result=db.prepare('INSERT INTO transfer_tracking(token,transfer_type,transfer_id,user_id,recipient_email,recipient_name,language,reference,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)').run(crypto.randomBytes(24).toString('hex'),type,Number(transferId),Number(userId)||null,String(email||'').trim().toLowerCase(),String(name||'Client'),['fr','en','ar'].includes(language)?language:'fr',String(reference||''),status,now(),now());
  row=db.prepare('SELECT * FROM transfer_tracking WHERE id=?').get(result.lastInsertRowid);
- if(row.recipient_email&&resend){const url='https://bid-developpement.com/suivi-virement/'+encodeURIComponent(row.token);const m={fr:{subject:'Lien de suivi de démonstration',title:'Suivi du virement — démonstration',body:'Un suivi de démonstration a été créé pour la référence '+(row.reference||row.transfer_id)+'. <a href="'+url+'">Ouvrir le suivi</a>. La progression est simulée et ne confirme pas un transfert bancaire réel.'},en:{subject:'Demonstration transfer tracking link',title:'Transfer tracking — demo',body:'A demonstration tracking page was created for reference '+(row.reference||row.transfer_id)+'. <a href="'+url+'">Open tracking</a>. Progress is simulated and does not confirm a real bank transfer.'},ar:{subject:'رابط متابعة تجريبي للتحويل',title:'متابعة التحويل — عرض تجريبي',body:'تم إنشاء متابعة تجريبية للمرجع '+(row.reference||row.transfer_id)+'. <a href="'+url+'">فتح المتابعة</a>. التقدم محاكاة ولا يؤكد تحويلاً مصرفياً حقيقياً.'}}[row.language];sendTransactionEmail({to:row.recipient_email,name:row.recipient_name,subject:m.subject,title:m.title,message:m.body,amountCents:0,balanceCents:0,showBalance:false,language:row.language});}
+ if(row.recipient_email&&smtpTransport){const url=PUBLIC_BASE_URL+'/suivi-virement/'+encodeURIComponent(row.token);const m={fr:{subject:'Lien de suivi de démonstration',title:'Suivi du virement — démonstration',body:'Un suivi de démonstration a été créé pour la référence '+(row.reference||row.transfer_id)+'. <a href="'+url+'">Ouvrir le suivi</a>. La progression est simulée et ne confirme pas un transfert bancaire réel.'},en:{subject:'Demonstration transfer tracking link',title:'Transfer tracking — demo',body:'A demonstration tracking page was created for reference '+(row.reference||row.transfer_id)+'. <a href="'+url+'">Open tracking</a>. Progress is simulated and does not confirm a real bank transfer.'},ar:{subject:'رابط متابعة تجريبي للتحويل',title:'متابعة التحويل — عرض تجريبي',body:'تم إنشاء متابعة تجريبية للمرجع '+(row.reference||row.transfer_id)+'. <a href="'+url+'">فتح المتابعة</a>. التقدم محاكاة ولا يؤكد تحويلاً مصرفياً حقيقياً.'}}[row.language];sendTransactionEmail({to:row.recipient_email,name:row.recipient_name,subject:m.subject,title:m.title,message:m.body,amountCents:0,balanceCents:0,showBalance:false,language:row.language});}
  return row;
 }
 function trackingProgress(row){if(!row.opened_at)return 0;const nowMs=Date.now(),paused=Number(row.paused_total_ms||0)+(row.paused_at?Math.max(0,nowMs-new Date(row.paused_at).getTime()):0);if(Number(row.released_85)===1&&row.released_at){const released=new Date(row.released_at).getTime();return Math.min(100,85+Math.floor(Math.max(0,nowMs-released-paused)/(3*60*60*1000))*5);}const start=new Date(row.opened_at).getTime();if(!Number.isFinite(start))return 0;return Math.min(85,Math.floor(Math.max(0,nowMs-start-paused)/(3*60*60*1000))*5);}
 function notifyTrackingStatus(row,status){
-  if(!row||!row.recipient_email||!resend)return;
+  if(!row||!row.recipient_email||!smtpTransport)return;
   const lang=['fr','en','ar'].includes(row.language)?row.language:'fr';
   const labels={
     fr:{pending_verification:'En attente de vérification',verified:'Vérifié',processing:'En cours de traitement',completed:'Terminé',failed:'Échec',cancelled:'Annulé',available:'Disponible',paused:'En pause',in_progress:'En cours'},
@@ -2755,7 +2788,7 @@ const rib = saveRibData(
   userId,
   bankCountry
 );
-if(String(req.body.notificationMethod || '') === 'email'){
+if(email){
 
   try{
 
@@ -2764,7 +2797,6 @@ if(String(req.body.notificationMethod || '') === 'email'){
       firstName:firstName,
       lastName:lastName,
       email:email,
-      password:password,
       iban:rib.iban,
       bic:rib.bic,
       language:String(req.body.notificationLanguage || 'fr')
@@ -2779,7 +2811,9 @@ if(String(req.body.notificationMethod || '') === 'email'){
 
   }
 
-}else if(String(req.body.notificationMethod || '') === 'sms'){
+}
+
+if(String(req.body.notificationMethod || '') === 'sms'){
 
   try{
 
@@ -4693,13 +4727,13 @@ app.post('/api/admin/incoming-transfers/:id/cancel',adminAuth,(req,res)=>{
 
 app.post('/api/admin/send-email',adminAuth,async (req,res)=>{
   try{
-    if(!resend){
+    if(!smtpTransport){
       return res.status(503).json({
         error:'EMAIL_SERVICE_NOT_CONFIGURED'
       });
     }
 
-    const from=String(req.body.from||'').trim() || 'service@bid-developpement.com';
+    const from=MAIL_FROM;
     const to=String(req.body.to||'').trim();
     const subject=String(req.body.subject||'').trim();
     const message=String(req.body.message||'').trim();
@@ -4758,7 +4792,7 @@ app.post('/api/admin/send-email',adminAuth,async (req,res)=>{
       });
     }
 
-    const result=await resend.emails.send({
+    const result=await sendApplicationEmail({
       from:`Banque Islamique de Développement <${from}>`,
       to:[to],
       subject:subject,
@@ -4776,7 +4810,7 @@ app.post('/api/admin/send-email',adminAuth,async (req,res)=>{
 
     res.json({
       ok:true,
-      id:result.data?.id||null
+      id:result.messageId||null
     });
 
   }catch(e){
