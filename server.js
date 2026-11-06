@@ -3768,7 +3768,7 @@ app.patch('/api/admin/external-transfers/:id/status',adminAuth,(req,res)=>{
 
       if(nextStatus==='verified'){
 
-        db.prepare(`
+        const verifiedUpdate=db.prepare(`
           UPDATE external_transfers
           SET status='verified',
               condition_completed=1,
@@ -3785,6 +3785,12 @@ app.patch('/api/admin/external-transfers/:id/status',adminAuth,(req,res)=>{
           nowValue,
           transferId
         );
+
+        if(verifiedUpdate.changes!==1){
+          const error=new Error('EXTERNAL_TRANSFER_STATUS_CHANGED');
+          error.code='EXTERNAL_TRANSFER_STATUS_CHANGED';
+          throw error;
+        }
 
       }else if(nextStatus==='processing'){
 
