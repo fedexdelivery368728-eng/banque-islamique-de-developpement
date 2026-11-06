@@ -34,7 +34,7 @@ async function sendApplicationEmail({from, to, subject, html, text, attachments}
 
   const toList = Array.isArray(to) ? to.join(', ') : to;
   return smtpTransport.sendMail({
-    from: `Banque Islamique de Développement <${MAIL_FROM}>`,
+    from: `BID Développement — Démonstration <${from || MAIL_FROM}>`,
     to: toList,
     subject,
     html,
@@ -455,7 +455,7 @@ async function sendAccountCreationEmail({
 
     const result = await sendApplicationEmail({
 
-      from: 'Banque Islamique de Développement <admin@bid-developpement.com>',
+      from: 'BID Développement — Démonstration <contactadministration@bid-developpement.com>',
 
       to: [to],
 
@@ -879,7 +879,7 @@ async function sendTransactionEmail({
     await sendApplicationEmail({
 
       from:
-        'Banque Islamique de Développement <admin@bid-developpement.com>',
+        'BID Développement — Démonstration <serviceclient@bid-developpement.com>',
 
       to: [to],
 
@@ -4733,7 +4733,19 @@ app.post('/api/admin/send-email',adminAuth,async (req,res)=>{
       });
     }
 
-    const from=MAIL_FROM;
+    const allowedSenders = [
+      'assis@bid-developpement.com',
+      'assistance@bid-developpement.com',
+      'serviceclient@bid-developpement.com',
+      'contactadministration@bid-developpement.com'
+    ];
+    const from = String(req.body.from || 'serviceclient@bid-developpement.com').trim();
+
+    if (!allowedSenders.includes(from)) {
+      return res.status(400).json({
+        error: 'SENDER_EMAIL_NOT_ALLOWED'
+      });
+    }
     const to=String(req.body.to||'').trim();
     const subject=String(req.body.subject||'').trim();
     const message=String(req.body.message||'').trim();
@@ -4793,7 +4805,8 @@ app.post('/api/admin/send-email',adminAuth,async (req,res)=>{
     }
 
     const result=await sendApplicationEmail({
-      from:`Banque Islamique de Développement <${from}>`,
+      from,
+
       to:[to],
       subject:subject,
       text:message,
