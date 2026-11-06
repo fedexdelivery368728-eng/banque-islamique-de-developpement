@@ -5305,7 +5305,122 @@ app.get('/attestation-verification',(req,res)=>{
   return res.redirect(302,'/verification/'+encodeURIComponent(ref));
 });
 
-app.get('/api/transfer-tracking/:token',(req,res)=>{let row=db.prepare('SELECT * FROM transfer_tracking WHERE token=?').get(String(req.params.token||''));if(!row)return res.status(404).json({error:'TRACKING_NOT_FOUND'});if(!row.opened_at){db.prepare('UPDATE transfer_tracking SET opened_at=?,updated_at=? WHERE id=?').run(now(),now(),row.id);row=db.prepare('SELECT * FROM transfer_tracking WHERE id=?').get(row.id);}res.set('Cache-Control','no-store').json({ok:true,reference:row.reference||String(row.transfer_id),status:row.status,language:['fr','en','ar'].includes(row.language)?row.language:'fr',progress:trackingProgress(row),paused:!!row.paused_at,released85:Number(row.released_85)===1,demo:true});});
+app.get('/api/transfer-tracking/:token',(req,res)=>{
+  try{
+    let row=db.prepare(
+      'SELECT * FROM transfer_tracking WHERE token=?'
+    ).get(String(req.params.token||''));
+
+    if(!row){
+      return res.status(404).json({error:'TRACKING_NOT_FOUND'});
+    }
+
+    if(!row.opened_at){
+      db.prepare(
+        'UPDATE transfer_tracking SET opened_at=?,updated_at=? WHERE id=?'
+      ).run(now(),now(),row.id);
+      row=db.prepare('SELECT * FROM transfer_tracking WHERE id=?').get(row.id);
+    }
+
+    let transfer=null;
+    let sender=null;
+    let beneficiary=null;
+    let details={};
+
+    if(row.transfer_type==='external'){
+      transfer=db.prepare(
+        'SELECT * FROM external_transfers WHERE id=?'
+      ).get(row.transfer_id);
+
+      if(transfer){
+        if(transfer.source_user_id){
+          sender=db.prepare(
+            'SELECT * FROM users WHERE id=?'
+          ).get(transfer.source_user_id);
+        }
+
+        details={
+          senderName:sender?.name||transfer.sender_bank_name||'',
+          beneficiaryName:transfer.beneficiary_name||'',
+          beneficiaryBank:transfer.bank_name||'',
+          beneficiaryCountry:transfer.beneficiary_country||'',
+          amountCents:Number(transfer.amount_cents)||0,
+          currency:transfer.currency||'',
+          reason:transfer.reason||'',
+          conditionText:transfer.condition_text||'',
+          createdAt:transfer.created_at||''
+        };
+      }
+    }else if(row.transfer_type==='internal'){
+      transfer=db.prepare(
+        'SELECT * FROM internal_transfers WHERE id=?'
+      ).get(row.transfer_id);
+
+      if(transfer){
+        sender=db.prepare(
+          'SELECT * FROM users WHERE id=?'
+        ).get(transfer.sender_user_id);
+
+        beneficiary=db.prepare(
+          'SELECT * FROM users WHERE id=?'
+        ).get(transfer.beneficiary_user_id);
+
+        details={
+          senderName:sender?.name||'',
+          beneficiaryName:beneficiary?.name||transfer.beneficiary_name||'',
+          beneficiaryBank:'Banque Islamique de Développement',
+          beneficiaryCountry:beneficiary?.bank_country||beneficiary?.country||'',
+          amountCents:Number(transfer.amount_cents)||0,
+          currency:transfer.currency||'',
+          reason:transfer.reason||'',
+          conditionText:transfer.condition_text||'',
+          createdAt:transfer.created_at||''
+        };
+      }
+    }else if(row.transfer_type==='incoming'){
+      transfer=db.prepare(
+        'SELECT * FROM incoming_transfers WHERE id=?'
+      ).get(row.transfer_id);
+
+      if(transfer){
+        beneficiary=db.prepare(
+          'SELECT * FROM users WHERE id=?'
+        ).get(transfer.user_id);
+
+        details={
+          senderName:transfer.sender_name||'',
+          beneficiaryName:beneficiary?.name||'',
+          beneficiaryBank:'Banque Islamique de Développement',
+          beneficiaryCountry:beneficiary?.bank_country||beneficiary?.country||'',
+          amountCents:Number(transfer.amount_cents)||0,
+          currency:beneficiary?.account_currency||'',
+          reason:'',
+          conditionText:transfer.condition_text||'',
+          createdAt:transfer.created_at||''
+        };
+      }
+    }
+
+    if(!transfer){
+      return res.status(404).json({error:'TRANSFER_NOT_FOUND'});
+    }
+
+    res.set('Cache-Control','no-store');
+    return res.json({
+      ok:true,
+      reference:row.reference||String(row.transfer_id),
+      status:row.status,
+      language:['fr','en','ar'].includes(row.language)?row.language:'fr',
+      progress:trackingProgress(row),
+      paused:!!row.paused_at,
+      released85:Number(row.released_85)===1,
+      details
+    });
+  }catch(error){
+    console.error('Erreur chargement détails suivi:',error);
+    return res.status(500).json({error:'TRACKING_LOAD_FAILED'});
+  }
+});
 app.get('/api/admin/transfer-tracking',adminAuth,(req,res)=>res.json(db.prepare('SELECT * FROM transfer_tracking ORDER BY id DESC').all().map(row=>({...row,progress:trackingProgress(row),paused:!!row.paused_at,released85:Number(row.released_85)===1}))));
 app.patch('/api/admin/transfer-tracking/:id',adminAuth,(req,res)=>{const id=Number(req.params.id),action=String(req.body.action||'').toLowerCase();if(!Number.isInteger(id)||id<1)return res.status(400).json({error:'INVALID_TRACKING_ID'});const row=db.prepare('SELECT * FROM transfer_tracking WHERE id=?').get(id);if(!row)return res.status(404).json({error:'TRACKING_NOT_FOUND'});if(action==='pause'){if(!row.paused_at)db.prepare('UPDATE transfer_tracking SET paused_at=?,updated_at=? WHERE id=?').run(now(),now(),id);}else if(action==='resume'){if(row.paused_at)db.prepare('UPDATE transfer_tracking SET paused_total_ms=paused_total_ms+?,paused_at=NULL,updated_at=? WHERE id=?').run(Math.max(0,Date.now()-new Date(row.paused_at).getTime()),now(),id);}else if(action==='release85')db.prepare('UPDATE transfer_tracking SET released_85=1,released_at=?,paused_total_ms=0,paused_at=NULL,updated_at=? WHERE id=?').run(now(),now(),id);else if(action==='status'){const status=String(req.body.status||'').trim().slice(0,120);if(!status)return res.status(400).json({error:'STATUS_REQUIRED'});db.prepare('UPDATE transfer_tracking SET status=?,updated_at=? WHERE id=?').run(status,now(),id);notifyTrackingStatus(row,status);}else return res.status(400).json({error:'INVALID_ACTION'});const fresh=db.prepare('SELECT * FROM transfer_tracking WHERE id=?').get(id);res.json({ok:true,tracking:{...fresh,progress:trackingProgress(fresh),paused:!!fresh.paused_at,released85:Number(fresh.released_85)===1}});});
 app.get('/suivi-virement/:token',(req,res)=>res.sendFile(path.join(__dirname,'tracking.html')));

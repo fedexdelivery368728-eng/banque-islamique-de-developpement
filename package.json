@@ -14,5 +14,8 @@
     "qrcode": "^1.5.4",
     "resend": "^6.32.0",
     "twilio": "^6.1.2"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.10.0": true
   }
 }
