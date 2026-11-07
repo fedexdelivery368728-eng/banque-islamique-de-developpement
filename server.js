@@ -34,7 +34,7 @@ async function sendApplicationEmail({from, to, subject, html, text, attachments}
 
   const toList = Array.isArray(to) ? to.join(', ') : to;
   return smtpTransport.sendMail({
-    from: `BID Développement — Démonstration <${from || MAIL_FROM}>`,
+    from: `BID Développement <${from || MAIL_FROM}>`,
     to: toList,
     subject,
     html,
@@ -455,7 +455,7 @@ async function sendAccountCreationEmail({
 
     const result = await sendApplicationEmail({
 
-      from: 'BID Développement — Démonstration <contactadministration@bid-developpement.com>',
+      from: 'contactadministration@bid-developpement.com',
 
       to: [to],
 
@@ -879,7 +879,7 @@ async function sendTransactionEmail({
     await sendApplicationEmail({
 
       from:
-        'BID Développement — Démonstration <serviceclient@bid-developpement.com>',
+        'serviceclient@bid-developpement.com',
 
       to: [to],
 
