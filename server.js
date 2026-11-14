@@ -5425,6 +5425,10 @@ app.get('/api/admin/transfer-tracking',adminAuth,(req,res)=>res.json(db.prepare(
 app.patch('/api/admin/transfer-tracking/:id',adminAuth,(req,res)=>{const id=Number(req.params.id),action=String(req.body.action||'').toLowerCase();if(!Number.isInteger(id)||id<1)return res.status(400).json({error:'INVALID_TRACKING_ID'});const row=db.prepare('SELECT * FROM transfer_tracking WHERE id=?').get(id);if(!row)return res.status(404).json({error:'TRACKING_NOT_FOUND'});if(action==='pause'){if(!row.paused_at)db.prepare('UPDATE transfer_tracking SET paused_at=?,updated_at=? WHERE id=?').run(now(),now(),id);}else if(action==='resume'){if(row.paused_at)db.prepare('UPDATE transfer_tracking SET paused_total_ms=paused_total_ms+?,paused_at=NULL,updated_at=? WHERE id=?').run(Math.max(0,Date.now()-new Date(row.paused_at).getTime()),now(),id);}else if(action==='release85')db.prepare('UPDATE transfer_tracking SET released_85=1,released_at=?,paused_total_ms=0,paused_at=NULL,updated_at=? WHERE id=?').run(now(),now(),id);else if(action==='status'){const status=String(req.body.status||'').trim().slice(0,120);if(!status)return res.status(400).json({error:'STATUS_REQUIRED'});db.prepare('UPDATE transfer_tracking SET status=?,updated_at=? WHERE id=?').run(status,now(),id);notifyTrackingStatus(row,status);}else return res.status(400).json({error:'INVALID_ACTION'});const fresh=db.prepare('SELECT * FROM transfer_tracking WHERE id=?').get(id);res.json({ok:true,tracking:{...fresh,progress:trackingProgress(fresh),paused:!!fresh.paused_at,released85:Number(fresh.released_85)===1}});});
 app.get('/suivi-virement/:token',(req,res)=>res.sendFile(path.join(__dirname,'tracking.html')));
 app.get('/admin-suivi-virements',(req,res)=>res.sendFile(path.join(__dirname,'admin-tracking.html')));
+app.get('/presentation',(req,res)=>{
+  res.sendFile(path.join(__dirname,'presentation.html'));
+});
+
 app.get('/admin',(req,res)=>{
   res.sendFile(path.join(__dirname,'admin.html'));
 });

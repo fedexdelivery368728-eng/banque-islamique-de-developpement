@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Présentation institutionnelle de la BID — page de démonstration.">
+  <meta name="theme-color" content="#092f3b">
+  <title>Présentation institutionnelle | BID</title>
+  <style>
+    :root{--navy:#092f3b;--navy2:#104858;--green:#087f68;--gold:#c9a65b;--ink:#17323a;--muted:#61747a;--paper:#f5f7f6;--line:#e2e9e7;--white:#fff;--max:1160px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Arial,sans-serif;line-height:1.65}a{color:inherit}.demo-bar{background:#fff4d9;color:#644d19;text-align:center;padding:9px 18px;font-size:13px;border-bottom:1px solid #ead9ac}.site-header{background:var(--navy);color:white;position:relative;z-index:2}.nav-wrap{max-width:var(--max);margin:auto;padding:17px 24px;display:flex;align-items:center;justify-content:space-between;gap:28px}.brand{display:flex;align-items:center;gap:13px;text-decoration:none;min-width:220px}.brand img{width:54px;height:48px;object-fit:contain;background:white;border-radius:7px;padding:3px}.brand strong{display:block;font-size:15px;line-height:1.25;letter-spacing:.02em}.brand small{display:block;color:#c7d7d9;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-top:4px}.nav-links{display:flex;align-items:center;gap:22px;flex-wrap:wrap}.nav-links a{text-decoration:none;color:#e4eff0;font-size:13px}.nav-links a:hover{color:#f0cf83}.nav-cta,.button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:6px;font-weight:700;transition:.2s}.nav-cta{padding:10px 15px;background:var(--gold);color:#172f34!important}.nav-cta:hover,.button:hover{transform:translateY(-1px);filter:brightness(1.05)}.hero{background:linear-gradient(115deg,rgba(7,39,50,.97),rgba(12,75,79,.9)),radial-gradient(circle at 80% 20%,#286e66,transparent 40%);color:white;overflow:hidden}.hero-inner{max-width:var(--max);margin:auto;padding:88px 24px 92px;display:grid;grid-template-columns:1.3fr .7fr;gap:50px;align-items:center}.eyebrow{color:#e6c77f;text-transform:uppercase;font-size:12px;font-weight:700;letter-spacing:.17em}.hero h1{font-size:clamp(36px,5vw,58px);line-height:1.1;letter-spacing:-.035em;margin:18px 0 20px;max-width:760px}.hero p{font-size:17px;color:#d4e2e2;max-width:690px;margin:0 0 28px}.hero-actions{display:flex;gap:12px;flex-wrap:wrap}.button{padding:13px 20px;background:var(--gold);color:#142f35}.button.secondary{border:1px solid #91afb0;color:white;background:transparent}.hero-mark{border:1px solid rgba(255,255,255,.2);border-radius:18px;padding:34px;background:rgba(255,255,255,.06);text-align:center}.hero-mark img{width:min(100%,210px);max-height:150px;object-fit:contain;background:#fff;border-radius:12px;padding:10px}.hero-mark p{font-size:12px;margin:17px 0 0;color:#d5e3e2}.section{max-width:var(--max);margin:auto;padding:76px 24px}.section-head{max-width:720px;margin-bottom:34px}.section-kicker{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--green);font-weight:800}.section h2{font-size:clamp(27px,3.4vw,38px);line-height:1.2;color:var(--navy);margin:9px 0 13px;letter-spacing:-.025em}.section-head p,.intro-copy{color:var(--muted);margin:0}.intro-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:start}.intro-panel{border-left:3px solid var(--gold);padding:7px 0 7px 24px;color:#3f565c}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:white;border:1px solid var(--line);border-radius:12px;padding:25px;box-shadow:0 8px 24px rgba(9,47,59,.035)}.card .num{font-size:12px;color:var(--gold);font-weight:800;letter-spacing:.12em}.card h3{font-size:18px;color:var(--navy);margin:10px 0 8px}.card p{font-size:14px;color:var(--muted);margin:0}.mission{background:#eaf1ef}.mission-inner{max-width:var(--max);margin:auto;padding:68px 24px;display:grid;grid-template-columns:.8fr 1.2fr;gap:55px;align-items:center}.mission h2{font-size:clamp(28px,3vw,38px);color:var(--navy);line-height:1.2;margin:10px 0}.mission p{color:#52686d}.mission-list{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mission-item{background:white;border-radius:10px;padding:18px;border:1px solid #dce7e3}.mission-item strong{display:block;color:var(--navy);margin-bottom:4px}.mission-item span{font-size:13px;color:var(--muted)}.contact-wrap{background:var(--navy);color:white}.contact-inner{max-width:var(--max);margin:auto;padding:68px 24px;display:grid;grid-template-columns:1fr 1fr;gap:45px}.contact-inner h2{font-size:34px;line-height:1.2;margin:9px 0 14px}.contact-inner p{color:#c9d9da}.contact-list{display:grid;grid-template-columns:1fr 1fr;gap:12px}.contact-item{border:1px solid rgba(255,255,255,.17);border-radius:9px;padding:16px}.contact-item small{display:block;color:#a9c0c1;font-size:11px;text-transform:uppercase;letter-spacing:.1em}.contact-item a{display:block;color:#f0d18a;font-size:13px;text-decoration:none;overflow-wrap:anywhere;margin-top:5px}.contact-note{font-size:12px!important;color:#a9c0c1!important;margin-top:18px}.site-footer{background:#06232c;color:#a9bdc0;padding:20px 24px;font-size:12px}.footer-inner{max-width:var(--max);margin:auto;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.footer-inner a{color:#e3c57f;text-decoration:none}.disclaimer{max-width:var(--max);margin:0 auto;padding:0 24px 25px;background:var(--navy);color:#b6cacc;font-size:11px}
+    @media(max-width:850px){.nav-wrap{align-items:flex-start;flex-direction:column;gap:15px}.nav-links{gap:13px}.hero-inner,.intro-grid,.mission-inner,.contact-inner{grid-template-columns:1fr}.hero-inner{padding-top:62px;padding-bottom:65px}.hero-mark{max-width:360px}.cards{grid-template-columns:1fr 1fr}.mission-inner{gap:25px}}
+    @media(max-width:560px){.nav-links{gap:10px 15px}.nav-links a{font-size:12px}.nav-cta{padding:8px 11px}.hero h1{font-size:37px}.section{padding:55px 20px}.cards,.mission-list,.contact-list{grid-template-columns:1fr}.contact-inner{padding:55px 20px}.brand{min-width:0}}
+  </style>
+</head>
+<body>
+  <div class="demo-bar">Site de démonstration — cette présentation ne constitue pas une offre de services bancaires réels.</div>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="/presentation" aria-label="BID — Présentation institutionnelle">
+        <img src="/IMG_4145.jpeg" alt="Logo présenté pour la démonstration BID">
+        <span><strong>Banque Islamique de Développement</strong><small>Présentation institutionnelle</small></span>
+      </a>
+      <nav class="nav-links" aria-label="Navigation principale">
+        <a href="#presentation">Présentation</a><a href="#mission">Mission</a><a href="#domaines">Domaines</a><a href="#activites">Activités</a><a href="#contact">Contact</a>
+        <a class="nav-cta" href="/client">Accès à la démo</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="hero" id="haut">
+      <div class="hero-inner">
+        <div>
+          <div class="eyebrow">Une vision de développement et de coopération</div>
+          <h1>Construire des perspectives durables, ensemble.</h1>
+          <p>Découvrez la présentation, les orientations et les domaines d’intervention illustratifs de la BID dans le cadre de cette démonstration institutionnelle.</p>
+          <div class="hero-actions"><a class="button" href="#presentation">Découvrir la BID</a><a class="button secondary" href="#mission">Notre mission</a></div>
+        </div>
+        <div class="hero-mark"><img src="/IMG_4145.jpeg" alt="Identité visuelle de la démonstration BID"><p>Une plateforme de présentation institutionnelle à vocation démonstrative.</p></div>
+      </div>
+    </section>
+
+    <section class="section" id="presentation">
+      <div class="section-head"><div class="section-kicker">Qui sommes-nous ?</div><h2>Présentation de la BID</h2><p>Cette page expose une identité et un positionnement institutionnels dans le cadre d’un projet de démonstration.</p></div>
+      <div class="intro-grid">
+        <p class="intro-copy">La Banque Islamique de Développement (BID) est présentée ici à travers une plateforme institutionnelle conçue pour expliquer une vision de développement, de coopération et d’accompagnement de projets. Le contenu décrit des orientations générales et des exemples de domaines d’action.</p>
+        <div class="intro-panel">La présente interface est un support de démonstration. Elle ne confirme pas l’existence d’un établissement bancaire agréé, d’une activité financière opérationnelle, ni la disponibilité de produits ou de services bancaires.</div>
+      </div>
+    </section>
+
+    <section class="mission" id="mission">
+      <div class="mission-inner">
+        <div><div class="section-kicker">Notre orientation</div><h2>Une approche centrée sur le développement durable</h2><p>Les objectifs ci-dessous constituent les axes de présentation retenus pour cette démonstration. Ils ne doivent pas être interprétés comme des engagements institutionnels vérifiés.</p></div>
+        <div class="mission-list">
+          <div class="mission-item"><strong>Favoriser le développement</strong><span>Mettre en avant des initiatives à impact économique et social.</span></div>
+          <div class="mission-item"><strong>Encourager la coopération</strong><span>Valoriser le dialogue et les partenariats entre acteurs.</span></div>
+          <div class="mission-item"><strong>Soutenir les projets</strong><span>Présenter des pistes d’accompagnement de projets structurants.</span></div>
+          <div class="mission-item"><strong>Promouvoir la durabilité</strong><span>Intégrer les enjeux sociaux, économiques et environnementaux.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="domaines">
+      <div class="section-head"><div class="section-kicker">Axes d’intervention</div><h2>Domaines de développement</h2><p>Exemples de secteurs pouvant être présentés dans un cadre de développement et de coopération.</p></div>
+      <div class="cards">
+        <article class="card"><div class="num">01 / INFRASTRUCTURES</div><h3>Infrastructures et équipements</h3><p>Présentation de projets liés aux équipements collectifs, aux transports et à l’aménagement.</p></article>
+        <article class="card"><div class="num">02 / ÉDUCATION</div><h3>Éducation et formation</h3><p>Initiatives illustratives en faveur de l’accès au savoir, de la formation et des compétences.</p></article>
+        <article class="card"><div class="num">03 / SANTÉ</div><h3>Santé et services sociaux</h3><p>Exemples de projets visant à renforcer les services essentiels et le bien-être des populations.</p></article>
+        <article class="card"><div class="num">04 / AGRICULTURE</div><h3>Agriculture et sécurité alimentaire</h3><p>Axes de réflexion autour de la production, des filières agricoles et de la résilience alimentaire.</p></article>
+        <article class="card"><div class="num">05 / ÉCONOMIE</div><h3>Entrepreneuriat et activité économique</h3><p>Présentation d’initiatives favorisant l’innovation, l’emploi et le développement des entreprises.</p></article>
+        <article class="card"><div class="num">06 / ENVIRONNEMENT</div><h3>Environnement et durabilité</h3><p>Exemples d’actions relatives à la gestion des ressources et à la transition durable.</p></article>
+      </div>
+    </section>
+
+    <section class="section" id="activites">
+      <div class="section-head"><div class="section-kicker">Ce que présente la plateforme</div><h2>Activités et services présentés</h2><p>Les rubriques suivantes décrivent les fonctions éditoriales et démonstratives de la plateforme, et non des prestations financières réellement disponibles.</p></div>
+      <div class="cards">
+        <article class="card"><div class="num">01</div><h3>Information institutionnelle</h3><p>Présenter les orientations, les objectifs et les domaines de développement.</p></article>
+        <article class="card"><div class="num">02</div><h3>Présentation de projets</h3><p>Illustrer des catégories de projets et leurs objectifs de développement.</p></article>
+        <article class="card"><div class="num">03</div><h3>Orientation et contact</h3><p>Mettre à disposition les coordonnées affichées dans l’environnement de démonstration.</p></article>
+      </div>
+    </section>
+
+    <section class="contact-wrap" id="contact">
+      <div class="contact-inner">
+        <div><div class="section-kicker">Restons en contact</div><h2>Informations et contacts</h2><p>Les adresses ci-contre sont reprises de la page d’accueil existante du projet. Leur présence ne vaut pas confirmation de leur caractère officiel ou de leur disponibilité.</p><p class="contact-note">Aucune adresse physique, aucun numéro de téléphone ni aucune immatriculation institutionnelle n’ont été fournis pour cette démonstration.</p></div>
+        <div class="contact-list">
+          <div class="contact-item"><small>Administration</small><a href="mailto:contactadministration@bid-developpement.com">contactadministration@bid-developpement.com</a></div>
+          <div class="contact-item"><small>Assistance</small><a href="mailto:assis@bid-developpement.com">assis@bid-developpement.com</a></div>
+          <div class="contact-item"><small>Support</small><a href="mailto:support@bid-developpement.com">support@bid-developpement.com</a></div>
+          <div class="contact-item"><small>Service client</small><a href="mailto:serviceclient@bid-developpement.com">serviceclient@bid-developpement.com</a></div>
+        </div>
+      </div>
+      <div class="disclaimer">Transparence : cette plateforme est une démonstration de site web. Elle ne permet pas d’effectuer des dépôts, des virements, des financements ou toute autre opération bancaire réelle.</div>
+    </section>
+  </main>
+  <footer class="site-footer"><div class="footer-inner"><span>© <span id="year">2026</span> — BID · Présentation de démonstration</span><span><a href="#haut">Retour en haut ↑</a> · <a href="/client">Espace de démonstration</a></span></div></footer>
+</body>
+</html>
