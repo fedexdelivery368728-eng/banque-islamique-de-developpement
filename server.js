@@ -5445,7 +5445,7 @@ app.get('/app',(req,res)=>{
 });
 
 app.get('/',(req,res)=>{
-  res.sendFile(path.join(__dirname,'home.html'));
+  res.sendFile(path.join(__dirname,'index.html'));
 });
 
 app.get('*',(req,res)=>{
