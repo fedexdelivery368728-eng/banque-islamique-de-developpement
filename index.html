@@ -2435,162 +2435,78 @@ const money=(v,currency="USD")=>
   ).format(Number(v)/100);
 
 const PUBLIC_TEXT={
-  fr:{about:"À propos",axes:"Nos axes",spaces:"Nos espaces",contact:"Contact",login:"Espace client",eyebrow:"DÉVELOPPEMENT · COOPÉRATION · INNOVATION",hero:"Des perspectives nouvelles pour un développement durable.",heroDesc:"Découvrez l’univers de présentation de la BID, ses orientations, ses domaines d’intérêt et les différents espaces de la plateforme.",contactTitle:"Contacts de la plateforme",send:"Adresse d’envoi",help:"Assistance",customer:"Service client",admin:"Administration"},
-  en:{about:"About",axes:"Our focus",spaces:"Our spaces",contact:"Contact",login:"Client area",eyebrow:"DEVELOPMENT · COOPERATION · INNOVATION",hero:"New perspectives for sustainable development.",heroDesc:"Discover this BID presentation platform, its priorities, areas of interest and the different sections available.",contactTitle:"Platform contacts",send:"Outgoing mail",help:"Support",customer:"Customer service",admin:"Administration"},
-  ar:{about:"من نحن",axes:"مجالات التركيز",spaces:"مساحاتنا",contact:"اتصل بنا",login:"مساحة العملاء",eyebrow:"التنمية · التعاون · الابتكار",hero:"آفاق جديدة من أجل تنمية مستدامة.",heroDesc:"اكتشف منصة عرض بنك التنمية الإسلامي وتوجهاتها ومجالات اهتمامها والأقسام المختلفة المتاحة.",contactTitle:"جهات الاتصال بالمنصة",send:"البريد الصادر",help:"المساعدة",customer:"خدمة العملاء",admin:"الإدارة"}
+  fr:{
+    title:"BID — Banque Islamique de Développement",brand:"Banque Islamique de Développement",brandSmall:"Présentation de la plateforme",topline:"Plateforme de présentation BID",toplineLang:"Français · English · العربية",
+    nav:["À propos","Nos axes","Nos espaces","Contact"],login:"Espace client",eyebrow:"DÉVELOPPEMENT · COOPÉRATION · INNOVATION",hero:"Des perspectives nouvelles pour un <em>développement durable.</em>",heroDesc:"Découvrez l’univers de présentation de la BID, ses orientations, ses domaines d’intérêt et les différents espaces de la plateforme.",heroDiscover:"Découvrir la plateforme",heroLogin:"Accéder à l’espace client",caption:"VISION<br><b>AVENIR</b><br>PARTENARIAT",bottom:"Une plateforme d’information et de découverte",
+    noticeTitle:"À propos de cette plateforme",notice:"Ce site est un projet indépendant de présentation. Il n’est pas le site officiel de la Banque Islamique de Développement et ne propose aucun service bancaire réel. N’utilisez pas de données personnelles ou financières réelles.",
+    aboutLabel:"01 — PRÉSENTATION",aboutTitle:"Une vision tournée vers les <em>opportunités</em> et le progrès.",aboutP:["Cette plateforme présente une vision générale du développement économique et social, de la coopération et de l’innovation. Elle propose un parcours de découverte structuré pour mieux comprendre les thèmes abordés et les outils numériques illustrés.","Son organisation met en avant l’accès à l’information, la clarté des parcours et une expérience de navigation simple, sur ordinateur comme sur mobile."],aboutLink:"Explorer les axes de présentation",
+    pillarsLabel:"02 — DOMAINES D’INTÉRÊT",pillarsTitle:"Des priorités qui façonnent <em>l’avenir.</em>",pillarsDesc:"Quelques grands thèmes mis en valeur dans cette présentation.",pillars:[ ["Développement humain","Mettre en lumière l’accès aux connaissances, aux compétences et aux possibilités de progrès social."],["Infrastructures durables","Présenter les enjeux liés aux infrastructures, à la résilience et à la croissance à long terme."],["Innovation & coopération","Explorer le rôle des partenariats, des nouvelles technologies et du partage des connaissances."] ],
+    spacesLabel:"03 — SERVICES DE LA PLATEFORME",spacesTitle:"Explorez les <em>espaces disponibles.</em>",spacesDesc:"Retrouvez les rubriques principales et découvrez leur utilité au sein de l’interface.",spaces:[ ["ACCÈS PERSONNEL","Espace client","Un espace de navigation qui présente les informations du profil et les différentes rubriques accessibles après connexion.","Découvrir l’espace"],["CONSULTATION","Suivi des opérations","Une rubrique de consultation permettant de visualiser les références, les dates et les statuts des opérations fictives affichées.","Consulter la rubrique"],["PARAMÈTRES","Gestion du profil","Un espace consacré à la consultation des informations de profil et à la découverte des paramètres disponibles dans l’interface.","Gérer le profil"] ],
+    ctaLabel:"04 — ACCÈS À LA PLATEFORME",ctaTitle:"Découvrez une expérience numérique <em>structurée et accessible.</em>",ctaDesc:"Accédez à l’interface pour parcourir les espaces et les fonctionnalités présentés.",ctaButton:"Ouvrir l’espace client",
+    footerSmall:"Page indépendante de présentation",footerLinks:["À propos","Domaines d’intérêt","Espaces","Contact","Espace client"],contactTitle:"Contacts de la plateforme",contactLabels:["Adresse d’envoi","Assistance","Service client","Administration"],legal:"© 2026 — Plateforme indépendante de présentation. Cette interface n’est pas affiliée au site officiel isdb.org et ne fournit aucun service bancaire réel."
+  },
+  en:{
+    title:"BID — Islamic Development Bank",brand:"Islamic Development Bank",brandSmall:"Platform overview",topline:"BID presentation platform",toplineLang:"Français · English · العربية",
+    nav:["About","Our focus","Our spaces","Contact"],login:"Client area",eyebrow:"DEVELOPMENT · COOPERATION · INNOVATION",hero:"New perspectives for <em>sustainable development.</em>",heroDesc:"Discover this BID presentation platform, its direction, areas of interest and the different sections available.",heroDiscover:"Explore the platform",heroLogin:"Access the client area",caption:"VISION<br><b>FUTURE</b><br>PARTNERSHIP",bottom:"An information and discovery platform",
+    noticeTitle:"About this platform",notice:"This website is an independent presentation project. It is not the official website of the Islamic Development Bank and does not provide real banking services. Do not use real personal or financial information.",
+    aboutLabel:"01 — OVERVIEW",aboutTitle:"A vision focused on <em>opportunity</em> and progress.",aboutP:["This platform presents a general overview of economic and social development, cooperation and innovation. It offers a structured way to explore the topics covered and the digital tools illustrated.","Its organization emphasizes access to information, clear navigation and a simple browsing experience on both computers and mobile devices."],aboutLink:"Explore the focus areas",
+    pillarsLabel:"02 — AREAS OF INTEREST",pillarsTitle:"Priorities shaping <em>the future.</em>",pillarsDesc:"A selection of key themes highlighted in this presentation.",pillars:[["Human development","Highlighting access to knowledge, skills and opportunities for social progress."],["Sustainable infrastructure","Presenting issues related to infrastructure, resilience and long-term growth."],["Innovation & cooperation","Exploring the role of partnerships, new technologies and knowledge sharing."]],
+    spacesLabel:"03 — PLATFORM SERVICES",spacesTitle:"Explore the <em>available sections.</em>",spacesDesc:"Find the main sections and discover their purpose within the interface.",spaces:[["PERSONAL ACCESS","Client area","A space presenting profile information and the different sections available after signing in.","Explore this area"],["INFORMATION","Operations tracking","A section for viewing references, dates and statuses of the sample operations displayed.","View this section"],["SETTINGS","Profile management","A space for reviewing profile information and discovering the settings available in the interface.","Manage profile"]],
+    ctaLabel:"04 — PLATFORM ACCESS",ctaTitle:"Discover a digital experience that is <em>organized and accessible.</em>",ctaDesc:"Enter the interface to explore the sections and features presented.",ctaButton:"Open client area",
+    footerSmall:"Independent presentation page",footerLinks:["About","Areas of interest","Sections","Contact","Client area"],contactTitle:"Platform contacts",contactLabels:["Outgoing mail","Support","Customer service","Administration"],legal:"© 2026 — Independent presentation platform. This interface is not affiliated with the official isdb.org website and does not provide real banking services."
+  },
+  ar:{
+    title:"منصة بنك التنمية الإسلامي — عرض تعريفي",brand:"البنك الإسلامي للتنمية",brandSmall:"التعريف بالمنصة",topline:"منصة تعريفية ببنك التنمية الإسلامي",toplineLang:"Français · English · العربية",
+    nav:["من نحن","مجالات التركيز","مساحاتنا","اتصل بنا"],login:"مساحة العملاء",eyebrow:"التنمية · التعاون · الابتكار",hero:"آفاق جديدة من أجل <em>تنمية مستدامة.</em>",heroDesc:"اكتشف المنصة التعريفية ببنك التنمية الإسلامي وتوجهاتها ومجالات اهتمامها والأقسام المختلفة المتاحة.",heroDiscover:"اكتشف المنصة",heroLogin:"الدخول إلى مساحة العملاء",caption:"الرؤية<br><b>المستقبل</b><br>الشراكة",bottom:"منصة للمعلومات والاستكشاف",
+    noticeTitle:"حول هذه المنصة",notice:"هذا الموقع مشروع عرض مستقل. وهو ليس الموقع الرسمي لبنك التنمية الإسلامي ولا يقدم أي خدمات مصرفية حقيقية. يرجى عدم استخدام بيانات شخصية أو مالية حقيقية.",
+    aboutLabel:"01 — نبذة تعريفية",aboutTitle:"رؤية تركز على <em>الفرص</em> والتقدم.",aboutP:["تقدم هذه المنصة عرضاً عاماً للتنمية الاقتصادية والاجتماعية والتعاون والابتكار. كما توفر مساراً منظماً للتعرف على الموضوعات والأدوات الرقمية المعروضة.","يركز تنظيمها على سهولة الوصول إلى المعلومات ووضوح التصفح وتوفير تجربة استخدام بسيطة على أجهزة الكمبيوتر والهواتف."],aboutLink:"استكشف مجالات العرض",
+    pillarsLabel:"02 — مجالات الاهتمام",pillarsTitle:"أولويات ترسم ملامح <em>المستقبل.</em>",pillarsDesc:"مجموعة من الموضوعات الرئيسية التي يسلط هذا العرض الضوء عليها.",pillars:[["التنمية البشرية","إبراز فرص الوصول إلى المعرفة والمهارات وإمكانات التقدم الاجتماعي."],["البنية التحتية المستدامة","عرض القضايا المتعلقة بالبنية التحتية والقدرة على الصمود والنمو طويل الأجل."],["الابتكار والتعاون","استكشاف دور الشراكات والتقنيات الحديثة وتبادل المعرفة."]],
+    spacesLabel:"03 — خدمات المنصة",spacesTitle:"استكشف <em>المساحات المتاحة.</em>",spacesDesc:"تعرف على الأقسام الرئيسية والغرض منها داخل الواجهة.",spaces:[["الدخول الشخصي","مساحة العملاء","مساحة تعرض معلومات الملف الشخصي والأقسام المختلفة المتاحة بعد تسجيل الدخول.","اكتشف المساحة"],["الاستعلام","متابعة العمليات","قسم للاستعلام يتيح عرض المراجع والتواريخ وحالات العمليات النموذجية المعروضة.","عرض القسم"],["الإعدادات","إدارة الملف الشخصي","مساحة مخصصة لمراجعة معلومات الملف الشخصي والتعرف على الإعدادات المتاحة في الواجهة.","إدارة الملف الشخصي"]],
+    ctaLabel:"04 — الدخول إلى المنصة",ctaTitle:"اكتشف تجربة رقمية <em>منظمة وسهلة الاستخدام.</em>",ctaDesc:"ادخل إلى الواجهة لاستكشاف المساحات والوظائف المعروضة.",ctaButton:"فتح مساحة العملاء",
+    footerSmall:"صفحة عرض مستقلة",footerLinks:["من نحن","مجالات الاهتمام","المساحات","اتصل بنا","مساحة العملاء"],contactTitle:"جهات الاتصال بالمنصة",contactLabels:["البريد الصادر","المساعدة","خدمة العملاء","الإدارة"],legal:"© 2026 — منصة عرض مستقلة. هذه الواجهة غير تابعة للموقع الرسمي isdb.org ولا تقدم خدمات مصرفية حقيقية."
+  }
 };
+
 function setLanguage(l){
   lang = ["fr","en","ar"].includes(l) ? l : "fr";
-  document.documentElement.lang = lang;
-  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  const t = PUBLIC_TEXT[lang];
+  const root = document.documentElement;
+  root.lang = lang;
+  root.dir = lang === "ar" ? "rtl" : "ltr";
+  document.title = t.title;
+  const setText = (selector, value) => { const e=document.querySelector(selector); if(e) e.textContent=value; };
+  const setHTML = (selector, value) => { const e=document.querySelector(selector); if(e) e.innerHTML=value; };
+  const setList = (selector, values, html=false) => document.querySelectorAll(selector).forEach((e,i)=>{ if(values[i]!==undefined) html ? e.innerHTML=values[i] : e.textContent=values[i]; });
 
-  const translations = {
-    fr: {
-      nav:["À propos","Nos axes","Nos espaces","Contact"],
-      login:"Espace client", eyebrow:"DÉVELOPPEMENT · COOPÉRATION · INNOVATION",
-      hero:"Des perspectives nouvelles pour un développement durable.",
-      heroDesc:"Découvrez l’univers de présentation de la BID, ses orientations, ses domaines d’intérêt et les différents espaces de la plateforme.",
-      discover:"Découvrir la plateforme", access:"Accéder à l’espace client",
-      topline:"Plateforme de présentation BID", aboutLabel:"01 — PRÉSENTATION",
-      aboutTitle:"Une vision tournée vers les opportunités et le progrès.",
-      aboutP1:"Cette plateforme présente une vision générale du développement économique et social, de la coopération et de l’innovation. Elle propose un parcours de découverte structuré pour mieux comprendre les thèmes abordés et les outils numériques illustrés.",
-      aboutP2:"Son organisation met en avant l’accès à l’information, la clarté des parcours et une expérience de navigation simple, sur ordinateur comme sur mobile.",
-      aboutLink:"Explorer les axes de présentation", axesLabel:"02 — DOMAINES D’INTÉRÊT",
-      axesTitle:"Des priorités qui façonnent l’avenir.", axesIntro:"Quelques grands thèmes mis en valeur dans cette présentation.",
-      pillarTitles:["Développement humain","Infrastructures durables","Innovation & coopération"],
-      pillarTexts:["Mettre en lumière l’accès aux connaissances, aux compétences et aux possibilités de progrès social.","Présenter les enjeux liés aux infrastructures, à la résilience et à la croissance à long terme.","Explorer le rôle des partenariats, des nouvelles technologies et du partage des connaissances."],
-      spacesLabel:"03 — SERVICES DE LA PLATEFORME", spacesTitle:"Explorez les espaces disponibles.",
-      spacesIntro:"Retrouvez les rubriques principales et découvrez leur utilité au sein de l’interface.",
-      tags:["ACCÈS PERSONNEL","CONSULTATION","PARAMÈTRES"],
-      spaceTitles:["Espace client","Suivi des opérations","Gestion du profil"],
-      spaceTexts:["Un espace de navigation qui présente les informations du profil et les différentes rubriques accessibles après connexion.","Une rubrique de consultation permettant de visualiser les références, les dates et les statuts des opérations fictives affichées.","Un espace consacré à la consultation des informations de profil et à la découverte des paramètres disponibles dans l’interface."],
-      spaceButtons:["Découvrir l’espace","Consulter la rubrique","Gérer le profil"],
-      ctaLabel:"04 — ACCÈS À LA PLATEFORME", ctaTitle:"Découvrez une expérience numérique structurée et accessible.",
-      ctaDesc:"Accédez à l’interface pour parcourir les espaces et les fonctionnalités présentés.", ctaButton:"Ouvrir l’espace client",
-      footerAbout:"Page indépendante de présentation", footerLinks:["À propos","Domaines d’intérêt","Espaces","Contact","Espace client"],
-      contactTitle:"Contacts de la plateforme", contactLabels:["Adresse d’envoi","Assistance","Service client","Administration"],
-      noticeTitle:"À propos de cette plateforme",
-      notice:"Ce site est un projet indépendant de présentation. Il n’est pas le site officiel de la Banque Islamique de Développement et ne propose aucun service bancaire réel. N’utilisez pas de données personnelles ou financières réelles.",
-      footerNotice:"© 2026 — Plateforme indépendante de présentation. Cette interface n’est pas affiliée au site officiel isdb.org et ne fournit aucun service bancaire réel."
-    },
-    en: {
-      nav:["About","Our focus","Our spaces","Contact"],
-      login:"Client area", eyebrow:"DEVELOPMENT · COOPERATION · INNOVATION",
-      hero:"New perspectives for sustainable development.",
-      heroDesc:"Discover this BID presentation platform, its priorities, areas of interest and the different sections available.",
-      discover:"Discover the platform", access:"Access the client area",
-      topline:"BID presentation platform", aboutLabel:"01 — OVERVIEW",
-      aboutTitle:"A vision focused on opportunities and progress.",
-      aboutP1:"This platform presents a general overview of economic and social development, cooperation and innovation. It offers a structured discovery journey to better understand the themes and digital tools illustrated.",
-      aboutP2:"Its design highlights access to information, clear navigation and a simple browsing experience on desktop and mobile devices.",
-      aboutLink:"Explore the presentation themes", axesLabel:"02 — AREAS OF INTEREST",
-      axesTitle:"Priorities shaping the future.", axesIntro:"A selection of key themes highlighted in this presentation.",
-      pillarTitles:["Human development","Sustainable infrastructure","Innovation & cooperation"],
-      pillarTexts:["Highlighting access to knowledge, skills and opportunities for social progress.","Presenting issues related to infrastructure, resilience and long-term growth.","Exploring the role of partnerships, new technologies and knowledge sharing."],
-      spacesLabel:"03 — PLATFORM AREAS", spacesTitle:"Explore the available spaces.",
-      spacesIntro:"Find the main sections and discover their purpose within the interface.",
-      tags:["PERSONAL ACCESS","CONSULTATION","SETTINGS"],
-      spaceTitles:["Client area","Operation tracking","Profile management"],
-      spaceTexts:["A navigation area presenting profile information and the different sections available after signing in.","A consultation section for viewing references, dates and statuses of the sample operations displayed.","An area for reviewing profile information and discovering the settings available in the interface."],
-      spaceButtons:["Explore this area","View this section","Manage profile"],
-      ctaLabel:"04 — PLATFORM ACCESS", ctaTitle:"Discover a structured and accessible digital experience.",
-      ctaDesc:"Access the interface to explore the spaces and features presented.", ctaButton:"Open client area",
-      footerAbout:"Independent presentation page", footerLinks:["About","Areas of interest","Spaces","Contact","Client area"],
-      contactTitle:"Platform contacts", contactLabels:["Outgoing mail","Support","Customer service","Administration"],
-      noticeTitle:"About this platform",
-      notice:"This website is an independent presentation project. It is not the official website of the Islamic Development Bank and does not provide real banking services. Do not use real personal or financial information.",
-      footerNotice:"© 2026 — Independent presentation platform. This interface is not affiliated with the official website isdb.org and does not provide real banking services."
-    },
-    ar: {
-      nav:["من نحن","مجالات التركيز","مساحاتنا","اتصل بنا"],
-      login:"مساحة العملاء", eyebrow:"التنمية · التعاون · الابتكار",
-      hero:"آفاق جديدة من أجل تنمية مستدامة.",
-      heroDesc:"اكتشف منصة عرض بنك التنمية الإسلامي وتوجهاتها ومجالات اهتمامها والأقسام المختلفة المتاحة.",
-      discover:"اكتشف المنصة", access:"الدخول إلى مساحة العملاء",
-      topline:"منصة عرض بنك التنمية الإسلامي", aboutLabel:"01 — نبذة تعريفية",
-      aboutTitle:"رؤية تركز على الفرص والتقدم.",
-      aboutP1:"تقدم هذه المنصة عرضاً عاماً للتنمية الاقتصادية والاجتماعية والتعاون والابتكار. كما توفر مساراً منظماً للتعرف على الموضوعات والأدوات الرقمية المعروضة.",
-      aboutP2:"يركز تنظيمها على سهولة الوصول إلى المعلومات ووضوح التصفح وتوفير تجربة استخدام بسيطة على أجهزة الكمبيوتر والهواتف.",
-      aboutLink:"استكشف محاور العرض", axesLabel:"02 — مجالات الاهتمام",
-      axesTitle:"أولويات ترسم ملامح المستقبل.", axesIntro:"مجموعة من الموضوعات الرئيسية التي يسلط هذا العرض الضوء عليها.",
-      pillarTitles:["التنمية البشرية","البنية التحتية المستدامة","الابتكار والتعاون"],
-      pillarTexts:["إبراز فرص الوصول إلى المعرفة والمهارات وإمكانات التقدم الاجتماعي.","عرض القضايا المتعلقة بالبنية التحتية والقدرة على الصمود والنمو طويل الأجل.","استكشاف دور الشراكات والتقنيات الحديثة وتبادل المعرفة."],
-      spacesLabel:"03 — أقسام المنصة", spacesTitle:"استكشف المساحات المتاحة.",
-      spacesIntro:"تعرف على الأقسام الرئيسية والغرض منها داخل الواجهة.",
-      tags:["الدخول الشخصي","الاستعلام","الإعدادات"],
-      spaceTitles:["مساحة العملاء","متابعة العمليات","إدارة الملف الشخصي"],
-      spaceTexts:["مساحة تعرض معلومات الملف الشخصي والأقسام المختلفة المتاحة بعد تسجيل الدخول.","قسم للاستعلام يتيح عرض المراجع والتواريخ وحالات العمليات النموذجية المعروضة.","مساحة مخصصة لمراجعة معلومات الملف الشخصي والتعرف على الإعدادات المتاحة في الواجهة."],
-      spaceButtons:["اكتشف المساحة","عرض القسم","إدارة الملف الشخصي"],
-      ctaLabel:"04 — الدخول إلى المنصة", ctaTitle:"اكتشف تجربة رقمية منظمة وسهلة الاستخدام.",
-      ctaDesc:"ادخل إلى الواجهة لاستكشاف المساحات والوظائف المعروضة.", ctaButton:"فتح مساحة العملاء",
-      footerAbout:"صفحة عرض مستقلة", footerLinks:["من نحن","مجالات الاهتمام","المساحات","اتصل بنا","مساحة العملاء"],
-      contactTitle:"جهات الاتصال بالمنصة", contactLabels:["البريد الصادر","المساعدة","خدمة العملاء","الإدارة"],
-      noticeTitle:"حول هذه المنصة",
-      notice:"هذا الموقع مشروع عرض مستقل. وهو ليس الموقع الرسمي لبنك التنمية الإسلامي ولا يقدم أي خدمات مصرفية حقيقية. يرجى عدم استخدام بيانات شخصية أو مالية حقيقية.",
-      footerNotice:"© 2026 — منصة عرض مستقلة. هذه الواجهة غير تابعة للموقع الرسمي isdb.org ولا تقدم خدمات مصرفية حقيقية."
-    }
-  };
-
-  const t = translations[lang];
-  const setText = (selector, value) => {
-    const el = document.querySelector(selector);
-    if (el && value !== undefined) el.textContent = value;
-  };
-  document.querySelectorAll(".pub-links a").forEach((el,i)=>{if(t.nav[i])el.textContent=t.nav[i];});
-  document.querySelectorAll(".pub-login").forEach(el=>{
-    const arrow=el.querySelector("span");
-    el.textContent=t.login+" ";
-    if(arrow)el.appendChild(arrow);
-  });
-  setText(".pub-topline span:first-child",t.topline);
-  setText(".pub-eyebrow",t.eyebrow);
-  setText(".pub-hero h1",t.hero);
-  setText(".pub-hero-content>p",t.heroDesc);
-  setText(".pub-btn-light",t.discover);
-  setText(".pub-btn-outline",t.access);
-  setText(".pub-notice strong",t.noticeTitle);
-  const notice=document.querySelector(".pub-notice p");
-  if(notice)notice.innerHTML="<strong>"+t.noticeTitle+"</strong><br>"+t.notice;
-  setText(".pub-about .pub-section-label",t.aboutLabel);
-  setText(".pub-about h2",t.aboutTitle);
-  const aboutP=document.querySelectorAll(".pub-about-grid>div:last-child p");
-  if(aboutP[0])aboutP[0].textContent=t.aboutP1;
-  if(aboutP[1])aboutP[1].textContent=t.aboutP2;
-  setText(".pub-text-link",t.aboutLink);
-  setText(".pub-pillars .pub-section-label",t.axesLabel);
-  setText(".pub-pillars h2",t.axesTitle);
-  setText(".pub-section-heading>p",t.axesIntro);
-  document.querySelectorAll(".pub-pillar h3").forEach((e,i)=>{if(t.pillarTitles[i])e.textContent=t.pillarTitles[i];});
-  document.querySelectorAll(".pub-pillar p").forEach((e,i)=>{if(t.pillarTexts[i])e.textContent=t.pillarTexts[i];});
-  setText(".pub-spaces>.pub-section-label",t.spacesLabel);
-  setText(".pub-spaces .pub-section-heading h2",t.spacesTitle);
-  setText(".pub-spaces .pub-section-heading>p",t.spacesIntro);
-  document.querySelectorAll(".pub-space-tag").forEach((e,i)=>{if(t.tags[i])e.textContent=t.tags[i];});
-  document.querySelectorAll(".pub-space-card h3").forEach((e,i)=>{if(t.spaceTitles[i])e.textContent=t.spaceTitles[i];});
-  document.querySelectorAll(".pub-space-card p").forEach((e,i)=>{if(t.spaceTexts[i])e.textContent=t.spaceTexts[i];});
-  document.querySelectorAll(".pub-space-card button").forEach((e,i)=>{
-    const arrow=e.querySelector("span");e.textContent=t.spaceButtons[i]||e.textContent;if(arrow)e.appendChild(arrow);
-  });
-  setText(".pub-cta .pub-section-label",t.ctaLabel);
-  setText(".pub-cta h2",t.ctaTitle);
-  setText(".pub-cta p",t.ctaDesc);
-  const ctaButton=document.querySelector(".pub-cta button");
-  if(ctaButton){const arrow=ctaButton.querySelector("span");ctaButton.textContent=t.ctaButton+" ";if(arrow)ctaButton.appendChild(arrow);}
-  setText(".pub-footer-brand small",t.footerAbout);
-  document.querySelectorAll(".pub-footer-links a").forEach((e,i)=>{if(t.footerLinks[i])e.textContent=t.footerLinks[i];});
-  setText("#contact h3",t.contactTitle);
-  document.querySelectorAll(".pub-contact-item span").forEach((e,i)=>{if(t.contactLabels[i])e.textContent=t.contactLabels[i];});
-  setText(".pub-footer>p",t.footerNotice);
+  setList(".pub-topline span", [t.topline,t.toplineLang]);
+  setText(".pub-brand strong",t.brand); setText(".pub-brand small",t.brandSmall);
+  setList(".pub-links a",t.nav);
+  document.querySelectorAll(".pub-login").forEach(e=>{const span=e.querySelector("span");e.textContent=t.login+" ";if(span)e.appendChild(span);});
+  const eyebrow=document.querySelector(".pub-eyebrow");if(eyebrow){const mark=eyebrow.querySelector("span");eyebrow.textContent=t.eyebrow+" ";if(mark)eyebrow.prepend(mark);}
+  setHTML(".pub-hero h1",t.hero); setText(".pub-hero-content>p",t.heroDesc);
+  setHTML(".pub-hero-actions a",t.heroDiscover+" <span>↗</span>"); setText(".pub-hero-actions button",t.heroLogin);
+  setHTML(".pub-hero-caption",t.caption); setText(".pub-hero-bottom span:first-child",t.bottom);
+  setHTML(".pub-notice p","<strong>"+t.noticeTitle+"</strong><br>"+t.notice);
+  setText(".pub-about .pub-section-label",t.aboutLabel); setHTML(".pub-about h2",t.aboutTitle);
+  setList(".pub-about-grid>div:last-child p",t.aboutP); setHTML(".pub-text-link",t.aboutLink+" <span>→</span>");
+  setText(".pub-pillars .pub-section-label",t.pillarsLabel); setHTML(".pub-pillars .pub-section-heading h2",t.pillarsTitle); setText(".pub-pillars .pub-section-heading>p",t.pillarsDesc);
+  document.querySelectorAll(".pub-pillar").forEach((e,i)=>{if(t.pillars[i]){setTextWithin(e,"h3",t.pillars[i][0]);setTextWithin(e,"p",t.pillars[i][1]);}});
+  setText(".pub-spaces>.pub-section-label",t.spacesLabel); setHTML(".pub-spaces .pub-section-heading h2",t.spacesTitle); setText(".pub-spaces .pub-section-heading>p",t.spacesDesc);
+  document.querySelectorAll(".pub-space-card").forEach((e,i)=>{if(t.spaces[i]){setTextWithin(e,".pub-space-tag",t.spaces[i][0]);setTextWithin(e,"h3",t.spaces[i][1]);setTextWithin(e,"p",t.spaces[i][2]);const b=e.querySelector("button");if(b){const span=b.querySelector("span");b.textContent=t.spaces[i][3]+" ";if(span)b.appendChild(span);}}});
+  setText(".pub-cta .pub-section-label",t.ctaLabel); setHTML(".pub-cta h2",t.ctaTitle); setText(".pub-cta p",t.ctaDesc);
+  const ctaButton=document.querySelector(".pub-cta button");if(ctaButton){const span=ctaButton.querySelector("span");ctaButton.textContent=t.ctaButton+" ";if(span)ctaButton.appendChild(span);}
+  setText(".pub-footer-brand strong",t.brand); setText(".pub-footer-brand small",t.footerSmall);
+  setList(".pub-footer-links a",t.footerLinks); setText(".pub-contact h3",t.contactTitle); setList(".pub-contact-item span",t.contactLabels); setText(".pub-footer>p",t.legal);
   document.querySelectorAll("#language,.pub-language").forEach(e=>e.value=lang);
-
   document.querySelectorAll("[data-k]").forEach(e=>e.textContent=tr(e.dataset.k));
-  const bankName=document.getElementById("clientBankName");
-  const bankAddress=document.getElementById("clientBankAddress");
-  if(bankName)bankName.textContent=tr("bankDisplayName");
-  if(bankAddress)bankAddress.textContent=tr("bankDisplayAddress");
+  const bankName=document.getElementById("clientBankName"), bankAddress=document.getElementById("clientBankAddress");
+  if(bankName) bankName.textContent=tr("bankDisplayName");
+  if(bankAddress) bankAddress.textContent=tr("bankDisplayAddress");
   const accountTab=document.querySelector('.tabs button[onclick*="myAccount"]');
-  if(accountTab)accountTab.textContent=tr("myAccount");
+  if(accountTab) accountTab.textContent=tr("myAccount");
 }
+
+function setTextWithin(parent, selector, value){const e=parent.querySelector(selector);if(e)e.textContent=value;}
 
 function showClientLogin(){
   const home = document.getElementById("publicHome");
