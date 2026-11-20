@@ -4,7 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>Banque Islamique de Développement</title>
+<title>BID — Banque Islamique de Développement</title>
+<meta name="description" content="Découvrez la plateforme BID et ses espaces numériques de présentation. Consultez les informations et accédez à votre espace client.">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="BID — Banque Islamique de Développement">
+<meta property="og:description" content="Présentation de la plateforme BID et accès à l’espace client.">
+<meta name="theme-color" content="#073d34">
 
 <style>
 *{box-sizing:border-box}
@@ -1201,35 +1207,197 @@ button.primary:hover,
 }
 
 
-/* Saisie des dates : champ lisible, tactile et calendrier facile à ouvrir */
-/* Année séparée pour éviter les difficultés du champ date natif sur Safari */
-.date-entry-helper{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:13px;color:#52645e}
-.date-entry-helper label{font-weight:600}
-.date-entry-helper input[type="number"]{width:108px;min-height:38px;padding:7px 9px;font-size:16px}
-.date-entry-helper .date-entry-hint{font-size:12px}
-
-input[type="date"],
-input[type="datetime-local"]{
-  width:100%;
-  min-height:46px;
-  max-width:100%;
-  padding:11px 12px;
+/* PAGE D'ACCUEIL PUBLIQUE — PROJET DE DEMONSTRATION */
+.public-home{
+  max-width:1100px;
+  margin:34px auto 55px;
+  padding:0 18px;
+}
+.public-nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  margin-bottom:22px;
+}
+.public-mark{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:#073d34;
+  font-weight:800;
+  font-size:18px;
+}
+.public-mark-icon{
+  display:grid;
+  place-items:center;
+  flex:0 0 58px;
+  width:58px;
+  height:58px;
+  border-radius:50%;
+  background:#092f35;
+  box-shadow:0 4px 14px rgba(7,61,52,.18);
+}
+.public-mark-icon svg{width:54px;height:54px;display:block}
+.public-mark strong{display:block;font-size:21px;letter-spacing:.12em;color:#092f35}
+.public-mark small{display:block;margin-top:2px;font-size:12px;font-weight:600;color:#667b74;letter-spacing:0}
+.public-hero{
+  position:relative;
+  overflow:hidden;
+  padding:clamp(30px,6vw,68px);
+  border-radius:24px;
+  color:#fff;
+  background:linear-gradient(125deg,#073d34 0%,#0b6657 65%,#13836c 100%);
+  box-shadow:0 18px 45px rgba(7,61,52,.16);
+}
+.public-hero:after{
+  content:"";
+  position:absolute;
+  width:330px;
+  height:330px;
+  right:-100px;
+  top:-120px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:50%;
+  box-shadow:0 0 0 35px rgba(255,255,255,.035),0 0 0 75px rgba(255,255,255,.025);
+}
+.public-kicker{
+  display:inline-block;
+  padding:7px 12px;
+  border:1px solid rgba(255,255,255,.35);
+  border-radius:30px;
+  color:#e3f5ed;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.public-hero h1{
+  max-width:720px;
+  margin:0 0 14px;
+  font-size:clamp(32px,5vw,54px);
+  line-height:1.08;
+  color:#fff;
+}
+.public-hero p{
+  max-width:650px;
+  color:#e0eee9;
+  font-size:18px;
+  line-height:1.7;
+}
+.public-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:28px;
+}
+.public-actions a,.public-actions button{
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  min-height:48px;
+  padding:12px 20px;
+  border-radius:30px;
+  text-decoration:none;
+  font-weight:750;
+}
+.public-primary{
+  border:0;
   background:#fff;
-  color:#17332d;
-  accent-color:#087f68;
-  cursor:pointer;
-  font-variant-numeric:tabular-nums;
-  touch-action:manipulation;
+  color:#073d34;
 }
-input[type="date"]:focus,
-input[type="datetime-local"]:focus{
-  outline:2px solid #087f68;
-  outline-offset:1px;
-  border-color:#087f68;
+.public-secondary{
+  border:1px solid rgba(255,255,255,.55);
+  color:#fff;
+  background:transparent;
 }
-@media(max-width:600px){
-  input[type="date"],input[type="datetime-local"]{font-size:16px;min-height:48px;}
+.public-disclaimer{
+  margin:18px 0 0;
+  padding:14px 16px;
+  border-left:4px solid #c99b42;
+  border-radius:9px;
+  background:#fff8e9;
+  color:#5c4a24;
+  line-height:1.55;
 }
+.public-section{
+  margin:42px 0;
+}
+.public-section h2{
+  margin:0 0 12px;
+  color:#073d34;
+  font-size:clamp(24px,3vw,32px);
+}
+.public-lead{
+  max-width:760px;
+  color:#5e716a;
+  line-height:1.7;
+}
+.public-cards{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+  margin-top:22px;
+}
+.public-card{
+  padding:23px;
+  border:1px solid #e1ebe6;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 5px 20px rgba(7,61,52,.045);
+}
+.public-card-icon{
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  margin-bottom:14px;
+  border-radius:12px;
+  background:#e8f3ef;
+  color:#087f68;
+  font-size:21px;
+}
+.public-card h3{margin:0 0 9px;color:#17332d}
+.public-card p{margin:0;color:#667b74;line-height:1.65}
+.public-footer{
+  padding:22px 0 8px;
+  border-top:1px solid #dfe9e4;
+  color:#667b74;
+  font-size:13px;
+  line-height:1.6;
+}
+@media(max-width:760px){
+  .public-cards{grid-template-columns:1fr}
+  .public-nav{align-items:flex-start;flex-direction:column}
+  .public-hero{border-radius:18px}
+  .public-hero p{font-size:16px}
+}
+
+
+/* Refonte visuelle de la page publique — inspiration éditoriale institutionnelle */
+body:has(#publicHome:not([style*="display: none"]))>header{display:none}
+body:has(#publicHome[style*="display: none"])>header{display:flex}
+.public-home{--ink:#102d35;--deep:#073c43;--green:#0b6258;--mint:#eaf2ef;--gold:#c8a65b;--muted:#61716f;background:#fff;color:var(--ink);margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6}
+.pub-topline{height:30px;padding:0 6.5%;display:flex;align-items:center;justify-content:space-between;background:#092e36;color:#d9e6e1;font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.pub-header{min-height:90px;padding:12px 6.5%;display:flex;align-items:center;justify-content:space-between;gap:24px;background:#fff;border-bottom:1px solid #e8eeeb;position:relative;z-index:2}
+.pub-brand,.pub-footer-brand{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);min-width:0}
+.pub-brand img{width:66px;height:60px;object-fit:contain}.pub-brand strong,.pub-footer-brand strong{display:block;font-size:14px;line-height:1.3;letter-spacing:.01em}.pub-brand small,.pub-footer-brand small{display:block;color:#7b8985;font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
+.pub-links{display:flex;gap:32px}.pub-links a,.pub-footer-links a{font-size:12px;font-weight:650;color:#435b58;text-decoration:none}.pub-links a:hover,.pub-footer-links a:hover{color:#b08b42}
+.pub-login{border:0;border-radius:3px;background:#0a4d4b;color:#fff;padding:13px 19px;font-size:12px;font-weight:700}.pub-login span{margin-left:12px;color:#e5c77f}
+.pub-hero{position:relative;overflow:hidden;min-height:520px;padding:90px 8% 72px;background:linear-gradient(112deg,#092f38 0%,#0b4b4b 57%,#17645a 100%);color:#fff;display:flex;align-items:center}
+.pub-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,29,36,.22),transparent 70%);pointer-events:none}
+.pub-hero-content{position:relative;z-index:1;max-width:670px}.pub-eyebrow,.pub-section-label{font-size:10px;letter-spacing:.19em;font-weight:750;color:#d4b66f}.pub-eyebrow{display:flex;align-items:center;gap:10px}.pub-eyebrow span{width:26px;height:1px;background:#d4b66f}
+.pub-hero h1{max-width:660px;margin:23px 0 18px;font-family:Georgia,serif;font-size:clamp(42px,5.2vw,68px);font-weight:400;line-height:1.08;letter-spacing:-.035em}.pub-hero h1 em,.pub-about h2 em,.pub-section-heading h2 em,.pub-cta h2 em{font-weight:400;color:#d9bd7c}.pub-hero-content>p{max-width:560px;color:#d6e4df;font-size:16px;line-height:1.85}.pub-hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}.pub-btn-light,.pub-btn-outline{display:inline-flex;align-items:center;gap:22px;min-height:48px;padding:0 20px;border-radius:2px;text-decoration:none;font-size:12px;font-weight:750}.pub-btn-light{background:#e4d1a0;color:#153a3d}.pub-btn-outline{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.45)}
+.pub-hero-side{position:absolute;right:9%;top:50%;width:350px;height:350px;transform:translateY(-50%);border:1px solid rgba(228,209,160,.2);border-radius:50%;display:grid;place-items:center;opacity:.9}.pub-hero-side:before,.pub-hero-side:after{content:"";position:absolute;border:1px solid rgba(228,209,160,.16);border-radius:50%;inset:28px}.pub-hero-side:after{inset:62px}.pub-orbit{position:absolute;border:1px solid rgba(228,209,160,.5);border-radius:50%;transform:rotate(-32deg)}.orbit-one{width:290px;height:120px}.orbit-two{width:290px;height:120px;transform:rotate(58deg)}.pub-orbit-core{width:112px;height:112px;border-radius:50%;display:grid;place-items:center;background:rgba(220,192,126,.13);border:1px solid #c8a65b;color:#f0dba9;font:32px Georgia,serif;letter-spacing:.1em}.pub-hero-caption{position:absolute;right:-42px;bottom:15px;color:#d7c28e;font-size:9px;letter-spacing:.18em;line-height:2}.pub-hero-caption b{font-size:13px;color:#fff}.pub-hero-bottom{position:absolute;z-index:1;bottom:20px;left:8%;right:8%;display:flex;justify-content:space-between;color:#a9c2bc;font-size:9px;letter-spacing:.12em;text-transform:uppercase}
+.pub-notice{max-width:1100px;margin:26px auto 0;padding:15px 20px;display:flex;gap:14px;align-items:flex-start;background:#f5f7f5;border-left:3px solid #b99a55}.pub-notice-icon{width:22px;height:22px;flex:0 0 22px;border:1px solid #b99a55;border-radius:50%;display:grid;place-items:center;color:#8b713c;font:12px Georgia}.pub-notice p{margin:0;color:#596b67;font-size:11px;line-height:1.65}.pub-notice strong{color:#183d3d;font-size:12px}
+.pub-about,.pub-pillars,.pub-spaces{padding:88px 8%;max-width:1440px;margin:auto}.pub-about-grid{display:grid;grid-template-columns:1fr 1fr;gap:9%;margin-top:24px}.pub-about h2,.pub-section-heading h2,.pub-cta h2{margin:0;font:400 clamp(32px,4vw,48px)/1.16 Georgia,serif;letter-spacing:-.025em;color:#15383b}.pub-about h2 em,.pub-section-heading h2 em{color:#a8894d}.pub-about-grid>div:last-child p{margin:0 0 15px;color:#667773;font-size:14px;line-height:1.9}.pub-text-link{display:inline-flex;gap:18px;margin-top:12px;color:#0b5b54;text-decoration:none;font-size:12px;font-weight:750}.pub-text-link span{color:#b28e4c}
+.pub-pillars{background:#f2f6f3;max-width:none;padding-left:max(8%,calc((100% - 1210px)/2));padding-right:max(8%,calc((100% - 1210px)/2))}.pub-section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:40px}.pub-section-heading>p{max-width:330px;margin:0 0 4px;color:#70807b;font-size:13px;line-height:1.8}.pub-section-heading h2{margin-top:15px}.pub-pillar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:38px}.pub-pillar{position:relative;min-height:245px;padding:27px 26px;background:#fff;border:1px solid #e4ebe6}.pub-pillar-no{position:absolute;right:22px;top:20px;color:#b5c0ba;font:13px Georgia}.pub-pillar-symbol{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#eaf1ec;color:#0b6158;font-size:22px}.pub-pillar h3{margin:22px 0 9px;color:#183b3a;font:22px Georgia}.pub-pillar p{margin:0;color:#71807b;font-size:12px;line-height:1.8}.pub-pillar-line{display:block;width:35px;height:2px;margin-top:22px;background:#c3a45f}
+.pub-spaces{padding-top:88px;padding-bottom:90px}.pub-space-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:36px}.pub-space-card{padding:27px 25px 22px;border:1px solid #e2eae5;background:#fff;min-height:290px;display:flex;flex-direction:column}.pub-space-icon{width:45px;height:45px;display:grid;place-items:center;background:#0b4d4b;color:#e7d29a;font-size:20px}.pub-space-tag{margin-top:24px;color:#a08348;font-size:9px;letter-spacing:.16em;font-weight:800}.pub-space-card h3{margin:8px 0;color:#163b3b;font:25px Georgia}.pub-space-card p{margin:0 0 22px;color:#71807b;font-size:12px;line-height:1.8}.pub-space-card button{margin-top:auto;padding:12px 0 0;border:0;border-top:1px solid #e5ece7;background:transparent;text-align:left;color:#0b5b54;font-size:11px;font-weight:800}.pub-space-card button span{float:right;color:#b18d4c}
+.pub-cta{padding:55px 8%;background:#0a3c43;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:30px}.pub-cta h2{max-width:680px;margin-top:14px;color:#fff;font-size:clamp(30px,3.5vw,43px)}.pub-cta h2 em{color:#d9bd7c}.pub-cta p{margin:14px 0 0;color:#c2d4ce;font-size:12px}.pub-cta button{flex:0 0 auto;padding:16px 22px;border:0;background:#e2cf9c;color:#153b3d;font-size:12px;font-weight:800}.pub-cta button span{margin-left:18px}
+.pub-footer{padding:34px 8% 20px;background:#072c34;color:#d8e3de}.pub-footer-brand{color:#fff}.pub-footer-brand img{width:50px;height:45px;object-fit:contain}.pub-footer-brand strong{font-size:12px}.pub-footer-brand small{color:#9eb4ac}.pub-footer-links{display:flex;flex-wrap:wrap;gap:25px;margin:24px 0}.pub-footer-links a{color:#c3d0ca;font-size:11px}.pub-footer>p{margin:0;padding-top:17px;border-top:1px solid rgba(255,255,255,.13);color:#91a69f;font-size:10px;line-height:1.7}
+@media(max-width:900px){.pub-hero-side{right:-95px;opacity:.3}.pub-links{gap:15px}.pub-about,.pub-pillars,.pub-spaces{padding:65px 6%}.pub-cta{padding:45px 6%}}
+@media(max-width:650px){.pub-topline{padding:0 5%;font-size:8px}.pub-header{padding:12px 5%;min-height:76px;flex-wrap:wrap}.pub-brand img{width:48px;height:46px}.pub-brand strong{font-size:11px}.pub-brand small{font-size:8px}.pub-links{order:3;width:100%;justify-content:space-between;padding:7px 0 2px}.pub-links a{font-size:10px}.pub-login{padding:10px 12px;font-size:10px}.pub-hero{min-height:510px;padding:65px 7% 75px}.pub-hero h1{font-size:43px}.pub-hero-content>p{font-size:14px}.pub-hero-side{right:-210px;width:310px;height:310px;opacity:.22}.pub-hero-bottom{left:7%;right:7%;font-size:8px}.pub-notice{margin:18px 5% 0;padding:13px}.pub-about-grid{grid-template-columns:1fr;gap:20px}.pub-about,.pub-pillars,.pub-spaces{padding:58px 7%}.pub-section-heading{display:block}.pub-section-heading>p{margin-top:14px}.pub-pillar-grid,.pub-space-grid{grid-template-columns:1fr}.pub-pillar{min-height:0}.pub-space-card{min-height:260px}.pub-cta{padding:45px 7%;display:block}.pub-cta button{margin-top:24px}.pub-footer{padding:30px 7% 18px}}
+
 </style>
 </head>
 
@@ -1250,9 +1418,69 @@ input[type="datetime-local"]:focus{
 
 </header>
 
+
+<main id="publicHome" class="public-home">
+  <div class="pub-topline"><span>Plateforme de présentation BID</span><span>Français · English · العربية</span></div>
+  <nav class="pub-header" aria-label="Navigation principale">
+    <a class="pub-brand" href="#accueil" aria-label="Accueil BID">
+      <img src="/IMG_4145.jpeg" alt="Logo BID">
+      <span><strong>Banque Islamique de Développement</strong><small>Présentation de la plateforme</small></span>
+    </a>
+    <div class="pub-links">
+      <a href="#apropos">À propos</a><a href="#axes">Nos axes</a><a href="#espaces">Nos espaces</a>
+    </div>
+    <button type="button" class="pub-login" onclick="showClientLogin()">Espace client <span aria-hidden="true">→</span></button>
+  </nav>
+
+  <section class="pub-hero" id="accueil">
+    <div class="pub-hero-pattern" aria-hidden="true"></div>
+    <div class="pub-hero-content">
+      <div class="pub-eyebrow"><span></span> DÉVELOPPEMENT · COOPÉRATION · INNOVATION</div>
+      <h1>Des perspectives nouvelles pour un <em>développement durable.</em></h1>
+      <p>Découvrez l’univers de présentation de la BID, ses orientations, ses domaines d’intérêt et les différents espaces de la plateforme.</p>
+      <div class="pub-hero-actions">
+        <a href="#apropos" class="pub-btn-light">Découvrir la plateforme <span>↗</span></a>
+        <button type="button" class="pub-btn-outline" onclick="showClientLogin()">Accéder à l’espace client</button>
+      </div>
+    </div>
+    <div class="pub-hero-side" aria-hidden="true"><div class="pub-orbit orbit-one"></div><div class="pub-orbit orbit-two"></div><div class="pub-orbit-core">BID</div><div class="pub-hero-caption">VISION<br><b>AVENIR</b><br>PARTENARIAT</div></div>
+    <div class="pub-hero-bottom"><span>Une plateforme d’information et de découverte</span><span>01 / 04</span></div>
+  </section>
+
+  <div class="pub-notice"><span class="pub-notice-icon">i</span><p><strong>À propos de cette plateforme</strong><br>Ce site est un projet indépendant de présentation. Il n’est pas le site officiel de la Banque Islamique de Développement et ne propose aucun service bancaire réel. N’utilisez pas de données personnelles ou financières réelles.</p></div>
+
+  <section class="pub-about" id="apropos">
+    <div class="pub-section-label">01 — PRÉSENTATION</div>
+    <div class="pub-about-grid"><div><h2>Une vision tournée vers les <em>opportunités</em> et le progrès.</h2></div><div><p>Cette plateforme présente une vision générale du développement économique et social, de la coopération et de l’innovation. Elle propose un parcours de découverte structuré pour mieux comprendre les thèmes abordés et les outils numériques illustrés.</p><p>Son organisation met en avant l’accès à l’information, la clarté des parcours et une expérience de navigation simple, sur ordinateur comme sur mobile.</p><a class="pub-text-link" href="#axes">Explorer les axes de présentation <span>→</span></a></div></div>
+  </section>
+
+  <section class="pub-pillars" id="axes">
+    <div class="pub-section-heading"><div><div class="pub-section-label">02 — DOMAINES D’INTÉRÊT</div><h2>Des priorités qui façonnent <em>l’avenir.</em></h2></div><p>Quelques grands thèmes mis en valeur dans cette présentation.</p></div>
+    <div class="pub-pillar-grid">
+      <article class="pub-pillar"><div class="pub-pillar-no">01</div><div class="pub-pillar-symbol">⌂</div><h3>Développement humain</h3><p>Mettre en lumière l’accès aux connaissances, aux compétences et aux possibilités de progrès social.</p><span class="pub-pillar-line"></span></article>
+      <article class="pub-pillar"><div class="pub-pillar-no">02</div><div class="pub-pillar-symbol">◇</div><h3>Infrastructures durables</h3><p>Présenter les enjeux liés aux infrastructures, à la résilience et à la croissance à long terme.</p><span class="pub-pillar-line"></span></article>
+      <article class="pub-pillar"><div class="pub-pillar-no">03</div><div class="pub-pillar-symbol">✳</div><h3>Innovation & coopération</h3><p>Explorer le rôle des partenariats, des nouvelles technologies et du partage des connaissances.</p><span class="pub-pillar-line"></span></article>
+    </div>
+  </section>
+
+  <section class="pub-spaces" id="espaces">
+    <div class="pub-section-label">03 — SERVICES DE LA PLATEFORME</div>
+    <div class="pub-section-heading"><div><h2>Explorez les <em>espaces disponibles.</em></h2></div><p>Retrouvez les rubriques principales et découvrez leur utilité au sein de l’interface.</p></div>
+    <div class="pub-space-grid">
+      <article class="pub-space-card"><div class="pub-space-icon">↗</div><div class="pub-space-tag">ACCÈS PERSONNEL</div><h3>Espace client</h3><p>Un espace de navigation qui présente les informations du profil et les différentes rubriques accessibles après connexion.</p><button type="button" onclick="showClientLogin()">Découvrir l’espace <span>→</span></button></article>
+      <article class="pub-space-card"><div class="pub-space-icon">▤</div><div class="pub-space-tag">CONSULTATION</div><h3>Suivi des opérations</h3><p>Une rubrique de consultation permettant de visualiser les références, les dates et les statuts des opérations fictives affichées.</p><button type="button" onclick="showClientLogin()">Consulter la rubrique <span>→</span></button></article>
+      <article class="pub-space-card"><div class="pub-space-icon">◎</div><div class="pub-space-tag">PARAMÈTRES</div><h3>Gestion du profil</h3><p>Un espace consacré à la consultation des informations de profil et à la découverte des paramètres disponibles dans l’interface.</p><button type="button" onclick="showClientLogin()">Gérer le profil <span>→</span></button></article>
+    </div>
+  </section>
+
+  <section class="pub-cta"><div><div class="pub-section-label">04 — ACCÈS À LA PLATEFORME</div><h2>Découvrez une expérience numérique <em>structurée et accessible.</em></h2><p>Accédez à l’interface pour parcourir les espaces et les fonctionnalités présentés.</p></div><button type="button" onclick="showClientLogin()">Ouvrir l’espace client <span>→</span></button></section>
+
+  <footer class="pub-footer"><div class="pub-footer-brand"><img src="/IMG_4145.jpeg" alt="Logo BID"><span><strong>Banque Islamique de Développement</strong><small>Page indépendante de présentation</small></span></div><div class="pub-footer-links"><a href="#apropos">À propos</a><a href="#axes">Domaines d’intérêt</a><a href="#espaces">Espaces</a><a href="javascript:void(0)" onclick="showClientLogin()">Espace client</a></div><p>© 2026 — Plateforme indépendante de présentation. Cette interface n’est pas affiliée au site officiel isdb.org et ne fournit aucun service bancaire réel.</p></footer>
+</main>
+
 <div class="wrap">
 
-<section id="auth" class="auth">
+<section id="auth" class="auth" style="display:none">
 
   <div class="login-title">
 
@@ -1398,14 +1626,8 @@ input[type="datetime-local"]:focus{
 
   <input
     id="rcountry"
-    placeholder="Pays de résidence"
+    placeholder="Pays"
   >
-
-  <label for="rbankCountry">Pays du compte bancaire</label>
-  <select id="rbankCountry" required>
-    <option value="MA" selected>Maroc</option>
-    <option value="AE">Émirats arabes unis — Dubaï</option>
-  </select>
 
   <h3>Pièce d'identité</h3>
 
@@ -2213,7 +2435,6 @@ const money=(v,currency="USD")=>
 
 function setLanguage(l){
   lang=l;
-  document.documentElement.lang=l;
   document.documentElement.dir=l==="ar"?"rtl":"ltr";
 
   document.querySelectorAll("[data-k]").forEach(
@@ -2228,47 +2449,35 @@ function setLanguage(l){
 
   const accountTab = document.querySelector('.tabs button[onclick*="myAccount"]');
   if(accountTab) accountTab.textContent=tr("myAccount");
-
-  renderIncomingTransfers();
 }
 
-let clientIncomingTransfers = [];
-let clientAccountCurrency = "USD";
 
-function renderIncomingTransfers(){
-  const incomingBox=document.getElementById("incomingTransfers");
-  const incomingCard=document.getElementById("incomingTransfersCard");
-  if(!incomingBox || !incomingCard) return;
+function showClientLogin(){
+  const home = document.getElementById("publicHome");
+  const authBox = document.getElementById("auth");
+  const accountCreatedBox = document.getElementById("accountCreated");
+  const appBox = document.getElementById("app");
 
-  const labels={
-    fr:{title:"Virement entrant",empty:"Aucun virement entrant.",amount:"Montant :",sender:"Expéditeur :",condition:"Condition demandée :",noCondition:"Aucune condition précisée",status:"Statut :",available:"Disponible",cancelled:"Annulé",pending:"🔒 En attente",warning:"⚠️ Montant non disponible tant que la condition n’est pas validée."},
-    en:{title:"Incoming transfer",empty:"No incoming transfers.",amount:"Amount:",sender:"Sender:",condition:"Requested condition:",noCondition:"No condition specified",status:"Status:",available:"Available",cancelled:"Cancelled",pending:"🔒 Pending",warning:"⚠️ Funds are unavailable until the condition is validated."},
-    ar:{title:"حوالة واردة",empty:"لا توجد حوالات واردة.",amount:"المبلغ:",sender:"المرسل:",condition:"الشرط المطلوب:",noCondition:"لم يتم تحديد أي شرط",status:"الحالة:",available:"متاح",cancelled:"ملغاة",pending:"🔒 قيد الانتظار",warning:"⚠️ المبلغ غير متاح حتى يتم التحقق من الشرط."}
-  };
-  const t=labels[lang]||labels.fr;
-  const incoming=Array.isArray(clientIncomingTransfers)?clientIncomingTransfers:[];
-  incomingCard.style.display=incoming.some(x=>x.status==="pending")?"block":"none";
+  if(home) home.style.display = "none";
+  if(accountCreatedBox) accountCreatedBox.style.display = "none";
+  if(appBox) appBox.style.display = "none";
+  if(authBox) authBox.style.display = "block";
 
-  if(incoming.length===0){
-    incomingBox.innerHTML='<p class="muted">'+t.empty+'</p>';
-    return;
-  }
+  mode("login");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
 
-  incomingBox.innerHTML=incoming.map(x=>{
-    const status=x.status==="available"?t.available:x.status==="cancelled"?t.cancelled:t.pending;
-    const amount=money(x.amount_cents,clientAccountCurrency);
-    const sender=String(x.sender_name||"—");
-    const condition=String(x.condition_text||t.noCondition);
-    return `
-      <div class="card" style="margin-top:12px">
-        <strong>🔒 ${t.title}</strong>
-        <p><strong>${t.amount}</strong> ${amount}</p>
-        <p><strong>${t.sender}</strong> ${sender}</p>
-        <p><strong>${t.condition}</strong> ${condition}</p>
-        <p><strong>${t.status}</strong> ${status}</p>
-        ${x.status==="pending"?'<p class="muted">'+t.warning+'</p>':''}
-      </div>`;
-  }).join("");
+function showPublicHome(){
+  const home = document.getElementById("publicHome");
+  const authBox = document.getElementById("auth");
+  const accountCreatedBox = document.getElementById("accountCreated");
+  const appBox = document.getElementById("app");
+
+  if(home) home.style.display = "block";
+  if(authBox) authBox.style.display = "none";
+  if(accountCreatedBox) accountCreatedBox.style.display = "none";
+  if(appBox) appBox.style.display = "none";
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
 function mode(m){
@@ -2380,7 +2589,7 @@ async function register(){
           address:raddress.value,
           city:rcity.value,
           country:rcountry.value,
-          bankCountry:rbankCountry.value,
+
           idType:ridType.value,
           idNumber:ridNumber.value,
           idIssueDate:ridIssueDate.value,
@@ -2617,13 +2826,14 @@ async function load(){
 
   const accountCurrency =
   me.account_currency || "USD";
-  clientAccountCurrency = accountCurrency;
 
 balance.textContent =
   money(me.balance_cents,accountCurrency);
 
 account.textContent =
-  me.rib?.account_number || me.rib_account_number || me.account_no || "—";
+  isUaeAccount
+    ? "1004837265916472"
+    : (me.account_no || me.rib?.account_number || "—");
   document.getElementById("clientHolder").textContent =
     clientFullName || "—";
 
@@ -2631,7 +2841,9 @@ account.textContent =
     String(value || "").replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim();
 
     document.getElementById("clientAccount").textContent =
-    me.rib?.account_number || me.rib_account_number || me.account_no || "À renseigner";
+    isUaeAccount
+      ? "1004837265916472"
+      : (me.account_no || me.rib?.account_number || me.rib_account_number || "À renseigner");
   document.getElementById("clientCountry").textContent =
     isUaeAccount ? "AE" : "MA";
 
@@ -2652,24 +2864,107 @@ account.textContent =
     : tr("bankDisplayAddress");
 
       document.getElementById("clientBankCode").textContent =
-    me.rib?.bank_code || me.bank_code || "À renseigner";
+    isUaeAccount ? "024" : (me.rib?.bank_code || me.bank_code || "À renseigner");
 
   document.getElementById("clientBranchCode").textContent =
-    me.rib?.branch_code || me.branch_code || "À renseigner";
+    isUaeAccount ? "124" : (me.rib?.branch_code || me.branch_code || "À renseigner");
 
   document.getElementById("clientRibKey").textContent =
-    me.rib?.rib_key || me.rib_key || "À renseigner";
+    isUaeAccount ? "81" : (me.rib?.rib_key || me.rib_key || "À renseigner");
 
   const clientIban = document.getElementById("clientIban");
-  const rawIban = String(me.rib?.iban || me.iban || "").replace(/\s/g, "").toUpperCase();
-  clientIban.textContent = rawIban ? formatAccount(rawIban) : "À renseigner";
+  if (isUaeAccount) {
+    clientIban.textContent = formatAccount("AE890241004837265916472");
+  } else {
+    const rawIban = String(me.rib?.iban || me.iban || "").replace(/\s/g, "").toUpperCase();
+    const ibanCheck = rawIban.startsWith("MA") ? rawIban.slice(2, 4) : "";
+    const bankCode = me.rib?.bank_code || me.bank_code || "";
+    const agenceCode = me.rib?.branch_code || me.branch_code || "";
+    const accountNumber = me.account_no || me.rib?.account_number || me.rib_account_number || "";
+    const ribKey = me.rib?.rib_key || me.rib_key || "";
+
+    clientIban.textContent =
+      ibanCheck && bankCode && agenceCode && accountNumber && ribKey
+        ? `MA${ibanCheck} ${bankCode} ${agenceCode} ${accountNumber} ${ribKey}`
+        : "À renseigner";
+  }
 
   document.getElementById("clientBic").textContent =
-    me.rib?.bic || me.bic || "À renseigner";
+    isUaeAccount ? "DUIBAEAD" : (me.rib?.bic || me.bic || "À renseigner");
 
   let bs=await api("/api/beneficiaries");
-  clientIncomingTransfers=await api("/api/incoming-transfers");
-  renderIncomingTransfers();
+  let incoming=await api("/api/incoming-transfers");
+
+  const incomingBox =
+    document.getElementById("incomingTransfers");
+    const incomingCard =
+  document.getElementById("incomingTransfersCard");
+
+incomingCard.style.display =
+  incoming.some(x => x.status === "pending")
+    ? "block"
+    : "none";
+
+  if(incoming.length===0){
+
+    incomingBox.innerHTML =
+      '<p class="muted">Aucun virement entrant.</p>';
+
+  }else{
+
+    incomingBox.innerHTML =
+      incoming.map(x=>{
+
+        const status =
+          x.status==="available"
+          ? "Disponible"
+          : x.status==="cancelled"
+          ? "Annulé"
+          : "🔒 En attente";
+
+        const amount =
+          money(
+            x.amount_cents,
+            accountCurrency
+          );
+
+        return `
+          <div class="card" style="margin-top:12px">
+
+            <strong>🔒 Virement entrant</strong>
+
+            <p>
+              <strong>Montant :</strong>
+              ${amount}
+            </p>
+
+            <p>
+              <strong>Expéditeur :</strong>
+              ${x.sender_name}
+            </p>
+
+            <p>
+              <strong>Condition demandée :</strong>
+              ${x.condition_text || "Aucune condition précisée"}
+            </p>
+
+            <p>
+              <strong>Statut :</strong>
+              ${status}
+            </p>
+
+            ${
+              x.status==="pending"
+              ? '<p class="muted">⚠️ Montant non disponible tant que la condition n’est pas validée.</p>'
+              : ''
+            }
+
+          </div>
+        `;
+
+      }).join("");
+
+  }
   internalBeneficiary.innerHTML=
     bs.map(
       b=>`<option value="${b.id}">
@@ -3157,55 +3452,6 @@ function show(id,b){
 }
 setLanguage("fr");
 
-
-
-// Ajoute une saisie directe de l'année à côté de chaque calendrier, tout en conservant la date ISO pour le serveur.
-function prepareDateFields(root=document){
-  const fields=[];
-  if(root.matches?.('input[type="date"],input[type="datetime-local"]')) fields.push(root);
-  root.querySelectorAll?.('input[type="date"],input[type="datetime-local"]').forEach(input=>fields.push(input));
-  fields.forEach(input=>{
-    input.lang='fr';
-    input.autocomplete='off';
-    input.setAttribute('title','Choisir le jour et le mois dans le calendrier; saisir l’année dans le champ juste dessous');
-    if(input.dataset.yearHelperReady==='1') return;
-    input.dataset.yearHelperReady='1';
-    const helper=document.createElement('div');
-    helper.className='date-entry-helper';
-    const label=document.createElement('label');
-    label.textContent='Année';
-    const year=document.createElement('input');
-    year.type='number'; year.inputMode='numeric'; year.min='1900'; year.max='2200'; year.step='1'; year.placeholder='AAAA'; year.setAttribute('aria-label','Année à quatre chiffres');
-    const hint=document.createElement('span'); hint.className='date-entry-hint'; hint.textContent='Saisir les 4 chiffres';
-    label.appendChild(year); helper.append(label,hint); input.insertAdjacentElement('afterend',helper);
-    const readYear=()=>{const v=input.value; if(v){const match=v.match(/^(\d{4})-/); if(match) year.value=match[1];}};
-    const writeYear=()=>{
-      const y=String(year.value||'').trim();
-      if(!/^\d{4}$/.test(y)||Number(y)<1900||Number(y)>2200) return;
-      const v=input.value;
-      if(input.type==='date'){
-        const parts=/^\d{4}-(\d{2})-(\d{2})$/.exec(v);
-        if(parts) input.value=y+'-'+parts[1]+'-'+parts[2];
-        else input.value=y+'-01-01';
-      }else{
-        const parts=/^\d{4}-(\d{2})-(\d{2})T(.*)$/.exec(v);
-        if(parts) input.value=y+'-'+parts[1]+'-'+parts[2]+'T'+parts[3];
-        else input.value=y+'-01-01T00:00';
-      }
-      input.dispatchEvent(new Event('input',{bubbles:true})); input.dispatchEvent(new Event('change',{bubbles:true}));
-    };
-    year.addEventListener('change',writeYear);
-    year.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();writeYear();year.blur();}});
-    input.addEventListener('input',readYear); input.addEventListener('change',readYear);
-    readYear();
-  });
-}
-prepareDateFields();
-if(document.body && 'MutationObserver' in window){
-  new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{
-    if(node.nodeType===1) prepareDateFields(node);
-  }))).observe(document.body,{childList:true,subtree:true});
-}
 </script>
 
 </body>
